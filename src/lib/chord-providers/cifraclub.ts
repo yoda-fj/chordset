@@ -1,21 +1,12 @@
 // =====================================
 // PROVIDER: CIFRA CLUB
-// Integra com a API fan-made: github.com/code4music/cifraclub-api
-// =====================================
-//
-// ATENÇÃO: Esta API usa Selenium/WebDriver para fazer scraping do Cifra Club.
-// Para rodar localmente:
-//   1. Instale Docker e Docker Compose
-//   2. git clone https://github.com/code4music/cifraclub-api
-//   3. cd cifraclub-api && docker-compose up
-//   4. A API estará disponível em http://localhost:3000
-//
-// Alternativamente, configure a URL da APIremota abaixo.
+// Usa as rotas internas do Chordset em /api/cifraclub/*
 // =====================================
 
 import { ChordProvider, SearchResult, SongFromProvider, SongWithChords } from './types';
 
-// URL da API Cifra Club (pode ser remota ou local)
+// URL da API interna do Cifra Club
+// Em desenvolvimento usa localhost, em produção usa a URL configurada
 const CIFRACLUB_API_URL = process.env.CIFRACLUB_API_URL || 'http://localhost:3000';
 
 export const cifraClubProvider: ChordProvider = {
@@ -93,7 +84,7 @@ export const cifraClubProvider: ChordProvider = {
       const timeoutId = setTimeout(() => controller.abort(), 60000);
 
       const response = await fetch(
-        `${CIFRACLUB_API_URL}/artists/${artist}/songs/${song}`,
+        `${CIFRACLUB_API_URL}/api/cifraclub/${artist}/${song}`,
         { signal: controller.signal }
       );
       clearTimeout(timeoutId);
