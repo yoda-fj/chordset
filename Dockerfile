@@ -34,9 +34,11 @@ RUN adduser --system --uid 1001 nextjs
 # Install curl for healthcheck
 RUN apk add --no-cache curl
 
+# Create data directory with correct ownership
+RUN mkdir -p /data && chown -R nextjs:nodejs /data
+
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
-COPY --from=builder --chown=nextjs:nodejs /app/data ./data
 
 USER nextjs
 
