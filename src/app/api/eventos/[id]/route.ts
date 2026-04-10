@@ -34,16 +34,19 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
     const { id } = await params
     const body = await request.json()
     
-    const evento = eventosDb.update(parseInt(id), {
+    // Se isStudyList for true, zera campos que não se aplicam
+    const updateData = {
       nome: body.nome,
-      data: body.data,
-      hora: body.hora,
-      local: body.local,
-      status: body.status,
+      data: body.isStudyList ? null : body.data,
+      hora: body.isStudyList ? null : body.hora,
+      local: body.isStudyList ? null : body.local,
+      status: body.isStudyList ? null : body.status,
       template_id: body.template_id,
-      tags: body.tags,
+      tags: body.isStudyList ? [] : body.tags,
       observacoes: body.observacoes
-    })
+    }
+    
+    const evento = eventosDb.update(parseInt(id), updateData)
     
     return NextResponse.json(evento)
   } catch (error) {

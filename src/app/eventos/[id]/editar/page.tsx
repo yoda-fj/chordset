@@ -38,6 +38,7 @@ export default function EditEventoPage() {
   const [templates, setTemplates] = useState<any[]>([])
   const [loadingTemplates, setLoadingTemplates] = useState(false)
   const [importing, setImporting] = useState(false)
+  const [isStudyList, setIsStudyList] = useState(false)
 
   useEffect(() => {
     async function fetchEvento() {
@@ -54,8 +55,10 @@ export default function EditEventoPage() {
         setHora(data.hora || '')
         setLocal(data.local || '')
         setStatus(data.status)
-        setTags(data.tags)
+        setTags(data.tags || [])
         setObservacoes(data.observacoes || '')
+        // Study list: data é null
+        setIsStudyList(!data.data)
         fetchMusicasDoEvento(data.id)
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Erro desconhecido')
@@ -109,11 +112,12 @@ export default function EditEventoPage() {
         },
         body: JSON.stringify({
           nome: nome.trim(),
-          data,
-          hora: hora || undefined,
-          local: local.trim() || undefined,
-          status,
-          tags,
+          data: isStudyList ? null : data,
+          isStudyList,
+          hora: isStudyList ? null : hora || undefined,
+          local: isStudyList ? null : local.trim() || undefined,
+          status: isStudyList ? null : status,
+          tags: isStudyList ? [] : tags,
           observacoes: observacoes.trim() || undefined,
         }),
       })
@@ -194,7 +198,7 @@ export default function EditEventoPage() {
     )
   }
 
-  const isValid = nome.trim() && data
+  const isValid = nome.trim() && (isStudyList || data)
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
@@ -216,7 +220,7 @@ export default function EditEventoPage() {
         </button>
       </div>
 
-      <h1 className="text-2xl font-bold text-gray-900">Editar Evento</h1>
+      <h1 className="text-2xl font-bold text-gray-900">{isStudyList ? 'Editar Lista de Estudo' : 'Editar Evento'}</h1>
 
       {error && (
         <div className="p-4 bg-red-50 border border-red-200 rounded-lg text-red-700">
@@ -226,87 +230,110 @@ export default function EditEventoPage() {
 
       {/* Dados do Evento */}
       <form onSubmit={handleSubmit} className="bg-white p-6 rounded-lg border space-y-6">
+        {/* Study List Toggle */}
+        <div className="flex items-center gap-2 p-3 bg-gray-50 rounded-lg border">
+          <input
+            type="checkbox"
+            id="isStudyList"
+            checked={isStudyList}
+            onChange={(e) => setIsStudyList(e.target.checked)}
+            className="w-4 h-4 text-indigo-600 rounded border-gray-300"
+          />
+          <label htmlFor="isStudyList" className="text-sm text-gray-600 cursor-pointer">
+            É uma lista de estudo (sem data, local ou status)
+          </label>
+        </div>
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="md:col-span-2">
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Nome do Evento *
+              {isStudyList ? 'Nome da Lista *' : 'Nome do Evento *'}
             </label>
             <input
               type="text"
               value={nome}
               onChange={(e) => setNome(e.target.value)}
-              required
+              required={!isStudyList}
               className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500"
-              placeholder="Ex: Culto de Domingo"
+              placeholder={isStudyList ? 'Ex: Estudos para guitarra' : 'Ex: Culto de Domingo'}
             />
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Data *
-            </label>
-            <input
-              type="date"
-              value={data}
-              onChange={(e) => setData(e.target.value)}
-              required
-              className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500"
-            />
-          </div>
+          {!isStudyList && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Data
+              </label>
+              <input
+                type="date"
+                value={data}
+                onChange={(e) => setData(e.target.value)}
+                className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500"
+              />
+            </div>
+          )}
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Hora
-            </label>
-            <input
-              type="time"
-              value={hora}
-              onChange={(e) => setHora(e.target.value)}
-              className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500"
-            />
-          </div>
+          {!isStudyList && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Hora
+              </label>
+              <input
+                type="time"
+                value={hora}
+                onChange={(e) => setHora(e.target.value)}
+                className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500"
+              />
+            </div>
+          )}
 
-          <div className="md:col-span-2">
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Local
-            </label>
-            <input
-              type="text"
-              value={local}
-              onChange={(e) => setLocal(e.target.value)}
-              className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500"
-              placeholder="Ex: Igreja Principal"
-            />
-          </div>
+          {!isStudyList && (
+            <div className="md:col-span-2">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Local
+              </label>
+              <input
+                type="text"
+                value={local}
+                onChange={(e) => setLocal(e.target.value)}
+                className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500"
+                placeholder="Ex: Igreja Principal"
+              />
+            </div>
+          )}
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Status
-            </label>
-            <select
-              value={status}
-              onChange={(e) => setStatus(e.target.value)}
-              className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 bg-white"
-            >
-              {STATUS_OPCOES.map((opcao) => (
-                <option key={opcao.value} value={opcao.value}>
-                  {opcao.label}
-                </option>
-              ))}
-            </select>
-          </div>
+          {!isStudyList && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Status
+              </label>
+              <select
+                value={status}
+                onChange={(e) => setStatus(e.target.value)}
+                className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 bg-white"
+              >
+                {STATUS_OPCOES.map((opcao) => (
+                  <option key={opcao.value} value={opcao.value}>
+                    {opcao.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Tags
-            </label>
-            <TagInput
-              tags={tags}
-              onChange={setTags}
-              suggestions={TAG_SUGGESTIONS}
-              placeholder="Adicionar tag..."
-            />
-          </div>
+          {!isStudyList && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Tags
+              </label>
+              <TagInput
+                tags={tags}
+                onChange={setTags}
+                suggestions={TAG_SUGGESTIONS}
+                placeholder="Adicionar tag..."
+              />
+            </div>
+          )}
 
           <div className="md:col-span-2">
             <label className="block text-sm font-medium text-gray-700 mb-1">

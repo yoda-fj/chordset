@@ -100,9 +100,11 @@ export default function EventoPage() {
     )
   }
 
-  // Formatar data
-  const dataObj = new Date(evento.data + 'T00:00:00')
-  const dataFormatada = dataObj.toLocaleDateString('pt-BR', {
+  // Study list: data é null
+  const isStudyList = !evento.data
+
+  // Formatar data (só se não for study list)
+  const dataFormatada = isStudyList ? null : new Date(evento.data + 'T00:00:00').toLocaleDateString('pt-BR', {
     weekday: 'long',
     day: 'numeric',
     month: 'long',
@@ -156,24 +158,26 @@ export default function EventoPage() {
           </span>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="flex items-center gap-2 text-gray-600">
-            <Calendar size={18} />
-            <span>{dataFormatada}</span>
+        {!isStudyList && (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="flex items-center gap-2 text-gray-600">
+              <Calendar size={18} />
+              <span>{dataFormatada}</span>
+            </div>
+            {evento.hora && (
+              <div className="flex items-center gap-2 text-gray-600">
+                <Clock size={18} />
+                <span>{evento.hora}</span>
+              </div>
+            )}
+            {evento.local && (
+              <div className="flex items-center gap-2 text-gray-600">
+                <MapPin size={18} />
+                <span>{evento.local}</span>
+              </div>
+            )}
           </div>
-          {evento.hora && (
-            <div className="flex items-center gap-2 text-gray-600">
-              <Clock size={18} />
-              <span>{evento.hora}</span>
-            </div>
-          )}
-          {evento.local && (
-            <div className="flex items-center gap-2 text-gray-600">
-              <MapPin size={18} />
-              <span>{evento.local}</span>
-            </div>
-          )}
-        </div>
+        )}
 
         {evento.tags?.length > 0 && (
           <div className="flex flex-wrap gap-2 mt-4">
