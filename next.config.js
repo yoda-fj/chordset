@@ -1,9 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  experimental: {
-    // Não bundlar playwright e cheerio no servidor
-    serverComponentsExternalPackages: ['playwright', 'cheerio'],
-  },
+  serverExternalPackages: ['playwright', 'cheerio', 'sqlite3'],
+  output: 'standalone',
 }
 
 module.exports = nextConfig
