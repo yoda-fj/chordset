@@ -29,6 +29,7 @@ export default function EventoPage() {
   const [error, setError] = useState<string | null>(null)
   const [showCloneModal, setShowCloneModal] = useState(false)
   const [cloneNome, setCloneNome] = useState('')
+  const [cloneData, setCloneData] = useState('')
   const [cloneLoading, setCloneLoading] = useState(false)
 
   const handleClone = async () => {
@@ -38,7 +39,7 @@ export default function EventoPage() {
       const res = await fetch(`/api/eventos/${eventoId}/clone`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ nome: cloneNome }),
+        body: JSON.stringify({ nome: cloneNome, data: cloneData || undefined }),
       })
       const data = await res.json()
       if (res.ok) {
@@ -241,8 +242,15 @@ export default function EventoPage() {
               value={cloneNome}
               onChange={(e) => setCloneNome(e.target.value)}
               placeholder="Nome do novo evento"
-              className="w-full px-4 py-2 border rounded-lg mb-4"
+              className="w-full px-4 py-2 border rounded-lg mb-3"
               autoFocus
+              onKeyDown={(e) => e.key === 'Enter' && handleClone()}
+            />
+            <input
+              type="date"
+              value={cloneData}
+              onChange={(e) => setCloneData(e.target.value)}
+              className="w-full px-4 py-2 border rounded-lg mb-4"
               onKeyDown={(e) => e.key === 'Enter' && handleClone()}
             />
             <div className="flex gap-3 justify-end">
