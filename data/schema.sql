@@ -38,7 +38,7 @@ CREATE TABLE IF NOT EXISTS template_musicas (
 CREATE TABLE IF NOT EXISTS eventos (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   nome TEXT NOT NULL,
-  data DATE NOT NULL,
+  data DATE,
   hora TIME,
   local TEXT,
   status TEXT DEFAULT 'rascunho', -- rascunho, confirmado, realizado, cancelado
