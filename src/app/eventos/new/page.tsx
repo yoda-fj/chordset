@@ -45,9 +45,9 @@ export default function NewEventoPage() {
           nome: nome.trim(),
           data: isStudyList ? undefined : data,
           hora: hora || undefined,
-          local: local.trim() || undefined,
-          status,
-          tags,
+          local: isStudyList ? undefined : (local.trim() || undefined),
+          status: isStudyList ? undefined : status,
+          tags: isStudyList ? undefined : tags,
           observacoes: observacoes.trim() || undefined,
         }),
       })
@@ -100,7 +100,7 @@ export default function NewEventoPage() {
               className="w-4 h-4 text-indigo-600 rounded border-gray-300"
             />
             <label htmlFor="isStudyList" className="text-sm text-gray-600 cursor-pointer">
-              É uma lista de estudo (sem data)
+              É uma lista de estudo (sem data, local ou status)
             </label>
           </div>
 
@@ -118,73 +118,85 @@ export default function NewEventoPage() {
             />
           </div>
 
-          <div className={`grid grid-cols-2 gap-4 ${isStudyList ? 'opacity-50 pointer-events-none' : ''}`}>
+          {/* Only show date/hora if NOT study list */}
+          {!isStudyList && (
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Data
+                </label>
+                <input
+                  type="date"
+                  value={data}
+                  onChange={(e) => setData(e.target.value)}
+                  className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Hora
+                </label>
+                <input
+                  type="time"
+                  value={hora}
+                  onChange={(e) => setHora(e.target.value)}
+                  className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500"
+                />
+              </div>
+            </div>
+          )}
+
+          {/* Only show local if NOT study list */}
+          {!isStudyList && (
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Data
+                Local
               </label>
               <input
-                type="date"
-                value={data}
-                onChange={(e) => setData(e.target.value)}
+                type="text"
+                value={local}
+                onChange={(e) => setLocal(e.target.value)}
                 className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500"
+                placeholder="Ex: Igreja Principal"
               />
             </div>
+          )}
 
+          {/* Only show status if NOT study list */}
+          {!isStudyList && (
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Hora
+                Status
               </label>
-              <input
-                type="time"
-                value={hora}
-                onChange={(e) => setHora(e.target.value)}
-                className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500"
+              <select
+                value={status}
+                onChange={(e) => setStatus(e.target.value)}
+                className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 bg-white"
+              >
+                {STATUS_OPCOES.map((opcao) => (
+                  <option key={opcao.value} value={opcao.value}>
+                    {opcao.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+
+          {/* Only show tags if NOT study list */}
+          {!isStudyList && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Tags
+              </label>
+              <TagInput
+                tags={tags}
+                onChange={setTags}
+                suggestions={TAG_SUGGESTIONS}
+                placeholder="Adicionar tag..."
               />
             </div>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Local
-            </label>
-            <input
-              type="text"
-              value={local}
-              onChange={(e) => setLocal(e.target.value)}
-              className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500"
-              placeholder="Ex: Igreja Principal"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Status
-            </label>
-            <select
-              value={status}
-              onChange={(e) => setStatus(e.target.value)}
-              className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 bg-white"
-            >
-              {STATUS_OPCOES.map((opcao) => (
-                <option key={opcao.value} value={opcao.value}>
-                  {opcao.label}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Tags
-            </label>
-            <TagInput
-              tags={tags}
-              onChange={setTags}
-              suggestions={TAG_SUGGESTIONS}
-              placeholder="Adicionar tag..."
-            />
-          </div>
+          )}
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -193,7 +205,7 @@ export default function NewEventoPage() {
             <textarea
               value={observacoes}
               onChange={(e) => setObservacoes(e.target.value)}
-              rows={4}
+              rows={3}
               className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500"
               placeholder="Observações adicionais..."
             />
