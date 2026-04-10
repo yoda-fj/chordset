@@ -13,7 +13,7 @@ const STATUS_OPCOES = [
   { value: 'cancelado', label: 'Cancelado' },
 ]
 
-const TAG_SUGGESTIONS = ['culto', 'evento', 'casamento', 'formatura', 'natal', 'páscoa', 'especial']
+const TAG_SUGGESTIONS = ['culto', 'evento', 'casamento', 'formatura', 'natal', 'páscoa', 'especial', 'estudo']
 
 export default function NewEventoPage() {
   const router = useRouter()
@@ -22,6 +22,7 @@ export default function NewEventoPage() {
   const [hora, setHora] = useState('')
   const [local, setLocal] = useState('')
   const [status, setStatus] = useState('rascunho')
+  const [isStudyList, setIsStudyList] = useState(false)
   const [tags, setTags] = useState<string[]>([])
   const [observacoes, setObservacoes] = useState('')
   const [saving, setSaving] = useState(false)
@@ -29,7 +30,7 @@ export default function NewEventoPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!nome.trim() || !data) return
+    if (!nome.trim() || (!isStudyList && !data)) return
 
     setSaving(true)
     setError(null)
@@ -42,7 +43,7 @@ export default function NewEventoPage() {
         },
         body: JSON.stringify({
           nome: nome.trim(),
-          data,
+          data: isStudyList ? undefined : data,
           hora: hora || undefined,
           local: local.trim() || undefined,
           status,
@@ -63,7 +64,7 @@ export default function NewEventoPage() {
     }
   }
 
-  const isValid = nome.trim() && data
+  const isValid = nome.trim() && (isStudyList || data)
 
   return (
     <div>
@@ -77,7 +78,9 @@ export default function NewEventoPage() {
         </Link>
       </div>
 
-      <h1 className="text-2xl font-bold text-gray-900 mb-6">Novo Evento</h1>
+      <h1 className="text-2xl font-bold text-gray-900 mb-6">
+        {isStudyList ? 'Nova Lista de Estudo' : 'Novo Evento'}
+      </h1>
 
       {error && (
         <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700">
@@ -87,9 +90,23 @@ export default function NewEventoPage() {
 
       <form onSubmit={handleSubmit} className="max-w-2xl">
         <div className="bg-white p-6 rounded-lg border space-y-6">
+          {/* Study List Toggle */}
+          <div className="flex items-center gap-2 p-3 bg-gray-50 rounded-lg border">
+            <input
+              type="checkbox"
+              id="isStudyList"
+              checked={isStudyList}
+              onChange={(e) => setIsStudyList(e.target.checked)}
+              className="w-4 h-4 text-indigo-600 rounded border-gray-300"
+            />
+            <label htmlFor="isStudyList" className="text-sm text-gray-600 cursor-pointer">
+              É uma lista de estudo (sem data)
+            </label>
+          </div>
+
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Nome do Evento *
+              {isStudyList ? 'Nome da Lista *' : 'Nome do Evento *'}
             </label>
             <input
               type="text"
@@ -97,20 +114,19 @@ export default function NewEventoPage() {
               onChange={(e) => setNome(e.target.value)}
               required
               className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500"
-              placeholder="Ex: Culto de Domingo"
+              placeholder={isStudyList ? 'Ex: Estudos para guitarra' : 'Ex: Culto de Domingo'}
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className={`grid grid-cols-2 gap-4 ${isStudyList ? 'opacity-50 pointer-events-none' : ''}`}>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Data *
+                Data
               </label>
               <input
                 type="date"
                 value={data}
                 onChange={(e) => setData(e.target.value)}
-                required
                 className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500"
               />
             </div>
@@ -179,7 +195,7 @@ export default function NewEventoPage() {
               onChange={(e) => setObservacoes(e.target.value)}
               rows={4}
               className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500"
-              placeholder="Observações adicionais sobre o evento..."
+              placeholder="Observações adicionais..."
             />
           </div>
         </div>
@@ -204,7 +220,7 @@ export default function NewEventoPage() {
             ) : (
               <>
                 <Save size={18} />
-                Criar Evento
+                {isStudyList ? 'Criar Lista de Estudo' : 'Criar Evento'}
               </>
             )}
           </button>
