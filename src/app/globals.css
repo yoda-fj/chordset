@@ -1,3 +1,56 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@media print {
+  /* Hide everything except the cifra content */
+  body * {
+    visibility: hidden;
+  }
+  
+  /* Show only the cifra container */
+  .print-cifra,
+  .print-cifra * {
+    visibility: visible;
+  }
+  
+  /* Reset positioning for the cifra container */
+  .print-cifra {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    padding: 20px;
+    background: white;
+  }
+  
+  /* Hide header, buttons, and controls */
+  .print\:hidden {
+    display: none !important;
+  }
+  
+  /* Show print-only elements */
+  .print\:block {
+    display: block !important;
+  }
+  
+  /* Clean typography for print */
+  .print-cifra h1 {
+    font-size: 24px;
+    font-weight: bold;
+    margin-bottom: 4px;
+  }
+  
+  .print-cifra h2 {
+    font-size: 18px;
+    font-weight: bold;
+    margin-bottom: 8px;
+  }
+  
+  .print-cifra pre {
+    font-family: 'Courier New', monospace;
+    font-size: 14px;
+    line-height: 1.5;
+    white-space: pre-wrap;
+  }
+}

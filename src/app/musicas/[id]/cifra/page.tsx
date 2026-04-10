@@ -149,7 +149,7 @@ export default function CifraPage() {
       </div>
 
       {/* Info da música */}
-      <div className="mb-4 flex items-start justify-between">
+      <div className="print-cifra mb-4 flex items-start justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">{musica.titulo}</h1>
           <p className="text-gray-600">{musica.artista}</p>
@@ -217,7 +217,7 @@ export default function CifraPage() {
         <div className="lg:col-span-2">
           <div 
             ref={scrollContainerRef}
-            className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-y-auto max-h-[calc(100vh-200px)]"
+            className="print-cifra bg-white rounded-xl shadow-sm border border-slate-200 overflow-y-auto max-h-[calc(100vh-200px)]"
           >
             <ChordViewer 
               chordProContent={currentCifra}

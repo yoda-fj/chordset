@@ -24,6 +24,7 @@ RUN npm run build
 FROM base AS runner
 WORKDIR /app
 
+ENV DATABASE_PATH=/data/chordset.db
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 

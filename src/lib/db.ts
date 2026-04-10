@@ -1,8 +1,8 @@
 import Database from 'better-sqlite3'
 import { join } from 'path'
-import { readFileSync } from 'fs'
+import { readFileSync, existsSync } from 'fs'
 
-const DB_PATH = join(process.cwd(), 'data', 'chordset.db')
+const DB_PATH = process.env.DATABASE_PATH || join(process.cwd(), 'data', 'chordset.db')
 
 let db: Database.Database | null = null
 
