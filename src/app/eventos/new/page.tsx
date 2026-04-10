@@ -112,7 +112,7 @@ export default function NewEventoPage() {
               type="text"
               value={nome}
               onChange={(e) => setNome(e.target.value)}
-              required
+              required={!isStudyList}
               className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500"
               placeholder={isStudyList ? 'Ex: Estudos para guitarra' : 'Ex: Culto de Domingo'}
             />
