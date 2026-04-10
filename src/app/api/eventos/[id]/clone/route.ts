@@ -34,9 +34,9 @@ export async function POST(
     // Criar novo evento
     const novoEvento = eventosDb.create({
       nome: novoNome,
-      data: body.data || null,
-      local: body.local || eventoOriginal.local || null,
-      observacoes: body.observacoes || eventoOriginal.observacoes || null,
+      data: body.data || new Date().toISOString().split('T')[0],
+      local: body.local || eventoOriginal.local || undefined,
+      observacoes: body.observacoes || eventoOriginal.observacoes || undefined,
     })
     
     // Copiar músicas
