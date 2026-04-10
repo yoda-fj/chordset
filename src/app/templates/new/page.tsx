@@ -20,13 +20,31 @@ export default function NewTemplatePage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!nome.trim()) return
+    if (!nome.trim() || saving) return
 
     setSaving(true)
-    // Mock save - substituir por chamada real ao Supabase
-    console.log('Salvando template:', { nome, descricao, tags, musicas })
-    await new Promise((resolve) => setTimeout(resolve, 500))
-    router.push('/templates')
+
+    try {
+      const response = await fetch('/api/templates', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          nome: nome.trim(),
+          descricao: descricao.trim() || null,
+          tags,
+        }),
+      })
+
+      if (!response.ok) {
+        throw new Error('Erro ao criar template')
+      }
+
+      router.push('/templates')
+    } catch (err) {
+      console.error('Erro:', err)
+      alert('Erro ao criar template')
+      setSaving(false)
+    }
   }
 
   return (

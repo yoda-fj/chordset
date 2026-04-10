@@ -187,33 +187,28 @@ export const ChordDiagram = ({
 
   if (error || !chordData) {
     return (
-      <div className="chord-diagram-fallback flex items-center justify-center bg-slate-100 dark:bg-slate-800 rounded-lg border border-dashed border-slate-300 dark:border-slate-600" style={{ width, height }}>
+      <div className="chord-diagram-fallback flex items-center justify-center bg-white dark:bg-slate-800 rounded-lg border border-dashed border-slate-300 dark:border-slate-600 shadow-sm" style={{ width, height }}>
         <span className="chord-name text-sm font-semibold text-slate-500 dark:text-slate-400">{transposedChord}</span>
       </div>
     );
   }
 
   return (
-    <div className="chord-diagram-wrapper flex flex-col items-center p-2 bg-slate-50 dark:bg-slate-800/50 rounded-lg border border-slate-200 dark:border-slate-700 hover:border-emerald-300 dark:hover:border-emerald-700 transition-colors">
-      <div ref={containerRef} className="chord-diagram-container flex justify-center items-center">
-        <style jsx>{`
-          .chord-diagram-container :global(svg circle) {
-            fill: #10b981 !important;
-          }
-          .chord-diagram-container :global(svg line) {
-            stroke: #6b7280 !important;
-          }
-          .chord-diagram-container :global(svg rect) {
-            fill: none;
-            stroke: #6b7280 !important;
-          }
-          .chord-diagram-container :global(svg text) {
-            fill: #6b7280 !important;
-            font-family: system-ui, -apple-system, sans-serif !important;
-          }
-        `}</style>
-      </div>
+    <div className="chord-diagram-wrapper flex flex-col items-center p-2 bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 hover:border-emerald-300 dark:hover:border-emerald-700 transition-colors shadow-sm">
+      <div ref={containerRef} className="chord-diagram-container flex justify-center items-center" />
       <span className="chord-diagram-name mt-1 text-xs font-semibold text-emerald-600 dark:text-emerald-400 text-center">{transposedChord}</span>
+      <style>{`
+        .chord-diagram-container svg circle { fill: #10b981; }
+        .chord-diagram-container svg line { stroke: #6b7280; }
+        .chord-diagram-container svg rect { stroke: #6b7280; }
+        .chord-diagram-container svg text { fill: #6b7280; }
+        @media (prefers-color-scheme: dark) {
+          .chord-diagram-container svg circle { fill: #34d399; }
+          .chord-diagram-container svg line { stroke: #94a3b8; }
+          .chord-diagram-container svg rect { stroke: #94a3b8; }
+          .chord-diagram-container svg text { fill: #94a3b8; }
+        }
+      `}</style>
     </div>
   );
 };
@@ -229,7 +224,7 @@ export const ChordDiagramPanel = ({ chords, semitones = 0 }: ChordDiagramPanelPr
   const uniqueChords = Array.from(new Set(chords));
 
   return (
-    <div className="chord-diagram-panel bg-slate-50 dark:bg-slate-800/50 rounded-xl p-4 border border-slate-200 dark:border-slate-700">
+    <div className="chord-diagram-panel bg-white dark:bg-slate-800 rounded-xl p-4 border border-slate-200 dark:border-slate-700 shadow-sm">
       <h3 className="panel-title flex items-center gap-2 text-xs uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-4">
         <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />

@@ -136,37 +136,35 @@ export default function MusicasPage() {
             key={musica.id}
             className="block p-6 bg-white border rounded-lg hover:shadow-md transition-shadow"
           >
-            <Link href={`/musicas/${musica.id}`}>
-              <div className="flex items-start justify-between mb-3">
-                <div className="flex items-center gap-2">
-                  <Music size={18} className="text-indigo-500" />
-                  <h3 className="text-lg font-medium text-gray-900">
-                    {musica.titulo}
-                  </h3>
-                </div>
-                {musica.tom_original && (
-                  <span className="inline-flex items-center px-2 py-0.5 bg-indigo-100 text-indigo-800 text-xs font-medium rounded-full">
-                    {musica.tom_original}
-                  </span>
-                )}
+            <div className="flex items-start justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <Music size={18} className="text-indigo-500" />
+                <Link href={`/musicas/${musica.id}/cifra`} className="text-lg font-medium text-gray-900 hover:text-indigo-600">
+                  {musica.titulo}
+                </Link>
               </div>
+              {musica.tom_original && (
+                <span className="inline-flex items-center px-2 py-0.5 bg-indigo-100 text-indigo-800 text-xs font-medium rounded-full">
+                  {musica.tom_original}
+                </span>
+              )}
+            </div>
 
-              <p className="text-sm text-gray-600 mb-3">
-                {musica.artista}
-              </p>
+            <p className="text-sm text-gray-600 mb-3">
+              {musica.artista}
+            </p>
 
-              <div className="flex flex-wrap gap-1 mb-3">
-                {musica.tags.map((tag) => (
-                  <span
-                    key={tag}
-                    className="inline-flex items-center gap-1 text-xs px-2 py-1 bg-gray-100 text-gray-600 rounded-full"
-                  >
-                    <Tag size={10} />
-                    {tag}
-                  </span>
-                ))}
-              </div>
-            </Link>
+            <div className="flex flex-wrap gap-1 mb-3">
+              {musica.tags.map((tag) => (
+                <span
+                  key={tag}
+                  className="inline-flex items-center gap-1 text-xs px-2 py-1 bg-gray-100 text-gray-600 rounded-full"
+                >
+                  <Tag size={10} />
+                  {tag}
+                </span>
+              ))}
+            </div>
 
             <div className="mt-3 pt-3 border-t flex items-center gap-3">
               {musica.cifra && (
@@ -179,7 +177,7 @@ export default function MusicasPage() {
                 </Link>
               )}
               <Link
-                href={`/musicas/${musica.id}`}
+                href={`/musicas/${musica.id}/edit`}
                 className="inline-flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900 font-medium"
               >
                 Editar

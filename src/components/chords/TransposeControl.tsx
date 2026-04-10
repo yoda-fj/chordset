@@ -1,61 +1,106 @@
-'use client';
+'use client'
 
-import { ChevronUp, ChevronDown, RotateCcw } from 'lucide-react';
+import { useState } from 'react'
+import { getAllKeys, formatKeyName, transposeCifra } from '@/utils/chord-transposer'
 
 interface TransposeControlProps {
-  originalKey: string;
-  currentKey: string;
-  semitones: number;
-  onTranspose: (delta: number) => void;
-  onReset: () => void;
+  musicaId: number
+  tomOriginal: string | null
+  cifra: string | null
+  semitones: number
+  onTranspose: (newTom: string, newCifra: string) => void
 }
 
-export const TransposeControl = ({
-  originalKey,
-  currentKey,
+export function TransposeControl({ 
+  musicaId, 
+  tomOriginal, 
+  cifra,
   semitones,
-  onTranspose,
-  onReset
-}: TransposeControlProps) => {
+  onTranspose 
+}: TransposeControlProps) {
+  const [selectedTom, setSelectedTom] = useState(tomOriginal || 'C')
+  const [saving, setSaving] = useState(false)
+  const [showDropdown, setShowDropdown] = useState(false)
+  
+  const keys = getAllKeys()
+  
+  const handleTranspose = async (newTom: string) => {
+    if (!tomOriginal || !cifra) return
+    
+    setSaving(true)
+    setSelectedTom(newTom)
+    setShowDropdown(false)
+    
+    try {
+      // Calcula a cifra transposta
+      const transposedCifra = transposeCifra(cifra, tomOriginal, newTom)
+      
+      // Salva no banco
+      const response = await fetch(`/api/musicas/${musicaId}/transpose`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ tom_original: newTom }),
+      })
+      
+      if (!response.ok) {
+        throw new Error('Erro ao salvar')
+      }
+      
+      // Atualiza a UI com o novo tom e nova cifra
+      onTranspose(newTom, transposedCifra)
+    } catch (error) {
+      console.error('[Transpose] Error:', error)
+      alert('Erro ao transpor')
+    } finally {
+      setSaving(false)
+    }
+  }
+  
   return (
-    <div className="transpose-control bg-white dark:bg-slate-800 rounded-xl p-4 border border-slate-200 dark:border-slate-700 shadow-sm">
-      <div className="transpose-info flex items-center gap-2 flex-wrap text-sm mb-3">
-        <span className="key-label text-slate-500 dark:text-slate-400 text-xs uppercase tracking-wide">Original:</span>
-        <span className="key-value text-slate-900 dark:text-white font-semibold text-lg min-w-[24px] text-center">{originalKey || '-'}</span>
-        <span className="separator text-slate-400">→</span>
-        <span className="key-label text-slate-500 dark:text-slate-400 text-xs uppercase tracking-wide">Atual:</span>
-        <span className="key-value current text-emerald-600 dark:text-emerald-400 font-semibold text-lg min-w-[24px] text-center">{currentKey || '-'}</span>
-        {semitones !== 0 && (
-          <span className="semitones-badge bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 px-2 py-0.5 rounded text-xs font-semibold">
-            {semitones > 0 ? '+' : ''}{semitones}
-          </span>
-        )}
-      </div>
-      <div className="transpose-buttons flex gap-2">
-        <button 
-          className="transpose-btn flex items-center justify-center w-10 h-10 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 border border-slate-200 dark:border-slate-600 rounded-lg text-slate-700 dark:text-slate-200 transition-all active:scale-95"
-          onClick={() => onTranspose(-1)}
-          title="Diminuir meio-tom"
+    <div className="flex items-center gap-2">
+      <span className="text-sm text-gray-600">Tom:</span>
+      
+      <div className="relative">
+        <button
+          onClick={() => setShowDropdown(!showDropdown)}
+          disabled={saving}
+          className="px-3 py-1.5 bg-indigo-100 text-indigo-700 rounded-lg font-medium hover:bg-indigo-200 transition-colors disabled:opacity-50 flex items-center gap-1"
         >
-          <ChevronDown size={20} />
+          {saving ? (
+            <span className="animate-spin">⏳</span>
+          ) : (
+            <>
+              <span>{selectedTom}</span>
+              <span className="text-xs opacity-70">({formatKeyName(selectedTom)})</span>
+            </>
+          )}
+          <span className="ml-1">▼</span>
         </button>
-        <button 
-          className="transpose-btn flex items-center justify-center w-10 h-10 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 border border-slate-200 dark:border-slate-600 rounded-lg text-slate-700 dark:text-slate-200 transition-all active:scale-95"
-          onClick={() => onTranspose(1)}
-          title="Aumentar meio-tom"
-        >
-          <ChevronUp size={20} />
-        </button>
-        {semitones !== 0 && (
-          <button 
-            className="transpose-btn reset flex items-center justify-center w-10 h-10 bg-red-50 dark:bg-red-900/20 hover:bg-red-100 dark:hover:bg-red-900/40 border border-red-200 dark:border-red-800 rounded-lg text-red-600 dark:text-red-400 transition-all active:scale-95"
-            onClick={onReset}
-            title="Resetar transposição"
-          >
-            <RotateCcw size={18} />
-          </button>
+        
+        {showDropdown && (
+          <>
+            <div 
+              className="fixed inset-0 z-10" 
+              onClick={() => setShowDropdown(false)}
+            />
+            <div className="absolute top-full left-0 mt-1 bg-white border rounded-lg shadow-lg z-20 grid grid-cols-4 gap-1 p-2 min-w-[200px]">
+              {keys.map((key) => (
+                <button
+                  key={key}
+                  onClick={() => handleTranspose(key)}
+                  className={`px-2 py-1 rounded text-sm hover:bg-indigo-100 transition-colors ${
+                    key === selectedTom 
+                      ? 'bg-indigo-500 text-white hover:bg-indigo-600' 
+                      : 'text-gray-700'
+                  }`}
+                >
+                  {key}
+                </button>
+              ))}
+            </div>
+          </>
         )}
       </div>
     </div>
-  );
-};
+  )
+}

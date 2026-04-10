@@ -1,67 +1,50 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
-import { ArrowLeft, Save, Loader2, Trash2 } from 'lucide-react'
+import { useParams } from 'next/navigation'
+import { ArrowLeft, Loader2, Edit, Calendar, Clock, MapPin, Music, Play } from 'lucide-react'
 import Link from 'next/link'
-import { TagInput } from '@/components/setlist/TagInput'
-import type { EventoWithTemplate } from '@/lib/eventos-db'
 
-const STATUS_OPCOES = [
-  { value: 'rascunho', label: 'Rascunho' },
-  { value: 'confirmado', label: 'Confirmado' },
-  { value: 'realizado', label: 'Realizado' },
-  { value: 'cancelado', label: 'Cancelado' },
-]
-
-const TAG_SUGGESTIONS = ['culto', 'evento', 'casamento', 'formatura', 'natal', 'páscoa', 'especial']
-
-interface EditEventoPageProps {
-  params: Promise<{ id: string }>
+const STATUS_LABELS: Record<string, string> = {
+  rascunho: 'Rascunho',
+  confirmado: 'Confirmado',
+  realizado: 'Realizado',
+  cancelado: 'Cancelado',
 }
 
-export default function EditEventoPage({ params }: EditEventoPageProps) {
-  const router = useRouter()
-  const [evento, setEvento] = useState<EventoWithTemplate | null>(null)
+const STATUS_COLORS: Record<string, string> = {
+  rascunho: 'bg-gray-100 text-gray-700',
+  confirmado: 'bg-blue-100 text-blue-700',
+  realizado: 'bg-green-100 text-green-700',
+  cancelado: 'bg-red-100 text-red-700',
+}
+
+export default function EventoPage() {
+  const params = useParams()
+  const eventoId = parseInt(params.id as string)
+
+  const [evento, setEvento] = useState<any>(null)
+  const [musicas, setMusicas] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
-  const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [nome, setNome] = useState('')
-  const [data, setData] = useState('')
-  const [hora, setHora] = useState('')
-  const [local, setLocal] = useState('')
-  const [status, setStatus] = useState('rascunho')
-  const [tags, setTags] = useState<string[]>([])
-  const [observacoes, setObservacoes] = useState('')
-  const [eventoId, setEventoId] = useState<number | null>(null)
 
   useEffect(() => {
-    async function loadParams() {
-      const { id } = await params
-      setEventoId(parseInt(id))
-    }
-    loadParams()
-  }, [params])
-
-  useEffect(() => {
-    if (!eventoId) return
-
-    async function fetchEvento() {
+    async function fetchData() {
       try {
-        setLoading(true)
-        const response = await fetch(`/api/eventos/${eventoId}`)
-        if (!response.ok) {
-          throw new Error('Erro ao carregar evento')
+        const [eventoRes, musicasRes] = await Promise.all([
+          fetch(`/api/eventos/${eventoId}`),
+          fetch(`/api/eventos/${eventoId}/musicas`)
+        ])
+
+        if (!eventoRes.ok) throw new Error('Evento não encontrado')
+
+        const eventoData = await eventoRes.json()
+        setEvento(eventoData)
+
+        if (musicasRes.ok) {
+          const musicasData = await musicasRes.json()
+          setMusicas(musicasData)
         }
-        const data = await response.json()
-        setEvento(data)
-        setNome(data.nome)
-        setData(data.data)
-        setHora(data.hora || '')
-        setLocal(data.local || '')
-        setStatus(data.status)
-        setTags(data.tags)
-        setObservacoes(data.observacoes || '')
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Erro desconhecido')
       } finally {
@@ -69,62 +52,8 @@ export default function EditEventoPage({ params }: EditEventoPageProps) {
       }
     }
 
-    fetchEvento()
+    fetchData()
   }, [eventoId])
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!eventoId || !nome.trim() || !data) return
-
-    setSaving(true)
-    setError(null)
-
-    try {
-      const response = await fetch(`/api/eventos/${eventoId}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          nome: nome.trim(),
-          data,
-          hora: hora || undefined,
-          local: local.trim() || undefined,
-          status,
-          tags,
-          observacoes: observacoes.trim() || undefined,
-        }),
-      })
-
-      if (!response.ok) {
-        const data = await response.json()
-        throw new Error(data.error || 'Erro ao atualizar evento')
-      }
-
-      router.push('/eventos')
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Erro ao atualizar evento')
-      setSaving(false)
-    }
-  }
-
-  const handleDelete = async () => {
-    if (!eventoId || !confirm('Tem certeza que deseja excluir este evento?')) return
-
-    try {
-      const response = await fetch(`/api/eventos/${eventoId}`, {
-        method: 'DELETE',
-      })
-
-      if (!response.ok) {
-        throw new Error('Erro ao excluir evento')
-      }
-
-      router.push('/eventos')
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Erro ao excluir evento')
-    }
-  }
 
   if (loading) {
     return (
@@ -134,176 +63,140 @@ export default function EditEventoPage({ params }: EditEventoPageProps) {
     )
   }
 
-  if (error && !evento) {
+  if (error || !evento) {
     return (
       <div className="text-center py-12">
-        <p className="text-red-600 mb-4">{error}</p>
-        <Link
-          href="/eventos"
-          className="text-indigo-600 hover:text-indigo-700 font-medium"
-        >
+        <p className="text-red-600 mb-4">{error || 'Evento não encontrado'}</p>
+        <Link href="/eventos" className="text-indigo-600 hover:text-indigo-700 font-medium">
           Voltar para Eventos
         </Link>
       </div>
     )
   }
 
-  const isValid = nome.trim() && data
+  // Formatar data
+  const dataObj = new Date(evento.data + 'T00:00:00')
+  const dataFormatada = dataObj.toLocaleDateString('pt-BR', {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  })
 
   return (
-    <div>
-      <div className="mb-6">
+    <div className="max-w-4xl mx-auto space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
         <Link
           href="/eventos"
           className="inline-flex items-center gap-2 text-gray-600 hover:text-gray-900"
         >
           <ArrowLeft size={18} />
-          Voltar para Eventos
+          Voltar
         </Link>
-      </div>
-
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">Editar Evento</h1>
-        <button
-          onClick={handleDelete}
-          className="inline-flex items-center gap-2 px-4 py-2 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors"
-        >
-          <Trash2 size={18} />
-          Excluir
-        </button>
-      </div>
-
-      {error && (
-        <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700">
-          {error}
-        </div>
-      )}
-
-      <form onSubmit={handleSubmit} className="max-w-2xl">
-        <div className="bg-white p-6 rounded-lg border space-y-6">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Nome do Evento *
-            </label>
-            <input
-              type="text"
-              value={nome}
-              onChange={(e) => setNome(e.target.value)}
-              required
-              className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500"
-              placeholder="Ex: Culto de Domingo"
-            />
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Data *
-              </label>
-              <input
-                type="date"
-                value={data}
-                onChange={(e) => setData(e.target.value)}
-                required
-                className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Hora
-              </label>
-              <input
-                type="time"
-                value={hora}
-                onChange={(e) => setHora(e.target.value)}
-                className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500"
-              />
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Local
-            </label>
-            <input
-              type="text"
-              value={local}
-              onChange={(e) => setLocal(e.target.value)}
-              className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500"
-              placeholder="Ex: Igreja Principal"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Status
-            </label>
-            <select
-              value={status}
-              onChange={(e) => setStatus(e.target.value)}
-              className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 bg-white"
+        <div className="flex gap-2">
+          {musicas.length > 0 && (
+            <Link
+              href={`/eventos/${eventoId}/setlist`}
+              className="inline-flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
             >
-              {STATUS_OPCOES.map((opcao) => (
-                <option key={opcao.value} value={opcao.value}>
-                  {opcao.label}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Tags
-            </label>
-            <TagInput
-              tags={tags}
-              onChange={setTags}
-              suggestions={TAG_SUGGESTIONS}
-              placeholder="Adicionar tag..."
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Observações
-            </label>
-            <textarea
-              value={observacoes}
-              onChange={(e) => setObservacoes(e.target.value)}
-              rows={4}
-              className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500"
-              placeholder="Observações adicionais sobre o evento..."
-            />
-          </div>
-        </div>
-
-        <div className="flex justify-end gap-3 mt-6">
+              <Play size={18} />
+              <span className="hidden sm:inline">Ao Vivo</span>
+            </Link>
+          )}
           <Link
-            href="/eventos"
-            className="px-4 py-2 text-gray-600 hover:text-gray-800"
+            href={`/eventos/${eventoId}/editar`}
+            className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
           >
-            Cancelar
+            <Edit size={18} />
+            Editar
           </Link>
-          <button
-            type="submit"
-            disabled={saving || !isValid}
-            className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50 transition-colors"
-          >
-            {saving ? (
-              <>
-                <Loader2 size={18} className="animate-spin" />
-                Salvando...
-              </>
-            ) : (
-              <>
-                <Save size={18} />
-                Salvar Alterações
-              </>
-            )}
-          </button>
         </div>
-      </form>
+      </div>
+
+      {/* Info */}
+      <div className="bg-white p-6 rounded-lg border">
+        <div className="flex items-start justify-between mb-4">
+          <h1 className="text-2xl font-bold text-gray-900">{evento.nome}</h1>
+          <span className={`px-3 py-1 rounded-full text-sm font-medium ${STATUS_COLORS[evento.status] || 'bg-gray-100 text-gray-700'}`}>
+            {STATUS_LABELS[evento.status] || evento.status}
+          </span>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="flex items-center gap-2 text-gray-600">
+            <Calendar size={18} />
+            <span>{dataFormatada}</span>
+          </div>
+          {evento.hora && (
+            <div className="flex items-center gap-2 text-gray-600">
+              <Clock size={18} />
+              <span>{evento.hora}</span>
+            </div>
+          )}
+          {evento.local && (
+            <div className="flex items-center gap-2 text-gray-600">
+              <MapPin size={18} />
+              <span>{evento.local}</span>
+            </div>
+          )}
+        </div>
+
+        {evento.tags?.length > 0 && (
+          <div className="flex flex-wrap gap-2 mt-4">
+            {evento.tags.map((tag: string) => (
+              <span key={tag} className="px-2 py-1 bg-gray-100 text-gray-600 rounded text-sm">
+                {tag}
+              </span>
+            ))}
+          </div>
+        )}
+
+        {evento.observacoes && (
+          <div className="mt-4 pt-4 border-t">
+            <p className="text-gray-600 whitespace-pre-wrap">{evento.observacoes}</p>
+          </div>
+        )}
+      </div>
+
+      {/* Repertório */}
+      <div className="bg-white p-6 rounded-lg border">
+        <div className="flex items-center gap-2 mb-4">
+          <Music size={20} className="text-indigo-500" />
+          <h2 className="text-lg font-semibold text-gray-900">
+            Repertório ({musicas.length})
+          </h2>
+        </div>
+
+        {musicas.length === 0 ? (
+          <p className="text-gray-500 text-center py-8">Nenhuma música no repertório</p>
+        ) : (
+          <div className="space-y-3">
+            {musicas.map((item, index) => (
+              <Link
+                key={item.id}
+                href={`/musicas/${item.musicas?.id}/cifra`}
+                className="flex items-center gap-4 p-3 border rounded-lg hover:bg-gray-50 transition-colors"
+              >
+                <span className="text-gray-400 font-medium w-6">{index + 1}.</span>
+                <div className="flex-1">
+                  <div className="font-medium text-gray-900">{item.musicas?.titulo}</div>
+                  <div className="text-sm text-gray-500">{item.musicas?.artista}</div>
+                </div>
+                {item.tom_evento && (
+                  <span className="text-sm text-gray-500">Tom: {item.tom_evento}</span>
+                )}
+                {item.responsavel && (
+                  <span className="text-sm text-gray-500">Resp: {item.responsavel}</span>
+                )}
+                {item.confirmada && (
+                  <span className="px-2 py-1 bg-green-100 text-green-700 rounded text-xs">OK</span>
+                )}
+              </Link>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   )
 }

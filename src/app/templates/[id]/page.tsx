@@ -2,12 +2,10 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter, useParams } from 'next/navigation'
-import { ArrowLeft, Save, Trash2 } from 'lucide-react'
+import { ArrowLeft, Save, Trash2, Loader2 } from 'lucide-react'
 import Link from 'next/link'
 import { TagInput } from '@/components/setlist/TagInput'
 import { SetlistBuilder } from '@/components/setlist/SetlistBuilder'
-import { Template, TemplateMusicaWithMusica } from '@/types/database'
-import { mockTemplates, mockTemplateMusicas } from '@/lib/mockData'
 
 const TAG_SUGGESTIONS = ['culto', 'domingo', 'quarta', 'sabado', 'evento', 'especial', 'louvor', 'adoracao', 'jovens', 'criancas']
 
@@ -19,22 +17,41 @@ export default function EditTemplatePage() {
   const [nome, setNome] = useState('')
   const [descricao, setDescricao] = useState('')
   const [tags, setTags] = useState<string[]>([])
-  const [musicas, setMusicas] = useState<TemplateMusicaWithMusica[]>([])
+  const [musicas, setMusicas] = useState<any[]>([])
   const [saving, setSaving] = useState(false)
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    // Mock load - substituir por chamada real ao Supabase
-    const template = mockTemplates.find((t) => t.id === templateId)
-    if (template) {
-      setNome(template.nome)
-      setDescricao(template.descricao || '')
-      setTags(template.tags)
+    async function fetchTemplate() {
+      try {
+        const [templateRes, musicasRes] = await Promise.all([
+          fetch(`/api/templates/${templateId}`),
+          fetch(`/api/templates/${templateId}/musicas`)
+        ])
+        
+        if (!templateRes.ok) throw new Error('Template não encontrado')
+        
+        const templateData = await templateRes.json()
+        setNome(templateData.nome || '')
+        setDescricao(templateData.descricao || '')
+        setTags(typeof templateData.tags === 'string' ? JSON.parse(templateData.tags) : templateData.tags || [])
+        
+        if (musicasRes.ok) {
+          const musicasData = await musicasRes.json()
+          setMusicas(musicasData)
+        }
+        
+        setLoading(false)
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Erro ao carregar')
+        setLoading(false)
+      }
     }
     
-    const templateMusicas = mockTemplateMusicas.filter((tm) => tm.template_id === templateId)
-    setMusicas(templateMusicas)
-    setLoading(false)
+    if (templateId) {
+      fetchTemplate()
+    }
   }, [templateId])
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -42,24 +59,59 @@ export default function EditTemplatePage() {
     if (!nome.trim()) return
 
     setSaving(true)
-    // Mock save
-    console.log('Atualizando template:', { templateId, nome, descricao, tags, musicas })
-    await new Promise((resolve) => setTimeout(resolve, 500))
-    router.push('/templates')
+    setError(null)
+
+    try {
+      const response = await fetch(`/api/templates/${templateId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          nome: nome.trim(),
+          descricao: descricao.trim() || null,
+          tags,
+        }),
+      })
+
+      if (!response.ok) throw new Error('Erro ao atualizar')
+      
+      router.push('/templates')
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Erro ao salvar')
+      setSaving(false)
+    }
   }
 
   const handleDelete = async () => {
     if (!confirm('Tem certeza que deseja excluir este template?')) return
     
-    // Mock delete
-    console.log('Excluindo template:', templateId)
-    router.push('/templates')
+    try {
+      const response = await fetch(`/api/templates/${templateId}`, {
+        method: 'DELETE',
+      })
+      
+      if (!response.ok) throw new Error('Erro ao excluir')
+      
+      router.push('/templates')
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Erro ao excluir')
+    }
   }
 
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="text-gray-500">Carregando...</div>
+        <Loader2 className="w-8 h-8 animate-spin text-indigo-600" />
+      </div>
+    )
+  }
+
+  if (error && !nome) {
+    return (
+      <div className="text-center py-12">
+        <p className="text-red-600 mb-4">{error}</p>
+        <Link href="/templates" className="text-indigo-600 hover:text-indigo-700">
+          Voltar para Templates
+        </Link>
       </div>
     )
   }
@@ -86,6 +138,12 @@ export default function EditTemplatePage() {
           Excluir
         </button>
       </div>
+
+      {error && (
+        <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700">
+          {error}
+        </div>
+      )}
 
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className="bg-white p-6 rounded-lg border space-y-4">
@@ -147,7 +205,7 @@ export default function EditTemplatePage() {
             disabled={saving || !nome.trim()}
             className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50 transition-colors"
           >
-            <Save size={18} />
+            {saving ? <Loader2 size={18} className="animate-spin" /> : <Save size={18} />}
             {saving ? 'Salvando...' : 'Salvar Alterações'}
           </button>
         </div>

@@ -1,119 +1,58 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
-import { ArrowLeft, Save, Loader2, Trash2 } from 'lucide-react'
+import { useParams } from 'next/navigation'
+import { ArrowLeft, Loader2, Music, Edit, FileText, Calendar } from 'lucide-react'
 import Link from 'next/link'
-import { TagInput } from '@/components/setlist/TagInput'
-import type { Musica } from '@/lib/musicas-db'
 
-const TOM_OPCOES = ['C', 'Cm', 'D', 'Dm', 'E', 'Em', 'F', 'Fm', 'G', 'Gm', 'A', 'Am', 'B', 'Bm']
-
-const TAG_SUGGESTIONS = ['louvor', 'adoracao', 'hino', 'clássico', 'contemporâneo', 'rock', 'gospel', 'natal', 'páscoa']
-
-interface EditMusicaPageProps {
-  params: Promise<{ id: string }>
+const STATUS_LABELS: Record<string, string> = {
+  rascunho: 'Rascunho',
+  confirmado: 'Confirmado',
+  realizado: 'Realizado',
+  cancelado: 'Cancelado',
 }
 
-export default function EditMusicaPage({ params }: EditMusicaPageProps) {
-  const router = useRouter()
-  const [musica, setMusica] = useState<Musica | null>(null)
+const STATUS_COLORS: Record<string, string> = {
+  rascunho: 'bg-gray-100 text-gray-700',
+  confirmado: 'bg-blue-100 text-blue-700',
+  realizado: 'bg-green-100 text-green-700',
+  cancelado: 'bg-red-100 text-red-700',
+}
+
+export default function MusicaPage() {
+  const params = useParams()
+  const musicaId = parseInt(params.id as string)
+
+  const [musica, setMusica] = useState<any>(null)
+  const [eventos, setEventos] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
-  const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [titulo, setTitulo] = useState('')
-  const [artista, setArtista] = useState('')
-  const [tomOriginal, setTomOriginal] = useState('')
-  const [cifra, setCifra] = useState('')
-  const [tags, setTags] = useState<string[]>([])
-  const [musicaId, setMusicaId] = useState<number | null>(null)
 
   useEffect(() => {
-    async function loadParams() {
-      const { id } = await params
-      setMusicaId(parseInt(id))
-    }
-    loadParams()
-  }, [params])
-
-  useEffect(() => {
-    if (!musicaId) return
-
-    async function fetchMusica() {
+    async function loadData() {
       try {
-        setLoading(true)
-        const response = await fetch(`/api/musicas/${musicaId}`)
-        if (!response.ok) {
-          throw new Error('Erro ao carregar música')
+        const [musicaRes, eventosRes] = await Promise.all([
+          fetch(`/api/musicas/${musicaId}`),
+          fetch(`/api/musicas/${musicaId}/eventos`)
+        ])
+
+        if (!musicaRes.ok) throw new Error('Música não encontrada')
+        
+        const musicaData = await musicaRes.json()
+        setMusica(musicaData)
+
+        if (eventosRes.ok) {
+          const eventosData = await eventosRes.json()
+          setEventos(eventosData)
         }
-        const data = await response.json()
-        setMusica(data)
-        setTitulo(data.titulo)
-        setArtista(data.artista)
-        setTomOriginal(data.tom_original || '')
-        setCifra(data.cifra || '')
-        setTags(data.tags)
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Erro desconhecido')
       } finally {
         setLoading(false)
       }
     }
-
-    fetchMusica()
+    loadData()
   }, [musicaId])
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!musicaId || !titulo.trim() || !artista.trim()) return
-
-    setSaving(true)
-    setError(null)
-
-    try {
-      const response = await fetch(`/api/musicas/${musicaId}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          titulo: titulo.trim(),
-          artista: artista.trim(),
-          tom_original: tomOriginal || undefined,
-          cifra: cifra.trim() || undefined,
-          tags,
-        }),
-      })
-
-      if (!response.ok) {
-        const data = await response.json()
-        throw new Error(data.error || 'Erro ao atualizar música')
-      }
-
-      router.push('/musicas')
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Erro ao atualizar música')
-      setSaving(false)
-    }
-  }
-
-  const handleDelete = async () => {
-    if (!musicaId || !confirm('Tem certeza que deseja excluir esta música?')) return
-
-    try {
-      const response = await fetch(`/api/musicas/${musicaId}`, {
-        method: 'DELETE',
-      })
-
-      if (!response.ok) {
-        throw new Error('Erro ao excluir música')
-      }
-
-      router.push('/musicas')
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Erro ao excluir música')
-    }
-  }
 
   if (loading) {
     return (
@@ -123,151 +62,112 @@ export default function EditMusicaPage({ params }: EditMusicaPageProps) {
     )
   }
 
-  if (error && !musica) {
+  if (error || !musica) {
     return (
       <div className="text-center py-12">
-        <p className="text-red-600 mb-4">{error}</p>
-        <Link
-          href="/musicas"
-          className="text-indigo-600 hover:text-indigo-700 font-medium"
-        >
+        <p className="text-red-600 mb-4">{error || 'Música não encontrada'}</p>
+        <Link href="/musicas" className="text-indigo-600 hover:text-indigo-700 font-medium">
           Voltar para Músicas
         </Link>
       </div>
     )
   }
 
-  const isValid = titulo.trim() && artista.trim()
-
   return (
-    <div>
-      <div className="mb-6">
+    <div className="max-w-4xl mx-auto space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
         <Link
           href="/musicas"
           className="inline-flex items-center gap-2 text-gray-600 hover:text-gray-900"
         >
           <ArrowLeft size={18} />
-          Voltar para Músicas
+          Voltar
+        </Link>
+        <Link
+          href={`/musicas/${musicaId}/edit`}
+          className="inline-flex items-center gap-2 px-4 py-2 text-gray-600 hover:text-gray-800 border border-gray-300 rounded-lg transition-colors"
+        >
+          <Edit size={18} />
+          Editar
         </Link>
       </div>
 
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">Editar Música</h1>
-        <button
-          onClick={handleDelete}
-          className="inline-flex items-center gap-2 px-4 py-2 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors"
-        >
-          <Trash2 size={18} />
-          Excluir
-        </button>
+      {/* Info */}
+      <div className="bg-white p-6 rounded-lg border">
+        <div className="flex items-start gap-4">
+          <div className="p-3 bg-indigo-100 rounded-lg">
+            <Music size={32} className="text-indigo-600" />
+          </div>
+          <div className="flex-1">
+            <h1 className="text-2xl font-bold text-gray-900">{musica.titulo}</h1>
+            <p className="text-lg text-gray-600 mt-1">{musica.artista}</p>
+            {musica.tom_original && (
+              <p className="text-sm text-gray-500 mt-2">Tom original: {musica.tom_original}</p>
+            )}
+          </div>
+        </div>
+
+        {musica.tags?.length > 0 && (
+          <div className="flex flex-wrap gap-2 mt-4 pt-4 border-t">
+            {musica.tags.map((tag: string) => (
+              <span key={tag} className="px-2 py-1 bg-gray-100 text-gray-600 rounded text-sm">
+                {tag}
+              </span>
+            ))}
+          </div>
+        )}
       </div>
 
-      {error && (
-        <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700">
-          {error}
+      {/* Ações */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <Link
+          href={`/musicas/${musicaId}/cifra`}
+          className="bg-white p-6 rounded-lg border hover:border-indigo-500 hover:shadow-md transition-all"
+        >
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-indigo-100 rounded">
+              <FileText size={24} className="text-indigo-600" />
+            </div>
+            <div>
+              <h3 className="font-semibold text-gray-900">Ver Cifra</h3>
+              <p className="text-sm text-gray-500">Cifra com acorde simplificado</p>
+            </div>
+          </div>
+        </Link>
+      </div>
+
+      {/* Eventos que usam esta música */}
+      {eventos.length > 0 && (
+        <div className="bg-white p-6 rounded-lg border">
+          <div className="flex items-center gap-2 mb-4">
+            <Calendar size={20} className="text-indigo-500" />
+            <h2 className="text-lg font-semibold text-gray-900">
+              Eventos ({eventos.length})
+            </h2>
+          </div>
+          <div className="space-y-2">
+            {eventos.map((evento) => (
+              <Link
+                key={evento.id}
+                href={`/eventos/${evento.id}`}
+                className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50 transition-colors"
+              >
+                <div>
+                  <div className="font-medium text-gray-900">{evento.nome}</div>
+                  <div className="text-sm text-gray-500">
+                    {new Date(evento.data).toLocaleDateString('pt-BR')}
+                    {evento.hora && ` • ${evento.hora}`}
+                  </div>
+                </div>
+                <span className={`px-2 py-1 rounded text-xs ${STATUS_COLORS[evento.status]}`}>
+                  {STATUS_LABELS[evento.status]}
+                </span>
+              </Link>
+            ))}
+          </div>
         </div>
       )}
-
-      <form onSubmit={handleSubmit} className="max-w-2xl">
-        <div className="bg-white p-6 rounded-lg border space-y-6">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Título *
-            </label>
-            <input
-              type="text"
-              value={titulo}
-              onChange={(e) => setTitulo(e.target.value)}
-              required
-              className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500"
-              placeholder="Ex: Amazing Grace"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Artista *
-            </label>
-            <input
-              type="text"
-              value={artista}
-              onChange={(e) => setArtista(e.target.value)}
-              required
-              className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500"
-              placeholder="Ex: John Newton"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Tom Original
-            </label>
-            <select
-              value={tomOriginal}
-              onChange={(e) => setTomOriginal(e.target.value)}
-              className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 bg-white"
-            >
-              <option value="">Selecionar tom...</option>
-              {TOM_OPCOES.map((tom) => (
-                <option key={tom} value={tom}>
-                  {tom}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Tags
-            </label>
-            <TagInput
-              tags={tags}
-              onChange={setTags}
-              suggestions={TAG_SUGGESTIONS}
-              placeholder="Adicionar tag..."
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Cifra
-            </label>
-            <textarea
-              value={cifra}
-              onChange={(e) => setCifra(e.target.value)}
-              rows={10}
-              className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 font-mono text-sm"
-              placeholder="Cole aqui a cifra da música..."
-            />
-          </div>
-        </div>
-
-        <div className="flex justify-end gap-3 mt-6">
-          <Link
-            href="/musicas"
-            className="px-4 py-2 text-gray-600 hover:text-gray-800"
-          >
-            Cancelar
-          </Link>
-          <button
-            type="submit"
-            disabled={saving || !isValid}
-            className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50 transition-colors"
-          >
-            {saving ? (
-              <>
-                <Loader2 size={18} className="animate-spin" />
-                Salvando...
-              </>
-            ) : (
-              <>
-                <Save size={18} />
-                Salvar Alterações
-              </>
-            )}
-          </button>
-        </div>
-      </form>
     </div>
   )
 }

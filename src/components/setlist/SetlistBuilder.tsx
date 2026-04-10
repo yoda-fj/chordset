@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import {
   DndContext,
   closestCenter,
@@ -19,7 +19,6 @@ import {
 import { Plus, Search } from 'lucide-react'
 import { MusicaCard } from './MusicaCard'
 import { Musica } from '@/types/database'
-import { mockMusicas } from '@/lib/mockData'
 
 interface SetlistBuilderProps {
   musicas: any[]
@@ -38,6 +37,30 @@ export function SetlistBuilder({
 }: SetlistBuilderProps) {
   const [showAddModal, setShowAddModal] = useState(false)
   const [searchTerm, setSearchTerm] = useState('')
+  const [availableMusicas, setAvailableMusicas] = useState<Musica[]>([])
+  const [loadingMusicas, setLoadingMusicas] = useState(true)
+
+  useEffect(() => {
+    async function fetchMusicas() {
+      try {
+        const response = await fetch('/api/musicas')
+        if (response.ok) {
+          const data = await response.json()
+          // Parse tags se vier como string JSON
+          const parsed = data.map((m: any) => ({
+            ...m,
+            tags: typeof m.tags === 'string' ? JSON.parse(m.tags) : m.tags || []
+          }))
+          setAvailableMusicas(parsed)
+        }
+      } catch (err) {
+        console.error('Erro ao buscar músicas:', err)
+      } finally {
+        setLoadingMusicas(false)
+      }
+    }
+    fetchMusicas()
+  }, [])
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -60,7 +83,37 @@ export function SetlistBuilder({
     }
   }
 
-  const handleRemove = (id: string) => {
+  const handleRemove = async (id: string) => {
+    // Se for um ID numérico (já salvo no banco), chamar DELETE
+    if (isEvento && eventoId && !id.toString().startsWith('temp-')) {
+      try {
+        const response = await fetch(`/api/eventos/${eventoId}/musicas/${id}`, {
+          method: 'DELETE',
+        })
+        if (!response.ok) {
+          console.error('Erro ao remover música')
+          return
+        }
+      } catch (err) {
+        console.error('Erro ao remover música:', err)
+        return
+      }
+    } else if (templateId && !id.toString().startsWith('temp-')) {
+      // Para templates, chamar DELETE na API
+      try {
+        const response = await fetch(`/api/templates/${templateId}/musicas?musica_id=${id}`, {
+          method: 'DELETE',
+        })
+        if (!response.ok) {
+          console.error('Erro ao remover música')
+          return
+        }
+      } catch (err) {
+        console.error('Erro ao remover música:', err)
+        return
+      }
+    }
+    
     const filtered = musicas.filter((m) => m.id !== id)
     const reordered = filtered.map((m, idx) => ({ ...m, ordem: idx + 1 }))
     onChange(reordered)
@@ -91,46 +144,84 @@ export function SetlistBuilder({
     onChange(updated)
   }
 
-  const handleAddMusica = (musica: Musica) => {
-    const newMusica = isEvento
-      ? ({
-          id: `temp-${Date.now()}`,
-          evento_id: eventoId || '',
-          musica_id: musica.id,
-          ordem: musicas.length + 1,
-          tom_evento: null,
-          observacoes: null,
-          confirmada: false,
-          responsavel: null,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-          musicas: musica,
-        } as any)
-      : ({
-          id: `temp-${Date.now()}`,
-          template_id: templateId || '',
-          musica_id: musica.id,
-          ordem: musicas.length + 1,
-          tom_sugerido: null,
-          observacoes: null,
-          created_at: new Date().toISOString(),
-          musicas: musica,
-        } as any)
-
-    onChange([...musicas, newMusica])
+  const handleAddMusica = async (musica: Musica) => {
+    // Para eventos, salvar imediatamente no banco
+    if (isEvento && eventoId) {
+      try {
+        const response = await fetch(`/api/eventos/${eventoId}/musicas`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            musica_id: musica.id,
+            ordem: musicas.length + 1,
+          }),
+        })
+        
+        if (response.ok) {
+          const savedMusica = await response.json()
+          // Buscar dados completos da música
+          const musicaData = availableMusicas.find(m => m.id === musica.id) || musica
+          onChange([...musicas, { ...savedMusica, musicas: musicaData }])
+        } else {
+          console.error('Erro ao adicionar música:', await response.text())
+          alert('Erro ao adicionar música')
+        }
+      } catch (err) {
+        console.error('Erro ao adicionar música:', err)
+        alert('Erro ao adicionar música')
+      }
+    } else if (templateId) {
+      // Para templates, salvar no banco via API
+      try {
+        const response = await fetch(`/api/templates/${templateId}/musicas`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            musica_id: musica.id,
+            ordem: musicas.length + 1,
+          }),
+        })
+        
+        if (response.ok) {
+          const savedMusica = await response.json()
+          const musicaData = availableMusicas.find(m => m.id === musica.id) || musica
+          onChange([...musicas, { ...savedMusica, musicas: musicaData }])
+        } else {
+          console.error('Erro ao adicionar música:', await response.text())
+          alert('Erro ao adicionar música')
+        }
+      } catch (err) {
+        console.error('Erro ao adicionar música:', err)
+        alert('Erro ao adicionar música')
+      }
+    } else {
+      // Fallback: estado local
+      const newMusica = ({
+        id: `temp-${Date.now()}`,
+        template_id: templateId || '',
+        musica_id: musica.id,
+        ordem: musicas.length + 1,
+        tom_sugerido: null,
+        observacoes: null,
+        created_at: new Date().toISOString(),
+        musicas: musica,
+      } as any)
+      onChange([...musicas, newMusica])
+    }
+    
     setShowAddModal(false)
     setSearchTerm('')
   }
 
-  const availableMusicas = mockMusicas.filter(
+  const filteredAvailableMusicas = availableMusicas.filter(
     (m) => !musicas.some((um) => um.musica_id === m.id)
   )
 
-  const filteredMusicas = availableMusicas.filter(
+  const filteredMusicas = filteredAvailableMusicas.filter(
     (m) =>
       m.titulo.toLowerCase().includes(searchTerm.toLowerCase()) ||
       m.artista.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      m.tags.some((t) => t.toLowerCase().includes(searchTerm.toLowerCase()))
+      (m.tags && m.tags.some((t: string) => t.toLowerCase().includes(searchTerm.toLowerCase())))
   )
 
   return (
@@ -140,6 +231,7 @@ export function SetlistBuilder({
           Músicas ({musicas.length})
         </h3>
         <button
+          type="button"
           onClick={() => setShowAddModal(true)}
           className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
         >
@@ -152,6 +244,7 @@ export function SetlistBuilder({
         <div className="text-center py-12 bg-gray-50 rounded-lg border-2 border-dashed">
           <p className="text-gray-500">Nenhuma música adicionada</p>
           <button
+            type="button"
             onClick={() => setShowAddModal(true)}
             className="mt-2 text-indigo-600 hover:text-indigo-700 font-medium"
           >
@@ -202,13 +295,16 @@ export function SetlistBuilder({
             </div>
 
             <div className="flex-1 overflow-auto p-4">
-              {filteredMusicas.length === 0 ? (
+              {loadingMusicas ? (
+                <p className="text-center text-gray-500 py-8">Carregando músicas...</p>
+              ) : filteredMusicas.length === 0 ? (
                 <p className="text-center text-gray-500 py-8">Nenhuma música encontrada</p>
               ) : (
                 <div className="space-y-2">
                   {filteredMusicas.map((musica) => (
                     <button
                       key={musica.id}
+                      type="button"
                       onClick={() => handleAddMusica(musica)}
                       className="w-full text-left p-3 border rounded-lg hover:bg-gray-50 transition-colors"
                     >

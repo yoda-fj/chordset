@@ -23,9 +23,28 @@ export const ChordViewer = ({
   artist 
 }: ChordViewerProps) => {
   
+  // Detecta se uma linha é tablatura (e.g., e|--2-2---|)
+  const isTabLine = (line: string): boolean => {
+    const trimmed = line.trim();
+    // Tab lines start with a string identifier (e, B, G, D, A, E) followed by |
+    // and contain mostly tab characters (digits, -, |, /, \, h, ~)
+    // Allow repeat annotations like (8x) at the end
+    const tabPattern = /^[a-gA-G]\|[-|0-9\-~h\//\\\s]+\(?[0-9]*x?\)?.*$/i;
+    return tabPattern.test(trimmed);
+  };
+
+  // Detecta se uma linha é só acorde (sem letra), tipo "A D/F# Em7"
+  const isChordLine = (line: string): boolean => {
+    // Remove espaços e verifica se só tem acordes (entre colchetes) ou chord names
+    const cleanLine = line.trim().replace(/\s+/g, ' ');
+    // Se tem apenas notas de acorde (A, Am, A7, etc) separadas por espaço, sem letras minúsculas restantes
+    const chordOnlyPattern = /^(?:\[?[A-G][#b]?(?:m|maj|min|dim|aug|sus|add|7|9|11|13|4|5|6|7add9|7sus4)*\]?(?:\s+|$))+$/;
+    return chordOnlyPattern.test(cleanLine) && /[A-G]/.test(cleanLine);
+  };
+
   const parsedLines = useMemo(() => {
     const lines: { 
-      type: 'section' | 'chords' | 'lyrics' | 'empty' | 'directive'; 
+      type: 'section' | 'chords' | 'lyrics' | 'empty' | 'directive' | 'tab'; 
       content?: string; 
       chords?: ChordPosition[];
     }[] = [];
@@ -51,6 +70,12 @@ export const ChordViewer = ({
       // Empty line
       if (!trimmedLine) {
         lines.push({ type: 'empty' });
+        continue;
+      }
+      
+      // Detect tablature lines
+      if (isTabLine(line)) {
+        lines.push({ type: 'tab', content: line });
         continue;
       }
       
@@ -139,8 +164,21 @@ export const ChordViewer = ({
           
           if (line.type === 'lyrics') {
             return (
-              <div key={lineIndex} className="lyrics-line-only text-slate-700 dark:text-slate-300 py-0.5 whitespace-pre-wrap">
+              <div key={lineIndex} className="lyrics-line-only text-slate-700 dark:text-slate-300 py-0.5 whitespace-pre-wrap font-sans">
                 {line.content}
+              </div>
+            );
+          }
+          
+          if (line.type === 'tab') {
+            return (
+              <div key={lineIndex} className="relative group">
+                <pre className="tab-line text-amber-600 dark:text-amber-400 py-0.5 font-mono text-sm leading-relaxed opacity-80">
+                  {line.content}
+                </pre>
+                <span className="absolute -top-3 right-0 text-xs text-amber-500 bg-amber-50 dark:bg-amber-900/30 px-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                  ⏸ Tablatura - não transpõe
+                </span>
               </div>
             );
           }
