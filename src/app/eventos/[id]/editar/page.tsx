@@ -39,6 +39,7 @@ export default function EditEventoPage() {
   const [loadingTemplates, setLoadingTemplates] = useState(false)
   const [importing, setImporting] = useState(false)
   const [isStudyList, setIsStudyList] = useState(false)
+  const [studyListLocked, setStudyListLocked] = useState(false)
 
   useEffect(() => {
     async function fetchEvento() {
@@ -58,7 +59,9 @@ export default function EditEventoPage() {
         setTags(data.tags || [])
         setObservacoes(data.observacoes || '')
         // Study list: data é null
-        setIsStudyList(!data.data)
+        const isSL = !data.data
+        setIsStudyList(isSL)
+        setStudyListLocked(isSL) // se já é study list, fica travado
         fetchMusicasDoEvento(data.id)
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Erro desconhecido')
@@ -230,19 +233,21 @@ export default function EditEventoPage() {
 
       {/* Dados do Evento */}
       <form onSubmit={handleSubmit} className="bg-white p-6 rounded-lg border space-y-6">
-        {/* Study List Toggle */}
-        <div className="flex items-center gap-2 p-3 bg-gray-50 rounded-lg border">
-          <input
-            type="checkbox"
-            id="isStudyList"
-            checked={isStudyList}
-            onChange={(e) => setIsStudyList(e.target.checked)}
-            className="w-4 h-4 text-indigo-600 rounded border-gray-300"
-          />
-          <label htmlFor="isStudyList" className="text-sm text-gray-600 cursor-pointer">
-            É uma lista de estudo (sem data, local ou status)
-          </label>
-        </div>
+        {/* Study List Toggle - só mostra se não for study list já criado */}
+        {!studyListLocked && (
+          <div className="flex items-center gap-2 p-3 bg-gray-50 rounded-lg border">
+            <input
+              type="checkbox"
+              id="isStudyList"
+              checked={isStudyList}
+              onChange={(e) => setIsStudyList(e.target.checked)}
+              className="w-4 h-4 text-indigo-600 rounded border-gray-300"
+            />
+            <label htmlFor="isStudyList" className="text-sm text-gray-600 cursor-pointer">
+              É uma lista de estudo (sem data, local ou status)
+            </label>
+          </div>
+        )}
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="md:col-span-2">
