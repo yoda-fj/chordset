@@ -22,7 +22,15 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     
     // Validação
-    if (!body.nome || !body.data) {
+    if (!body.nome) {
+      return NextResponse.json(
+        { error: 'Nome é obrigatório' },
+        { status: 400 }
+      )
+    }
+    
+    // Data é obrigatória apenas se não for lista de estudo
+    if (!body.data && !body.isStudyList) {
       return NextResponse.json(
         { error: 'Nome e data são obrigatórios' },
         { status: 400 }

@@ -44,7 +44,8 @@ export default function NewEventoPage() {
         body: JSON.stringify({
           nome: nome.trim(),
           data: isStudyList ? undefined : data,
-          hora: hora || undefined,
+          isStudyList,
+          hora: isStudyList ? undefined : (hora || undefined),
           local: isStudyList ? undefined : (local.trim() || undefined),
           status: isStudyList ? undefined : status,
           tags: isStudyList ? undefined : tags,
