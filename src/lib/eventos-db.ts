@@ -30,7 +30,7 @@ export interface EventoWithTemplate extends Evento {
 
 export interface CreateEventoInput {
   nome: string
-  data: string
+  data?: string | null
   hora?: string
   local?: string
   status?: EventoStatus
@@ -123,7 +123,7 @@ export const eventosDb = {
     `)
     const result = stmt.run(
       input.nome,
-      input.data,
+      input.data || null,
       input.hora || null,
       input.local || null,
       input.status || 'rascunho',
