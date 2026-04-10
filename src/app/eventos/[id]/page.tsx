@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useParams } from 'next/navigation'
-import { ArrowLeft, Loader2, Edit, Calendar, Clock, MapPin, Music, Play } from 'lucide-react'
+import { ArrowLeft, Loader2, Edit, Calendar, Clock, MapPin, Music, Play, Copy } from 'lucide-react'
 import Link from 'next/link'
 
 const STATUS_LABELS: Record<string, string> = {
@@ -27,7 +27,32 @@ export default function EventoPage() {
   const [musicas, setMusicas] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [showCloneModal, setShowCloneModal] = useState(false)
+  const [cloneNome, setCloneNome] = useState('')
+  const [cloneLoading, setCloneLoading] = useState(false)
 
+  const handleClone = async () => {
+    if (!cloneNome.trim()) return
+    setCloneLoading(true)
+    try {
+      const res = await fetch(`/api/eventos/${eventoId}/clone`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ nome: cloneNome }),
+      })
+      const data = await res.json()
+      if (res.ok) {
+        window.location.href = `/eventos/${data.evento.id}`
+      } else {
+        alert(data.error || 'Erro ao clonar')
+      }
+    } catch (err) {
+      alert('Erro ao clonar evento')
+    } finally {
+      setCloneLoading(false)
+    }
+  }
+  
   useEffect(() => {
     async function fetchData() {
       try {
@@ -111,6 +136,13 @@ export default function EventoPage() {
             <Edit size={18} />
             Editar
           </Link>
+          <button
+            onClick={() => setShowCloneModal(true)}
+            className="inline-flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+          >
+            <Copy size={18} />
+            Clonar
+          </button>
         </div>
       </div>
 
@@ -197,6 +229,40 @@ export default function EventoPage() {
           </div>
         )}
       </div>
+      
+      {/* Clone Modal */}
+      {showCloneModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
+            <h3 className="text-lg font-bold mb-4">Clonar Evento</h3>
+            <p className="text-gray-600 mb-4">Copiar &quot;{evento.nome}&quot; com todas as músicas?</p>
+            <input
+              type="text"
+              value={cloneNome}
+              onChange={(e) => setCloneNome(e.target.value)}
+              placeholder="Nome do novo evento"
+              className="w-full px-4 py-2 border rounded-lg mb-4"
+              autoFocus
+              onKeyDown={(e) => e.key === 'Enter' && handleClone()}
+            />
+            <div className="flex gap-3 justify-end">
+              <button
+                onClick={() => setShowCloneModal(false)}
+                className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleClone}
+                disabled={!cloneNome.trim() || cloneLoading}
+                className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50"
+              >
+                {cloneLoading ? 'Clonando...' : 'Clonar'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
