@@ -34,13 +34,15 @@ RUN adduser --system --uid 1001 nextjs
 # Install curl for healthcheck
 RUN apk add --no-cache curl
 
-# Create data directory with correct ownership
-RUN mkdir -p /data && chown -R nextjs:nodejs /data
+# Create data directory - volume will mount here
+RUN mkdir -p /data
 
-COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
-COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+# Don't change ownership of /data - let volume handle it
+COPY --from=builder /app/.next/standalone ./
+COPY --from=builder /app/.next/static ./.next/static
 
-USER nextjs
+# Run as root to allow writing to volume mount (Coolify manages permissions)
+USER root
 
 EXPOSE 3000
 
