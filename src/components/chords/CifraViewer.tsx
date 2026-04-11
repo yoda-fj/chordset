@@ -21,6 +21,7 @@ interface CifraViewerProps {
   artista: string;
   tomOriginal?: string | null;
   showMetronome?: boolean;
+  showControls?: boolean;
   compact?: boolean;
   className?: string;
 }
@@ -31,6 +32,7 @@ export function CifraViewer({
   artista,
   tomOriginal,
   showMetronome = false,
+  showControls = true,
   compact = false,
   className = '',
 }: CifraViewerProps) {
@@ -74,7 +76,7 @@ export function CifraViewer({
   return (
     <div className={`flex flex-col ${className}`}>
       {/* Controls Bar */}
-      <div className="bg-white rounded-xl p-2 border border-slate-200 shadow-sm mb-2 flex flex-wrap items-center gap-2">
+      {showControls && <div className="bg-white rounded-xl p-2 border border-slate-200 shadow-sm mb-2 flex flex-wrap items-center gap-2">
         {/* Tom */}
         <div className="flex items-center gap-1 px-2">
           <Music2 className="w-4 h-4 text-indigo-600" />
@@ -135,7 +137,7 @@ export function CifraViewer({
             {showSidebar ? <ChevronUp className="w-4 h-4 text-slate-600" /> : <ChevronDown className="w-4 h-4 text-slate-600" />}
           </button>
         )}
-      </div>
+      </div>}
       
       {/* Inline tools row */}
       {showSidebar && (
