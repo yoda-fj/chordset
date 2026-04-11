@@ -24,6 +24,25 @@
 - [x] Persiste no banco via API de reorder
 - [x] DragOverlay para melhor experiência mobile
 
+### Importação de Cifra
+- [x] Importar via Cifra Club (busca + extrai do site)
+- [x] Importar via Foto (📷) com LLM de visão
+  - Providers: OpenAI (GPT-4o), Google (Gemini 2.0 Flash), OpenRouter (Claude)
+  - Revisão antes de salvar (editar título, artista, tom, cifra)
+  - API keys configuradas via variáveis de ambiente
+
+### Ensaios (Prática)
+- [x] Tabela `practice_sessions` no banco
+- [x] CRUD completo via API
+- [x] Página de lista com filtros por status
+- [x] Página de criação (seleciona música + dificuldade)
+- [x] Página de detalhe com cronômetro e metrônomo
+- [x] Status: needs_practice, practiced, mastered
+- [x] Dificuldade: easy, medium, hard
+- [x] Observações por sessão
+- [x] Tempo acumulado de prática
+- [x] Componente CifraViewer reutilizável (transpose, fonte, fullscreen, autoscroll)
+
 ### Docker / Deploy
 - [x] Dockerfile multistage
 - [x] Basic Auth via middleware
@@ -36,33 +55,26 @@
 - [x] Clone de eventos
 - [x] Importar repertório de template
 - [x] Responsivo (mobile-first)
-
-### Ensaios (Prática)
-- [x] Tabela `practice_sessions` no banco
-- [x] CRUD completo via API
-- [x] Página de lista com filtros por status
-- [x] Página de criação (seleciona música + dificuldade)
-- [x] Página de detalhe com cronômetro e metrônomo
-- [x] Status: needs_practice, practiced, mastered
-- [x] Dificuldade: easy, medium, hard
-- [x] Observações por sessão
-- [x] Tempo acumulado de prática
+- [x] Componente MusicaCard simplificado (removeu campos Resp e OK)
+- [x] Auto-save de mudanças em músicas do evento (tom, observações)
 
 ## 🔧 Pending / Bugs
 
-### Bug Conhecido
-- [ ] /eventos/new não carrega no Coolify (HTTP 200 mas "This page couldn't load") - possivelmente Docker cache ou Next.js build issue
-
-### Para Implementar
-- [ ] Persistent storage pro SQLite no Coolify
-- [ ] Testar reorder no mobile após DragOverlay fix
+### Pending
+- [ ] Testar import via foto em produção (precisa de API key configurada)
+- [ ] Testar reorder no mobile
+- [ ] Deploy no Coolify e testar persistent storage
 
 ## 📋 Configuração
 
-### Variáveis de Ambiente (.env)
+### Variáveis de Ambiente (.env.local)
 ```
 BASIC_AUTH_USER=admin
-BASIC_AUTH_PASSWORD=senha
+BASIC_AUTH_PASSWORD=senhaForte
+DATABASE_PATH=./data/chordset.db
+OPENAI_API_KEY=sk-...          # Opcional
+GEMINI_API_KEY=...             # Opcional  
+OPENROUTER_API_KEY=sk-or-...   # Opcional
 ```
 
 ### Tech Stack
@@ -78,3 +90,4 @@ BASIC_AUTH_PASSWORD=senha
 - Build de produção: `next start` (não `next dev`) para evitar WebSocket errors no acesso via rede
 - Basic Auth protege todas as rotas via src/middleware.ts
 - Study list: evento com `data = null` no banco
+- Para acesso via rede local: next.config.js com `allowedDevOrigins: ['192.168.15.3', '192.168.15.4']`
