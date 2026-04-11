@@ -166,6 +166,30 @@ export function SetlistBuilder({
       }
     })
     onChange(updated)
+    
+    // Auto-save to server for events
+    if (isEvento && eventoId && !id.toString().startsWith('temp-')) {
+      fetch(`/api/eventos/${eventoId}/musicas/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          tom_evento: updates.tom,
+          observacoes: updates.observacoes,
+          confirmada: updates.confirmada,
+          responsavel: updates.responsavel,
+        }),
+      }).catch((err) => console.error('Erro ao salvar música:', err))
+    } else if (templateId && !id.toString().startsWith('temp-')) {
+      // For templates, save tom_sugerido and observacoes
+      fetch(`/api/templates/${templateId}/musicas/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          tom_sugerido: updates.tom,
+          observacoes: updates.observacoes,
+        }),
+      }).catch((err) => console.error('Erro ao salvar música:', err))
+    }
   }
 
   const handleAddMusica = async (musica: Musica) => {
