@@ -1,19 +1,19 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { PracticeTimer } from '@/components/practice/PracticeTimer';
 import { ChordDisplay } from '@/components/practice/ChordDisplay';
 import { Metronome } from '@/components/chords/Metronome';
-import { mockPracticeSessionsWithMusica } from '@/lib/mockPracticeData';
-import { formatDuration } from '@/lib/mockPracticeData';
+import { formatDuration } from '@/lib/practice-utils';
 import { 
   PracticeStatus, 
   DifficultyLevel, 
   PRACTICE_STATUS_LABELS, 
   DIFFICULTY_LABELS,
   PRACTICE_STATUS_BADGE_CLASSES,
-  DIFFICULTY_BADGE_CLASSES
+  DIFFICULTY_BADGE_CLASSES,
+  PracticeSessionWithMusica
 } from '@/types/practice';
 import { 
   ArrowLeft, 
@@ -23,7 +23,9 @@ import {
   CheckCircle, 
   AlertCircle,
   Save,
-  FileText
+  FileText,
+  Loader2,
+  Trash2
 } from 'lucide-react';
 
 export default function EnsaioDetailPage() {
@@ -31,39 +33,106 @@ export default function EnsaioDetailPage() {
   const router = useRouter();
   const id = parseInt(params.id as string);
   
-  const session = mockPracticeSessionsWithMusica.find(s => s.id === id);
+  const [session, setSession] = useState<PracticeSessionWithMusica | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   
-  const [status, setStatus] = useState<PracticeStatus>(session?.status || 'needs_practice');
-  const [difficulty, setDifficulty] = useState<DifficultyLevel>(session?.difficulty || 'medium');
-  const [notes, setNotes] = useState(session?.notes || '');
-  const [practiceTime, setPracticeTime] = useState(session?.total_practice_time_seconds || 0);
+  const [status, setStatus] = useState<PracticeStatus>('needs_practice');
+  const [difficulty, setDifficulty] = useState<DifficultyLevel>('medium');
+  const [notes, setNotes] = useState('');
+  const [practiceTime, setPracticeTime] = useState(0);
   const [isSaving, setIsSaving] = useState(false);
-  
-  if (!session) {
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  useEffect(() => {
+    async function fetchSession() {
+      try {
+        const response = await fetch(`/api/practice-sessions/${id}`);
+        if (!response.ok) throw new Error('Sessão não encontrada');
+        const data = await response.json();
+        setSession(data);
+        setStatus(data.status);
+        setDifficulty(data.difficulty);
+        setNotes(data.notes || '');
+        setPracticeTime(data.total_practice_time_seconds);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Erro desconhecido');
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchSession();
+  }, [id]);
+
+  const handleSave = async () => {
+    setIsSaving(true);
+    try {
+      const response = await fetch(`/api/practice-sessions/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          status,
+          difficulty,
+          notes: notes || null,
+          total_practice_time_seconds: practiceTime,
+          last_practiced_at: new Date().toISOString(),
+        }),
+      });
+      
+      if (!response.ok) throw new Error('Erro ao salvar');
+      
+      // Update session with new data
+      const updated = await response.json();
+      setSession(updated);
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'Erro ao salvar');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!confirm('Tem certeza que deseja excluir esta sessão?')) return;
+    
+    setIsDeleting(true);
+    try {
+      const response = await fetch(`/api/practice-sessions/${id}`, {
+        method: 'DELETE',
+      });
+      
+      if (!response.ok) throw new Error('Erro ao excluir');
+      router.push('/ensaios');
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'Erro ao excluir');
+      setIsDeleting(false);
+    }
+  };
+
+  const handleTimeUpdate = (newTime: number) => {
+    setPracticeTime(newTime);
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <Loader2 className="w-8 h-8 animate-spin text-indigo-600" />
+      </div>
+    );
+  }
+
+  if (error || !session) {
     return (
       <div className="text-center py-12">
-        <p className="text-slate-500">Sessão de ensaio não encontrada.</p>
+        <p className="text-red-600 mb-4">{error || 'Sessão não encontrada'}</p>
         <button
           onClick={() => router.push('/ensaios')}
-          className="mt-4 text-indigo-600 hover:text-indigo-700"
+          className="text-indigo-600 hover:text-indigo-700"
         >
           Voltar para Ensaios
         </button>
       </div>
     );
   }
-
-  const handleSave = () => {
-    setIsSaving(true);
-    // Simulate save
-    setTimeout(() => {
-      setIsSaving(false);
-    }, 500);
-  };
-
-  const handleTimeUpdate = (newTime: number) => {
-    setPracticeTime(newTime);
-  };
 
   return (
     <div className="ensaio-detail-page space-y-6">
@@ -85,14 +154,24 @@ export default function EnsaioDetailPage() {
           </div>
         </div>
         
-        <button
-          onClick={handleSave}
-          disabled={isSaving}
-          className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50 transition-colors"
-        >
-          <Save className="w-4 h-4" />
-          {isSaving ? 'Salvando...' : 'Salvar'}
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={handleDelete}
+            disabled={isDeleting}
+            className="inline-flex items-center gap-2 px-3 py-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+          >
+            <Trash2 className="w-4 h-4" />
+            {isDeleting ? 'Excluindo...' : 'Excluir'}
+          </button>
+          <button
+            onClick={handleSave}
+            disabled={isSaving}
+            className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50 transition-colors"
+          >
+            <Save className="w-4 h-4" />
+            {isSaving ? 'Salvando...' : 'Salvar'}
+          </button>
+        </div>
       </div>
 
       <div className="grid lg:grid-cols-2 gap-6">

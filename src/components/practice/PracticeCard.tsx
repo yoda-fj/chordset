@@ -1,7 +1,7 @@
 'use client';
 
 import { PracticeSessionWithMusica } from '@/types/practice';
-import { formatDuration } from '@/lib/mockPracticeData';
+import { formatDuration } from '@/lib/practice-utils';
 import { PRACTICE_STATUS_LABELS, DIFFICULTY_LABELS, PRACTICE_STATUS_BADGE_CLASSES, DIFFICULTY_BADGE_CLASSES } from '@/types/practice';
 import { Clock, Music, FileText, ChevronRight } from 'lucide-react';
 import Link from 'next/link';

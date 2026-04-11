@@ -73,3 +73,20 @@ CREATE INDEX IF NOT EXISTS idx_eventos_data ON eventos(data);
 CREATE INDEX IF NOT EXISTS idx_eventos_status ON eventos(status);
 CREATE INDEX IF NOT EXISTS idx_evento_musicas_evento ON evento_musicas(evento_id);
 CREATE INDEX IF NOT EXISTS idx_template_musicas_template ON template_musicas(template_id);
+
+-- Tabela de Sessões de Ensaio (Prática)
+CREATE TABLE IF NOT EXISTS practice_sessions (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  musica_id INTEGER NOT NULL,
+  status TEXT DEFAULT 'needs_practice', -- needs_practice, practiced, mastered
+  difficulty TEXT DEFAULT 'medium', -- easy, medium, hard
+  total_practice_time_seconds INTEGER DEFAULT 0,
+  last_practiced_at DATETIME,
+  notes TEXT,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (musica_id) REFERENCES musicas(id) ON DELETE CASCADE
+);
+
+CREATE INDEX IF NOT EXISTS idx_practice_sessions_musica ON practice_sessions(musica_id);
+CREATE INDEX IF NOT EXISTS idx_practice_sessions_status ON practice_sessions(status);

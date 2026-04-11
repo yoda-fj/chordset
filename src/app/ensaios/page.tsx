@@ -1,17 +1,35 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { PracticeCard } from '@/components/practice/PracticeCard';
 import { PracticeStats } from '@/components/practice/PracticeStats';
-import { mockPracticeSessionsWithMusica } from '@/lib/mockPracticeData';
-import { PracticeStatus, PRACTICE_STATUS_LABELS } from '@/types/practice';
-import { Music, Filter } from 'lucide-react';
+import { PracticeStatus, PRACTICE_STATUS_LABELS, PracticeSessionWithMusica } from '@/types/practice';
+import { Music, Filter, Loader2, Plus } from 'lucide-react';
+import Link from 'next/link';
 
 export default function EnsaiosPage() {
   const [filter, setFilter] = useState<PracticeStatus | 'all'>('all');
+  const [sessions, setSessions] = useState<PracticeSessionWithMusica[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   
-  const sessions = mockPracticeSessionsWithMusica;
-  
+  useEffect(() => {
+    async function fetchSessions() {
+      try {
+        setLoading(true);
+        const response = await fetch('/api/practice-sessions');
+        if (!response.ok) throw new Error('Erro ao carregar sessões');
+        const data = await response.json();
+        setSessions(data);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Erro desconhecido');
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchSessions();
+  }, []);
+
   const filteredSessions = filter === 'all' 
     ? sessions 
     : sessions.filter(s => s.status === filter);
@@ -26,6 +44,22 @@ export default function EnsaiosPage() {
     return dateB.getTime() - dateA.getTime();
   });
 
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <Loader2 className="w-8 h-8 animate-spin text-indigo-600" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="text-center py-12">
+        <p className="text-red-600 mb-4">{error}</p>
+      </div>
+    );
+  }
+
   return (
     <div className="ensaios-page space-y-6">
       {/* Header */}
@@ -39,6 +73,13 @@ export default function EnsaiosPage() {
             Gerencie suas sessões de prática e acompanhe seu progresso
           </p>
         </div>
+        <Link
+          href="/ensaios/new"
+          className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
+        >
+          <Plus size={18} />
+          Novo Ensaio
+        </Link>
       </div>
 
       {/* Stats */}
@@ -99,7 +140,14 @@ export default function EnsaiosPage() {
         ) : (
           <div className="text-center py-12 bg-white rounded-xl border border-slate-200">
             <Music className="w-12 h-12 text-slate-300 mx-auto mb-3" />
-            <p className="text-slate-500">Nenhuma música encontrada com este filtro.</p>
+            <p className="text-slate-500 mb-4">Nenhuma sessão de ensaio ainda.</p>
+            <Link
+              href="/ensaios/new"
+              className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
+            >
+              <Plus size={18} />
+              Criar primeiro ensaio
+            </Link>
           </div>
         )}
       </div>
