@@ -7,65 +7,60 @@ interface AutoscrollProps {
   targetRef: React.RefObject<HTMLElement | null>;
 }
 
-type SpeedLevel = 1 | 1.5 | 2;
+type SpeedLevel = 0 | 1 | 2 | 3;
 
 const SPEED_MAP: Record<SpeedLevel, number> = {
-  1: 30,    // pixels por segundo (lento)
-  1.5: 50,  // médio
-  2: 80     // rápido
+  0: 0,    // off
+  1: 30,   // lento
+  2: 60,   // médio
+  3: 100   // rápido
 };
 
 export const Autoscroll = ({ targetRef }: AutoscrollProps) => {
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [speed, setSpeed] = useState<SpeedLevel>(1);
+  const [speed, setSpeed] = useState<SpeedLevel>(0);
   const [progress, setProgress] = useState(0);
   const animationRef = useRef<number | null>(null);
   const lastTimeRef = useRef<number>(0);
 
   const scroll = useCallback((timestamp: number) => {
-    if (!targetRef.current) return;
+    if (!targetRef.current || speed === 0) return;
     
     const element = targetRef.current;
     const maxScroll = element.scrollHeight - element.clientHeight;
     
-    if (maxScroll <= 0) {
-      setIsPlaying(false);
-      return;
-    }
+    if (maxScroll <= 0) return;
 
     if (lastTimeRef.current === 0) {
       lastTimeRef.current = timestamp;
     }
 
-    const deltaTime = (timestamp - lastTimeRef.current) / 1000; // segundos
+    const deltaTime = (timestamp - lastTimeRef.current) / 1000;
     lastTimeRef.current = timestamp;
 
     const scrollAmount = SPEED_MAP[speed] * deltaTime;
-    const newScrollTop = element.scrollTop + scrollAmount;
-
-    if (newScrollTop >= maxScroll) {
-      element.scrollTop = maxScroll;
-      setProgress(100);
-      setIsPlaying(false);
-      lastTimeRef.current = 0;
-      return;
-    }
+    const newScrollTop = Math.min(element.scrollTop + scrollAmount, maxScroll);
 
     element.scrollTop = newScrollTop;
     setProgress((newScrollTop / maxScroll) * 100);
     
-    animationRef.current = requestAnimationFrame(scroll);
+    if (newScrollTop < maxScroll && speed > 0) {
+      animationRef.current = requestAnimationFrame(scroll);
+    } else {
+      // Chegou no fim ou velocidade foi mudada pra 0
+      setSpeed(0);
+      lastTimeRef.current = 0;
+    }
   }, [speed, targetRef]);
 
   useEffect(() => {
-    if (isPlaying) {
+    if (speed > 0) {
       lastTimeRef.current = 0;
       animationRef.current = requestAnimationFrame(scroll);
     } else {
       if (animationRef.current) {
         cancelAnimationFrame(animationRef.current);
+        animationRef.current = null;
       }
-      lastTimeRef.current = 0;
     }
 
     return () => {
@@ -73,7 +68,7 @@ export const Autoscroll = ({ targetRef }: AutoscrollProps) => {
         cancelAnimationFrame(animationRef.current);
       }
     };
-  }, [isPlaying, scroll]);
+  }, [speed, scroll]);
 
   // Atualiza progresso quando scrolla manualmente
   useEffect(() => {
@@ -87,81 +82,36 @@ export const Autoscroll = ({ targetRef }: AutoscrollProps) => {
       }
     };
 
-    element.addEventListener('scroll', handleScroll);
+    element.addEventListener('scroll', handleScroll, { passive: true });
     return () => element.removeEventListener('scroll', handleScroll);
   }, [targetRef]);
 
-  const togglePlay = () => {
-    if (progress >= 100) {
-      // Reinicia do início se chegou ao fim
-      if (targetRef.current) {
-        targetRef.current.scrollTop = 0;
-        setProgress(0);
-      }
-    }
-    setIsPlaying(!isPlaying);
-  };
-
-  const handleSpeedChange = (newSpeed: SpeedLevel) => {
+  const cycleSpeed = () => {
+    const newSpeed = ((speed) % 4) as SpeedLevel;
     setSpeed(newSpeed);
   };
 
-  const formatTime = () => {
-    const element = targetRef.current;
-    if (!element) return '0:00';
-    
-    const maxScroll = element.scrollHeight - element.clientHeight;
-    const remaining = maxScroll - element.scrollTop;
-    const seconds = remaining / SPEED_MAP[speed];
-    const mins = Math.floor(seconds / 60);
-    const secs = Math.floor(seconds % 60);
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
-  };
-
   return (
-    <div className="autoscroll-panel bg-white dark:bg-slate-800 rounded-xl p-4 border border-slate-200 dark:border-slate-700 shadow-sm">
-      <div className="autoscroll-header flex justify-between items-center mb-4">
-        <h3 className="panel-title flex items-center gap-2 text-xs uppercase tracking-wider text-slate-500 dark:text-slate-400 m-0">
-          <Gauge size={16} />
-          Autoscroll
-        </h3>
-        <span className="time-remaining text-xs text-slate-400 dark:text-slate-500 font-mono">{formatTime()}</span>
-      </div>
-
-      <div className="autoscroll-controls flex items-center gap-4 mb-4">
-        <button 
-          className={`play-btn flex items-center justify-center w-11 h-11 rounded-full transition-all hover:scale-105 ${isPlaying ? 'bg-red-500 hover:bg-red-600' : 'bg-emerald-500 hover:bg-emerald-600'} text-white shadow-lg`}
-          onClick={togglePlay}
-          aria-label={isPlaying ? 'Pausar' : 'Iniciar'}
-        >
-          {isPlaying ? <Pause size={20} /> : <Play size={20} className="ml-0.5" />}
-        </button>
-
-        <div className="speed-control flex flex-col gap-2 flex-1">
-          <span className="speed-label text-xs text-slate-500 dark:text-slate-400 uppercase tracking-wide">Velocidade:</span>
-          <div className="speed-buttons flex gap-1">
-            {[1, 1.5, 2].map((s) => (
-              <button
-                key={s}
-                className={`speed-btn flex-1 py-2 px-3 rounded-lg text-xs font-semibold transition-all ${speed === s ? 'bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700' : 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-600 hover:bg-slate-200 dark:hover:bg-slate-600'}`}
-                onClick={() => handleSpeedChange(s as SpeedLevel)}
-              >
-                {s}x
-              </button>
-            ))}
+    <div className="flex items-center gap-2">
+      <button 
+        className={`p-2 rounded-lg transition-all ${speed > 0 ? 'bg-emerald-500 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}
+        onClick={cycleSpeed}
+        title={speed === 0 ? 'Auto-scroll: Off' : `Auto-scroll: ${speed}x`}
+      >
+        {speed === 0 ? <Gauge size={18} /> : speed === 1 ? <Play size={16} /> : speed === 2 ? <Play size={16} className="fill-current" /> : <Play size={16} className="fill-current" />}
+      </button>
+      
+      {speed > 0 && (
+        <div className="flex-1 flex items-center gap-2">
+          <div className="flex-1 h-1 bg-slate-200 rounded-full overflow-hidden">
+            <div 
+              className="h-full bg-emerald-500 rounded-full transition-all"
+              style={{ width: `${progress}%` }}
+            />
           </div>
+          <span className="text-xs text-slate-500 w-8">{Math.round(progress)}%</span>
         </div>
-      </div>
-
-      <div className="progress-bar-container flex items-center gap-3">
-        <div className="progress-bar flex-1 h-1.5 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
-          <div 
-            className="progress-fill h-full bg-gradient-to-r from-emerald-500 to-blue-500 rounded-full transition-all duration-100"
-            style={{ width: `${progress}%` }}
-          />
-        </div>
-        <span className="progress-text text-xs text-slate-500 dark:text-slate-400 font-mono min-w-[2.5rem] text-right">{Math.round(progress)}%</span>
-      </div>
+      )}
     </div>
   );
 };
