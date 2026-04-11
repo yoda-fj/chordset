@@ -102,7 +102,7 @@ export default function EditEventoPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!nome.trim() || !data) return
+    if (!nome.trim() || (!isStudyList && !data)) return
 
     setSaving(true)
     setError(null)
