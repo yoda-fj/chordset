@@ -69,7 +69,7 @@ export async function POST(request: NextRequest) {
 
     // Build the request based on provider
     let response;
-    let extractedText: string;
+    let extractedText = '';
 
     if (providerId === 'openai') {
       response = await fetch(provider.apiEndpoint, {
