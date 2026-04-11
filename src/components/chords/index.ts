@@ -3,3 +3,4 @@ export { TransposeControl } from './TransposeControl';
 export { Metronome } from './Metronome';
 export { ChordDiagram, ChordDiagramPanel } from './ChordDiagram';
 export { Autoscroll } from './Autoscroll';
+export { CifraViewer } from './CifraViewer';

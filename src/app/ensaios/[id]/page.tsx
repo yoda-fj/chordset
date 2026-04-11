@@ -1,13 +1,10 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { PracticeTimer } from '@/components/practice/PracticeTimer';
-import { Metronome } from '@/components/chords/Metronome';
-import { Autoscroll } from '@/components/chords/Autoscroll';
-import { ChordViewer } from '@/components/chords/ChordViewer';
+import { CifraViewer } from '@/components/chords/CifraViewer';
 import { formatDuration } from '@/lib/practice-utils';
-import { getAllKeys, transposeCifra } from '@/utils/chord-transposer';
 import { 
   PracticeStatus, 
   DifficultyLevel, 
@@ -20,26 +17,19 @@ import {
 import { 
   ArrowLeft, 
   Clock, 
-  Music, 
   User, 
   CheckCircle, 
   AlertCircle,
   Save,
   FileText,
   Loader2,
-  Trash2,
-  Music2,
-  ZoomIn,
-  ZoomOut,
-  Maximize,
-  Minimize
+  Trash2
 } from 'lucide-react';
 
 export default function EnsaioDetailPage() {
   const params = useParams();
   const router = useRouter();
   const id = parseInt(params.id as string);
-  const scrollContainerRef = useRef<HTMLDivElement>(null);
   
   const [session, setSession] = useState<PracticeSessionWithMusica | null>(null);
   const [loading, setLoading] = useState(true);
@@ -52,16 +42,6 @@ export default function EnsaioDetailPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
-  // Transpose state
-  const [originalTom, setOriginalTom] = useState<string | null>(null);
-  const [originalCifra, setOriginalCifra] = useState<string | null>(null);
-  const [currentTom, setCurrentTom] = useState<string>('C');
-  const [currentCifra, setCurrentCifra] = useState<string | null>(null);
-
-  // Display settings
-  const [fontSize, setFontSize] = useState(16);
-  const [isFullscreen, setIsFullscreen] = useState(false);
-
   useEffect(() => {
     async function fetchSession() {
       try {
@@ -73,16 +53,6 @@ export default function EnsaioDetailPage() {
         setDifficulty(data.difficulty);
         setNotes(data.notes || '');
         setPracticeTime(data.total_practice_time_seconds);
-        
-        // Setup transpose
-        if (data.musicas?.tom_original) {
-          setOriginalTom(data.musicas.tom_original);
-          setCurrentTom(data.musicas.tom_original);
-        }
-        if (data.musicas?.cifra) {
-          setOriginalCifra(data.musicas.cifra);
-          setCurrentCifra(data.musicas.cifra);
-        }
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Erro desconhecido');
       } finally {
@@ -91,13 +61,6 @@ export default function EnsaioDetailPage() {
     }
     fetchSession();
   }, [id]);
-
-  const handleTranspose = (newTom: string) => {
-    if (!originalTom || !originalCifra) return;
-    const transposed = transposeCifra(originalCifra, originalTom, newTom);
-    setCurrentTom(newTom);
-    setCurrentCifra(transposed);
-  };
 
   const handleSave = async () => {
     setIsSaving(true);
@@ -146,16 +109,6 @@ export default function EnsaioDetailPage() {
     setPracticeTime(newTime);
   };
 
-  const toggleFullscreen = async () => {
-    if (!document.fullscreenElement) {
-      await document.documentElement.requestFullscreen();
-      setIsFullscreen(true);
-    } else {
-      await document.exitFullscreen();
-      setIsFullscreen(false);
-    }
-  };
-
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
@@ -179,9 +132,6 @@ export default function EnsaioDetailPage() {
   }
 
   const { musicas } = session;
-  const hasCifra = musicas?.cifra;
-  const displayTom = currentTom;
-  const displayCifra = currentCifra || musicas?.cifra;
 
   return (
     <div className="ensaio-detail-page space-y-6">
@@ -225,92 +175,15 @@ export default function EnsaioDetailPage() {
 
       <div className="grid lg:grid-cols-3 gap-6">
         {/* Main Content - Cifra */}
-        <div className="lg:col-span-2 space-y-4">
-          {/* Controles da Cifra */}
-          <div className="bg-white rounded-xl p-4 border border-slate-200 shadow-sm space-y-4">
-            {/* Header com info e controles */}
-            <div className="flex items-center justify-between flex-wrap gap-4">
-              <div className="flex items-center gap-2">
-                <Music2 className="w-5 h-5 text-indigo-600" />
-                <span className="font-medium text-slate-900">Cifra</span>
-                {originalTom && (
-                  <span className="text-sm text-slate-500 ml-2">
-                    Tom: <strong className="text-indigo-600">{displayTom}</strong>
-                  </span>
-                )}
-              </div>
-              
-              <div className="flex items-center gap-2">
-                {/* Font size controls */}
-                <button
-                  onClick={() => setFontSize(Math.max(12, fontSize - 2))}
-                  className="p-2 hover:bg-slate-100 rounded-lg"
-                  title="Diminuir fonte"
-                >
-                  <ZoomOut className="w-4 h-4 text-slate-600" />
-                </button>
-                <span className="text-sm text-slate-500 w-12 text-center">{fontSize}px</span>
-                <button
-                  onClick={() => setFontSize(Math.min(28, fontSize + 2))}
-                  className="p-2 hover:bg-slate-100 rounded-lg"
-                  title="Aumentar fonte"
-                >
-                  <ZoomIn className="w-4 h-4 text-slate-600" />
-                </button>
-                
-                {/* Fullscreen */}
-                <button
-                  onClick={toggleFullscreen}
-                  className="p-2 hover:bg-slate-100 rounded-lg"
-                  title={isFullscreen ? 'Sair fullscreen' : 'Fullscreen'}
-                >
-                  {isFullscreen ? (
-                    <Minimize className="w-4 h-4 text-slate-600" />
-                  ) : (
-                    <Maximize className="w-4 h-4 text-slate-600" />
-                  )}
-                </button>
-              </div>
-            </div>
-
-            {/* Transpose */}
-            {originalTom && originalCifra && (
-              <div className="flex items-center gap-2">
-                <span className="text-sm text-slate-600">Transpor para:</span>
-                <select
-                  value={currentTom}
-                  onChange={(e) => handleTranspose(e.target.value)}
-                  className="px-3 py-1.5 bg-indigo-100 text-indigo-700 font-medium rounded-lg border-0 cursor-pointer focus:ring-2 focus:ring-indigo-500"
-                >
-                  {getAllKeys().map((key) => (
-                    <option key={key} value={key}>{key}</option>
-                  ))}
-                </select>
-              </div>
-            )}
-          </div>
-
-          {/* Cifra Viewer */}
-          <div 
-            ref={scrollContainerRef}
-            className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden"
-            style={{ maxHeight: isFullscreen ? 'calc(100vh - 300px)' : 'calc(100vh - 400px)' }}
-          >
-            {hasCifra ? (
-              <div style={{ fontSize: `${fontSize}px` }}>
-                <ChordViewer 
-                  chordProContent={displayCifra}
-                  semitones={0}
-                  title={musicas.titulo}
-                  artist={musicas.artista}
-                />
-              </div>
-            ) : (
-              <div className="p-8 text-center text-slate-500">
-                Nenhuma cifra disponível para esta música.
-              </div>
-            )}
-          </div>
+        <div className="lg:col-span-2">
+          <CifraViewer
+            cifra={musicas?.cifra}
+            titulo={musicas?.titulo || ''}
+            artista={musicas?.artista || ''}
+            tomOriginal={musicas?.tom_original}
+            showMetronome={true}
+            compact={true}
+          />
         </div>
 
         {/* Sidebar - Practice Tools */}
@@ -329,12 +202,6 @@ export default function EnsaioDetailPage() {
               Tempo total acumulado: <span className="font-medium">{formatDuration(practiceTime)}</span>
             </div>
           </div>
-
-          {/* Metronome */}
-          <Metronome defaultBpm={100} />
-
-          {/* Autoscroll */}
-          <Autoscroll targetRef={scrollContainerRef} />
 
           {/* Status Selection */}
           <div className="bg-white rounded-xl p-4 border border-slate-200 shadow-sm">
