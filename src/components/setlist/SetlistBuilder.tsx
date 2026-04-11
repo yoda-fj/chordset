@@ -80,6 +80,22 @@ export function SetlistBuilder({
       // Atualizar ordem
       const reordered = newMusicas.map((m, idx) => ({ ...m, ordem: idx + 1 }))
       onChange(reordered)
+      
+      // Salvar nova ordem no banco
+      const orderedIds = reordered.map((m) => m.id)
+      if (isEvento && eventoId) {
+        fetch(`/api/eventos/${eventoId}/musicas/reorder`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ orderedIds }),
+        }).catch((err) => console.error('Erro ao reordenar:', err))
+      } else if (templateId) {
+        fetch(`/api/templates/${templateId}/musicas/reorder`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ orderedIds }),
+        }).catch((err) => console.error('Erro ao reordenar:', err))
+      }
     }
   }
 
