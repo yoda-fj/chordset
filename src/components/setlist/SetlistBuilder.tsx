@@ -9,6 +9,7 @@ import {
   useSensor,
   useSensors,
   DragEndEvent,
+  DragOverlay,
 } from '@dnd-kit/core'
 import {
   arrayMove,
@@ -39,6 +40,8 @@ export function SetlistBuilder({
   const [searchTerm, setSearchTerm] = useState('')
   const [availableMusicas, setAvailableMusicas] = useState<Musica[]>([])
   const [loadingMusicas, setLoadingMusicas] = useState(true)
+  const [activeId, setActiveId] = useState<number | string | null>(null)
+  const activeMusica = musicas.find((m) => m.id === activeId)
 
   useEffect(() => {
     async function fetchMusicas() {
@@ -63,7 +66,12 @@ export function SetlistBuilder({
   }, [])
 
   const sensors = useSensors(
-    useSensor(PointerSensor),
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        delay: 0,
+        tolerance: 5,
+      },
+    }),
     useSensor(KeyboardSensor, {
       coordinateGetter: sortableKeyboardCoordinates,
     })
@@ -272,6 +280,7 @@ export function SetlistBuilder({
           sensors={sensors}
           collisionDetection={closestCenter}
           onDragEnd={handleDragEnd}
+          onDragStart={({ active }) => setActiveId(active.id)}
         >
           <SortableContext
             items={musicas.map((m) => m.id)}
@@ -289,6 +298,16 @@ export function SetlistBuilder({
               ))}
             </div>
           </SortableContext>
+          <DragOverlay>
+            {activeMusica && (
+              <div className="opacity-80">
+                <MusicaCard
+                  musica={activeMusica}
+                  isEvento={isEvento}
+                />
+              </div>
+            )}
+          </DragOverlay>
         </DndContext>
       )}
 
