@@ -37,13 +37,23 @@
 - [x] Importar repertório de template
 - [x] Responsivo (mobile-first)
 
+### Ensaios (Prática)
+- [x] Tabela `practice_sessions` no banco
+- [x] CRUD completo via API
+- [x] Página de lista com filtros por status
+- [x] Página de criação (seleciona música + dificuldade)
+- [x] Página de detalhe com cronômetro e metrônomo
+- [x] Status: needs_practice, practiced, mastered
+- [x] Dificuldade: easy, medium, hard
+- [x] Observações por sessão
+- [x] Tempo acumulado de prática
+
 ## 🔧 Pending / Bugs
 
 ### Bug Conhecido
 - [ ] /eventos/new não carrega no Coolify (HTTP 200 mas "This page couldn't load") - possivelmente Docker cache ou Next.js build issue
 
 ### Para Implementar
-- [ ] Seção de Ensaios (ensaios page.tsx) - currently mock data, sem API real
 - [ ] Persistent storage pro SQLite no Coolify
 - [ ] Testar reorder no mobile após DragOverlay fix
 
