@@ -90,28 +90,6 @@ export function MusicaCard({ musica, onRemove, onUpdate, isEvento = false }: Mus
 
             {isEvento && eventoMusica && (
               <>
-                {/* Responsável */}
-                <div className="flex items-center gap-1">
-                  <label className="text-xs font-medium text-gray-500">Resp:</label>
-                  <input
-                    type="text"
-                    value={eventoMusica.responsavel || ''}
-                    onChange={(e) => onUpdate?.({ responsavel: e.target.value })}
-                    placeholder="-"
-                    className="text-xs md:text-sm border rounded px-1 md:px-2 py-1 w-16 md:w-20 bg-gray-50 focus:ring-2 focus:ring-indigo-500"
-                  />
-                </div>
-
-                {/* Confirmada */}
-                <label className="flex items-center gap-1 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={eventoMusica.confirmada}
-                    onChange={(e) => onUpdate?.({ confirmada: e.target.checked })}
-                    className="rounded text-indigo-600 focus:ring-indigo-500"
-                  />
-                  <span className="text-xs text-gray-600">OK</span>
-                </label>
               </>
             )}
           </div>
