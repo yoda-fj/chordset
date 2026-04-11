@@ -151,14 +151,13 @@ export function CifraViewer({
         className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-auto"
         style={{ maxHeight: isFullscreen ? 'calc(100vh - 180px)' : (compact ? '300px' : 'calc(100vh - 280px)') }}
       >
-        <div style={{ fontSize: `${fontSize}px` }}>
-          <ChordViewer 
-            chordProContent={currentCifra || cifra}
-            semitones={0}
-            title={titulo}
-            artist={artista}
-          />
-        </div>
+        <ChordViewer 
+          chordProContent={currentCifra || cifra}
+          semitones={0}
+          title={titulo}
+          artist={artista}
+          fontSize={fontSize}
+        />
       </div>
     </div>
   );

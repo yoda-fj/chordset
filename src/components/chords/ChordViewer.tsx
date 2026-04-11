@@ -8,6 +8,7 @@ interface ChordViewerProps {
   semitones: number;
   title?: string;
   artist?: string;
+  fontSize?: number;
 }
 
 interface ChordPosition {
@@ -20,7 +21,8 @@ export const ChordViewer = ({
   chordProContent, 
   semitones,
   title,
-  artist 
+  artist,
+  fontSize = 16
 }: ChordViewerProps) => {
   
   // Detecta se uma linha é tablatura (e.g., e|--2-2---|)
@@ -148,7 +150,7 @@ export const ChordViewer = ({
         </div>
       )}
       
-      <div className="chord-sheet text-base leading-relaxed">
+      <div className="chord-sheet leading-relaxed" style={{ fontSize: `${fontSize}px` }}>
         {parsedLines.map((line, lineIndex) => {
           if (line.type === 'section') {
             return (
