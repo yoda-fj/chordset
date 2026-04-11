@@ -2,9 +2,10 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { ArrowLeft, Save, Loader2, Download, X, Search } from 'lucide-react'
+import { ArrowLeft, Save, Loader2, Download, X, Search, Camera } from 'lucide-react'
 import Link from 'next/link'
 import { TagInput } from '@/components/setlist/TagInput'
+import { ImportPhotoModal } from '@/components/ocr/ImportPhotoModal'
 
 const TOM_OPCOES = ['C', 'Cm', 'D', 'Dm', 'E', 'Em', 'F', 'Fm', 'G', 'Gm', 'A', 'Am', 'B', 'Bm']
 
@@ -26,6 +27,14 @@ interface ImportData {
   provider: string;
 }
 
+interface ExtractedData {
+  titulo: string;
+  artista: string;
+  tom: string | null;
+  cifra: string;
+  observacoes?: string | null;
+}
+
 export default function NewMusicaPage() {
   const router = useRouter()
   const [titulo, setTitulo] = useState('')
@@ -38,6 +47,7 @@ export default function NewMusicaPage() {
   
   // Import states
   const [showImport, setShowImport] = useState(false)
+  const [showPhotoImport, setShowPhotoImport] = useState(false)
   const [importQuery, setImportQuery] = useState('')
   const [importLoading, setImportLoading] = useState(false)
   const [importResults, setImportResults] = useState<SearchResult[]>([])
@@ -111,6 +121,14 @@ export default function NewMusicaPage() {
     } finally {
       setImportLoading(false)
     }
+  }
+
+  const handlePhotoImport = (data: ExtractedData) => {
+    setTitulo(data.titulo)
+    setArtista(data.artista)
+    setTomOriginal(data.tom || '')
+    setCifra(data.cifra)
+    setTags(data.observacoes ? [data.observacoes] : [])
   }
 
   const handleSelectResult = async (result: SearchResult) => {
@@ -270,6 +288,14 @@ export default function NewMusicaPage() {
             <Download size={18} />
             Importar do Cifra Club
           </button>
+          <button
+            type="button"
+            onClick={() => setShowPhotoImport(true)}
+            className="inline-flex items-center gap-2 px-4 py-2 text-indigo-600 border border-indigo-600 rounded-lg hover:bg-indigo-50 transition-colors"
+          >
+            <Camera size={18} />
+            Importar via Foto
+          </button>
           <Link
             href="/musicas"
             className="px-4 py-2 text-gray-600 hover:text-gray-800"
@@ -385,6 +411,13 @@ export default function NewMusicaPage() {
           </div>
         </div>
       )}
+
+      {/* Photo Import Modal */}
+      <ImportPhotoModal
+        isOpen={showPhotoImport}
+        onClose={() => setShowPhotoImport(false)}
+        onImport={handlePhotoImport}
+      />
     </div>
   )
 }
