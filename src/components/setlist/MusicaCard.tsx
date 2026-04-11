@@ -26,6 +26,7 @@ export function MusicaCard({ musica, onRemove, onUpdate, isEvento = false }: Mus
     transform: CSS.Transform.toString(transform),
     transition,
     opacity: isDragging ? 0.5 : 1,
+    zIndex: isDragging ? 50 : undefined,
   }
 
   const eventoMusica = isEvento ? musica as EventoMusicaWithMusica : null
@@ -43,9 +44,10 @@ export function MusicaCard({ musica, onRemove, onUpdate, isEvento = false }: Mus
         <button
           {...attributes}
           {...listeners}
-          className="mt-1 text-gray-400 hover:text-gray-600 cursor-grab active:cursor-grabbing"
+          className="mt-1 text-gray-400 hover:text-gray-600 cursor-grab active:cursor-grabbing touch-none select-none p-2 -m-2"
+          style={{ touchAction: 'none' }}
         >
-          <GripVertical size={18} />
+          <GripVertical size={20} />
         </button>
 
         <div className="flex-1 min-w-0">
