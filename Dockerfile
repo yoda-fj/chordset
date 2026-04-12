@@ -31,6 +31,22 @@ ENV NEXT_TELEMETRY_DISABLED=1
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
 
+# Install Chromium for cifra scraping (Alpine package)
+RUN apk add --no-cache \
+    chromium \
+    nss \
+    freetype \
+    harfbuzz \
+    cairo \
+    pango \
+    gdk-pixbuf \
+    ttf-freefont \
+    udev
+
+# Point Playwright to system chromium
+ENV PLAYWRIGHT_CHROMIUM_PATH=/usr/bin/chromium-browser
+ENV PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1
+
 # Install curl for healthcheck
 RUN apk add --no-cache curl
 
