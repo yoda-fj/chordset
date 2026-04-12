@@ -1,8 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
 
 export function middleware(request: NextRequest) {
-  // Skip for API health checks and static files
   const url = request.nextUrl.pathname
+
+  // Rotas internas de scraping (usadas pelo frontend)
+  if (url.startsWith('/api/cifraclub/')) {
+    return NextResponse.next()
+  }
+
+  // Skip for API health checks and static files
   if (
     url.startsWith('/_next') ||
     url.startsWith('/api/health') ||
