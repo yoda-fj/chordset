@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { ArrowLeft, Save, Loader2, Download, X, Search, Camera } from 'lucide-react'
+import { ArrowLeft, Save, Loader2, Download, X, Search, Camera, Music } from 'lucide-react'
 import Link from 'next/link'
 import { TagInput } from '@/components/setlist/TagInput'
 import { ImportPhotoModal } from '@/components/ocr/ImportPhotoModal'
@@ -17,6 +17,7 @@ interface SearchResult {
   artista: string;
   tom?: string | null;
   url: string;
+  image?: string;
 }
 
 interface ImportData {
@@ -383,13 +384,26 @@ export default function NewMusicaPage() {
                       key={result.id}
                       onClick={() => handleSelectResult(result)}
                       disabled={importingSong}
-                      className="w-full text-left p-3 border rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50"
+                      className="w-full text-left p-3 border rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50 flex items-center gap-3"
                     >
-                      <div className="font-medium">{result.titulo}</div>
-                      <div className="text-sm text-gray-500">{result.artista}</div>
-                      {result.tom && (
-                        <div className="text-xs text-indigo-600 mt-1">Tom: {result.tom}</div>
+                      {result.image ? (
+                        <img
+                          src={result.image}
+                          alt={result.titulo}
+                          className="w-12 h-12 rounded object-cover flex-shrink-0"
+                        />
+                      ) : (
+                        <div className="w-12 h-12 rounded bg-gray-200 flex-shrink-0 flex items-center justify-center">
+                          <Music size={20} className="text-gray-400" />
+                        </div>
                       )}
+                      <div className="flex-1 min-w-0">
+                        <div className="font-medium truncate">{result.titulo}</div>
+                        <div className="text-sm text-gray-500 truncate">{result.artista}</div>
+                        {result.tom && (
+                          <div className="text-xs text-indigo-600 mt-0.5">Tom: {result.tom}</div>
+                        )}
+                      </div>
                     </button>
                   ))}
                 </div>

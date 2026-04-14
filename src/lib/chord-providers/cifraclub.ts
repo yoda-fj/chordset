@@ -45,6 +45,7 @@ export const cifraClubProvider: ChordProvider = {
         artista: item.art,
         tom: null,
         url: `https://www.cifraclub.com.br/${item.dns}/${item.url}`,
+        image: item.imgm || null,
       }));
 
       return {

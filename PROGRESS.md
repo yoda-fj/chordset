@@ -26,6 +26,7 @@
 
 ### Importação de Cifra
 - [x] Importar via Cifra Club (busca + extrai do site)
+  - Exibe capa do álbum/música na lista de resultados (campo `imgm`)
 - [x] Importar via Foto (📷) com LLM de visão
   - Providers: OpenAI (GPT-4o), Google (Gemini 2.0 Flash), OpenRouter (Claude)
   - Revisão antes de salvar (editar título, artista, tom, cifra)

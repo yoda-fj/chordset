@@ -13,6 +13,8 @@ export interface SongFromProvider {
   tom?: string | null;
   /** URL da música no provider */
   url: string;
+  /** URL da imagem/cover da música (opcional) */
+  image?: string | null;
 }
 
 export interface SongWithChords extends SongFromProvider {
