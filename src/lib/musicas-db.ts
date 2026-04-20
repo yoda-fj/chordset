@@ -7,6 +7,8 @@ export interface Musica {
   tom_original: string | null
   cifra: string | null
   tags: string[]
+  observacao: string | null
+  audio_url: string | null
   created_at: string
   updated_at: string
 }
@@ -25,6 +27,8 @@ export interface UpdateMusicaInput {
   tom_original?: string
   cifra?: string
   tags?: string[]
+  observacao?: string | null
+  audio_url?: string | null
 }
 
 export const musicasDb = {
@@ -34,7 +38,9 @@ export const musicasDb = {
     const rows = stmt.all() as any[]
     return rows.map(row => ({
       ...row,
-      tags: JSON.parse(row.tags || '[]')
+      tags: JSON.parse(row.tags || '[]'),
+      observacao: row.observacao || null,
+      audio_url: row.audio_url || null
     }))
   },
 
@@ -45,7 +51,9 @@ export const musicasDb = {
     if (!row) return null
     return {
       ...row,
-      tags: JSON.parse(row.tags || '[]')
+      tags: JSON.parse(row.tags || '[]'),
+      observacao: row.observacao || null,
+      audio_url: row.audio_url || null
     }
   },
 
@@ -93,6 +101,14 @@ export const musicasDb = {
       sets.push('tags = ?')
       values.push(JSON.stringify(input.tags))
     }
+    if (input.observacao !== undefined) {
+      sets.push('observacao = ?')
+      values.push(input.observacao)
+    }
+    if (input.audio_url !== undefined) {
+      sets.push('audio_url = ?')
+      values.push(input.audio_url)
+    }
 
     if (sets.length === 0) {
       const musica = this.getById(id)
@@ -135,11 +151,10 @@ export const musicasDb = {
     const rows = stmt.all(...params) as any[]
     return rows.map(row => ({
       ...row,
-      tags: JSON.parse(row.tags || '[]')
+      tags: JSON.parse(row.tags || '[]'),
+      observacao: row.observacao || null,
+      audio_url: row.audio_url || null
     }))
-  },
-
-  getAllTags(): string[] {
     const db = getDb()
     const stmt = db.prepare('SELECT tags FROM musicas')
     const rows = stmt.all() as any[]

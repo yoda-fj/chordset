@@ -8,6 +8,8 @@ CREATE TABLE IF NOT EXISTS musicas (
   tom_original TEXT,
   cifra TEXT,
   tags TEXT DEFAULT '[]', -- JSON array de tags
+  observacao TEXT, -- Observação livre do usuário
+  audio_url TEXT, -- URL/caminho para gravação de áudio de referência
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
