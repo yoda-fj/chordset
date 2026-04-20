@@ -114,6 +114,9 @@ export function CifraViewer({
         >
           <ZoomIn className="w-4 h-4 text-slate-600" />
         </button>
+
+        {/* Autoscroll - always visible */}
+        <Autoscroll targetRef={scrollContainerRef} />
         
         {/* Fullscreen */}
         <button
@@ -127,23 +130,12 @@ export function CifraViewer({
             <Maximize className="w-4 h-4 text-slate-600" />
           )}
         </button>
-        
-        {/* Toggle sidebar (for compact mode with tools) */}
-        {(showMetronome || compact) && (
-          <button
-            onClick={() => setShowSidebar(!showSidebar)}
-            className="p-1.5 hover:bg-slate-100 rounded"
-          >
-            {showSidebar ? <ChevronUp className="w-4 h-4 text-slate-600" /> : <ChevronDown className="w-4 h-4 text-slate-600" />}
-          </button>
-        )}
       </div>}
       
-      {/* Inline tools row */}
+      {/* Inline tools row - only metronome now */}
       {showSidebar && (
         <div className="flex flex-wrap items-center gap-2 mb-2">
           {showMetronome && <Metronome defaultBpm={100} compact />}
-          <Autoscroll targetRef={scrollContainerRef} />
         </div>
       )}
 
