@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { useParams } from 'next/navigation'
-import { ArrowLeft, Loader2, Music, Edit, FileText, Calendar, Mic, Upload, Trash2, Play, Pause, X } from 'lucide-react'
+import { ArrowLeft, Loader2, Music, Edit, FileText, Calendar, Mic, Upload, Trash2, Play, Pause, X, ChevronLeft, ChevronRight } from 'lucide-react'
 import Link from 'next/link'
 
 const STATUS_LABELS: Record<string, string> = {
@@ -40,6 +40,7 @@ export default function MusicaPage() {
   const [audioUrl, setAudioUrl] = useState<string | null>(null)
   const [isUploading, setIsUploading] = useState(false)
   const [isPlaying, setIsPlaying] = useState(false)
+  const [sidebarOpen, setSidebarOpen] = useState(false)
   const mediaRecorderRef = useRef<MediaRecorder | null>(null)
   const audioRef = useRef<HTMLAudioElement | null>(null)
   const timerRef = useRef<NodeJS.Timeout | null>(null)
@@ -309,115 +310,132 @@ export default function MusicaPage() {
         )}
       </div>
 
-      {/* Observacao */}
-      <div className="bg-white p-6 rounded-lg border">
-        <h2 className="text-lg font-semibold text-gray-900 mb-4">Observações</h2>
-        <div className="relative">
-          <textarea
-            value={observacao}
-            onChange={(e) => handleObservacaoChange(e.target.value)}
-            onBlur={saveObservacao}
-            placeholder="Adicione observações sobre esta música..."
-            className="w-full p-3 border rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-indigo-500 min-h-[100px]"
-          />
-          {savingObs && (
-            <span className="absolute top-2 right-2 text-xs text-gray-400">Salvando...</span>
-          )}
-        </div>
-      </div>
+      {/* Observacao + Audio - Collapsible sidebar */}
+      <div className="fixed right-0 top-1/2 -translate-y-1/2 z-50 flex items-start print:hidden">
+        {/* Toggle button */}
+        <button
+          onClick={() => setSidebarOpen(!sidebarOpen)}
+          className="p-3 bg-white border shadow-lg rounded-l-lg hover:bg-gray-50"
+          title={sidebarOpen ? 'Fechar painel' : 'Abrir painel'}
+        >
+          {sidebarOpen ? <ChevronRight size={20} /> : <ChevronLeft size={20} />}
+        </button>
 
-      {/* Audio Recording/Upload */}
-      <div className="bg-white p-6 rounded-lg border">
-        <h2 className="text-lg font-semibold text-gray-900 mb-4">Gravação de Referência</h2>
-
-        {audioUrl && !audioBlob && (
-          <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg mb-4">
-            <button
-              onClick={togglePlayback}
-              className="p-2 bg-indigo-600 text-white rounded-full hover:bg-indigo-700"
-            >
-              {isPlaying ? <Pause size={20} /> : <Play size={20} />}
-            </button>
-            <audio
-              ref={audioRef}
-              src={audioUrl}
-              onEnded={() => setIsPlaying(false)}
-            />
-            <span className="flex-1 text-sm text-gray-600">Sua gravação</span>
-            <button
-              onClick={deleteAudio}
-              className="p-2 text-red-600 hover:bg-red-50 rounded-lg"
-              title="Excluir gravação"
-            >
-              <Trash2 size={18} />
-            </button>
-          </div>
-        )}
-
-        {audioBlob && (
-          <div className="flex items-center gap-4 p-4 bg-green-50 rounded-lg mb-4">
-            <div className="flex-1">
-              <p className="text-sm font-medium text-green-800">Nova gravação</p>
-              <p className="text-xs text-green-600">{formatTime(recordingTime)}</p>
+        {/* Sidebar content */}
+        <div className={`transition-all duration-300 overflow-hidden bg-white border shadow-lg rounded-l-lg ${sidebarOpen ? 'w-80 p-4 opacity-100' : 'w-0 p-0 opacity-0'}`}>
+          <div className="space-y-4">
+            {/* Observacao */}
+            <div>
+              <h2 className="text-base font-semibold text-gray-900 mb-3">Observações</h2>
+              <div className="relative">
+                <textarea
+                  value={observacao}
+                  onChange={(e) => handleObservacaoChange(e.target.value)}
+                  onBlur={saveObservacao}
+                  placeholder="Adicione observações..."
+                  className="w-full p-3 border rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-indigo-500 min-h-[120px] text-sm"
+                />
+                {savingObs && (
+                  <span className="absolute top-2 right-2 text-xs text-gray-400">Salvando...</span>
+                )}
+              </div>
             </div>
-            <button
-              onClick={uploadAudio}
-              disabled={isUploading}
-              className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 flex items-center gap-2"
-            >
-              {isUploading ? <Loader2 size={16} className="animate-spin" /> : <Upload size={16} />}
-              Salvar
-            </button>
-            <button
-              onClick={clearRecording}
-              className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg"
-            >
-              <X size={18} />
-            </button>
-          </div>
-        )}
 
-        {!audioUrl && !audioBlob && (
-          <p className="text-sm text-gray-500 mb-4">Gravar ou enviar áudio para referência</p>
-        )}
+            {/* Audio Recording/Upload */}
+            <div>
+              <h2 className="text-base font-semibold text-gray-900 mb-3">Gravação de Referência</h2>
 
-        <div className="flex items-center gap-4">
-          <input
-            type="file"
-            id="audio-upload"
-            accept="audio/*"
-            onChange={uploadFileInput}
-            className="hidden"
-          />
-          <label
-            htmlFor="audio-upload"
-            className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 cursor-pointer"
-          >
-            <Upload size={18} />
-            Enviar arquivo
-          </label>
-
-          {!audioBlob && (
-            <>
-              {isRecording ? (
-                <button
-                  onClick={stopRecording}
-                  className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
-                >
-                  <div className="w-3 h-3 bg-white rounded-full animate-pulse" />
-                  Parar ({formatTime(recordingTime)})
-                </button>
-              ) : (
-                <button
-                  onClick={startRecording}
-                  className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700"
-                >
-                  <Mic size={18} />
-                  Gravar
-                </button>
+              {audioUrl && !audioBlob && (
+                <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg mb-3">
+                  <button
+                    onClick={togglePlayback}
+                    className="p-2 bg-indigo-600 text-white rounded-full hover:bg-indigo-700"
+                  >
+                    {isPlaying ? <Pause size={16} /> : <Play size={16} />}
+                  </button>
+                  <audio
+                    ref={audioRef}
+                    src={audioUrl}
+                    onEnded={() => setIsPlaying(false)}
+                  />
+                  <span className="flex-1 text-sm text-gray-600">Sua gravação</span>
+                  <button
+                    onClick={deleteAudio}
+                    className="p-1 text-red-600 hover:bg-red-50 rounded-lg"
+                    title="Excluir gravação"
+                  >
+                    <Trash2 size={14} />
+                  </button>
+                </div>
               )}
-            </>
-          )}
+
+              {audioBlob && (
+                <div className="flex items-center gap-3 p-3 bg-green-50 rounded-lg mb-3">
+                  <div className="flex-1">
+                    <p className="text-sm font-medium text-green-800">Nova gravação</p>
+                    <p className="text-xs text-green-600">{formatTime(recordingTime)}</p>
+                  </div>
+                  <button
+                    onClick={uploadAudio}
+                    disabled={isUploading}
+                    className="px-3 py-1.5 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 flex items-center gap-1 text-sm"
+                  >
+                    {isUploading ? <Loader2 size={14} className="animate-spin" /> : <Upload size={14} />}
+                    Salvar
+                  </button>
+                  <button
+                    onClick={clearRecording}
+                    className="p-1 text-gray-600 hover:bg-gray-100 rounded-lg"
+                  >
+                    <X size={14} />
+                  </button>
+                </div>
+              )}
+
+              {!audioUrl && !audioBlob && (
+                <p className="text-xs text-gray-500 mb-3">Gravar ou enviar áudio</p>
+              )}
+
+              <div className="flex items-center gap-2">
+                <input
+                  type="file"
+                  id="audio-upload"
+                  accept="audio/*"
+                  onChange={uploadFileInput}
+                  className="hidden"
+                />
+                <label
+                  htmlFor="audio-upload"
+                  className="flex items-center gap-1 px-3 py-1.5 border border-gray-300 rounded-lg hover:bg-gray-50 cursor-pointer text-sm"
+                >
+                  <Upload size={14} />
+                  Enviar
+                </label>
+
+                {!audioBlob && (
+                  <>
+                    {isRecording ? (
+                      <button
+                        onClick={stopRecording}
+                        className="flex items-center gap-1 px-3 py-1.5 bg-red-600 text-white rounded-lg hover:bg-red-700 text-sm"
+                      >
+                        <div className="w-2 h-2 bg-white rounded-full animate-pulse" />
+                        Parar ({formatTime(recordingTime)})
+                      </button>
+                    ) : (
+                      <button
+                        onClick={startRecording}
+                        className="flex items-center gap-1 px-3 py-1.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 text-sm"
+                      >
+                        <Mic size={14} />
+                        Gravar
+                      </button>
+                    )}
+                  </>
+                )}
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 

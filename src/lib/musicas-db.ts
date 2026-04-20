@@ -155,6 +155,9 @@ export const musicasDb = {
       observacao: row.observacao || null,
       audio_url: row.audio_url || null
     }))
+  },
+
+  getAllTags(): string[] {
     const db = getDb()
     const stmt = db.prepare('SELECT tags FROM musicas')
     const rows = stmt.all() as any[]
