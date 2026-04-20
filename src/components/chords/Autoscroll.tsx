@@ -87,7 +87,7 @@ export const Autoscroll = ({ targetRef }: AutoscrollProps) => {
   }, [targetRef]);
 
   const cycleSpeed = () => {
-    const newSpeed = ((speed) % 4) as SpeedLevel;
+    const newSpeed = ((speed + 1) % 4) as SpeedLevel;
     setSpeed(newSpeed);
   };
 
