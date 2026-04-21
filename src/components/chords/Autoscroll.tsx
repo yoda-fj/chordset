@@ -7,13 +7,15 @@ interface AutoscrollProps {
   targetRef: React.RefObject<HTMLElement | null>;
 }
 
-type SpeedLevel = 0 | 1 | 2 | 3;
+type SpeedLevel = 0 | 1 | 2 | 3 | 4 | 5;
 
 const SPEED_MAP: Record<SpeedLevel, number> = {
   0: 0,    // off
-  1: 30,   // lento
-  2: 60,   // médio
-  3: 100   // rápido
+  1: 15,   // muito lento
+  2: 30,   // lento
+  3: 60,   // médio
+  4: 100,  // rápido
+  5: 150   // muito rápido
 };
 
 export const Autoscroll = ({ targetRef }: AutoscrollProps) => {
@@ -87,7 +89,7 @@ export const Autoscroll = ({ targetRef }: AutoscrollProps) => {
   }, [targetRef]);
 
   const cycleSpeed = () => {
-    const newSpeed = ((speed + 1) % 4) as SpeedLevel;
+    const newSpeed = ((speed + 1) % 6) as SpeedLevel;
     setSpeed(newSpeed);
   };
 
@@ -96,9 +98,9 @@ export const Autoscroll = ({ targetRef }: AutoscrollProps) => {
       <button 
         className={`p-2 rounded-lg transition-all ${speed > 0 ? 'bg-emerald-500 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}
         onClick={cycleSpeed}
-        title={speed === 0 ? 'Auto-scroll: Off' : `Auto-scroll: ${speed}x`}
+        title={speed === 0 ? 'Auto-scroll: Off' : `Auto-scroll: ${speed}/5`}
       >
-        {speed === 0 ? <Gauge size={18} /> : speed === 1 ? <Play size={16} /> : speed === 2 ? <Play size={16} className="fill-current" /> : <Play size={16} className="fill-current" />}
+        {speed === 0 ? <Gauge size={18} /> : <Play size={16} className={speed >= 4 ? 'fill-current' : ''} />}
       </button>
       
       {speed > 0 && (
