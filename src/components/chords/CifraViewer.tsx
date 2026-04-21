@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { ChordViewer } from './ChordViewer';
 import { Autoscroll } from './Autoscroll';
 import { Metronome } from './Metronome';
@@ -24,6 +24,7 @@ interface CifraViewerProps {
   showControls?: boolean;
   compact?: boolean;
   className?: string;
+  onFullscreenChange?: (isFullscreen: boolean) => void;
 }
 
 export function CifraViewer({
@@ -35,6 +36,7 @@ export function CifraViewer({
   showControls = true,
   compact = false,
   className = '',
+  onFullscreenChange,
 }: CifraViewerProps) {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   
@@ -56,14 +58,31 @@ export function CifraViewer({
   };
 
   const toggleFullscreen = async () => {
-    if (!document.fullscreenElement) {
-      await document.documentElement.requestFullscreen();
-      setIsFullscreen(true);
-    } else {
-      await document.exitFullscreen();
-      setIsFullscreen(false);
+    try {
+      if (!document.fullscreenElement) {
+        await document.documentElement.requestFullscreen();
+        setIsFullscreen(true);
+        onFullscreenChange?.(true);
+      } else {
+        await document.exitFullscreen();
+        setIsFullscreen(false);
+        onFullscreenChange?.(false);
+      }
+    } catch {
+      // ignore
     }
   };
+
+  // Listen to fullscreen changes (for Esc key)
+  useEffect(() => {
+    const handleChange = () => {
+      const fs = !!document.fullscreenElement;
+      setIsFullscreen(fs);
+      onFullscreenChange?.(fs);
+    };
+    document.addEventListener('fullscreenchange', handleChange);
+    return () => document.removeEventListener('fullscreenchange', handleChange);
+  }, [onFullscreenChange]);
 
   if (!cifra) {
     return (
