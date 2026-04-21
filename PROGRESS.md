@@ -10,7 +10,7 @@
 - [x] Transposição de tom em tempo real
 - [x] Wake Lock API (mantém tela acesa no mobile)
 - [x] Scroll speed control (⏹ → 1x → 2x → 3x)
-- [x] Fullscreen mode
+- [x] Fullscreen mode (esconde header e footer, mostra controles flutuantes)
 - [x] Controles de fonte (🔍- / 🔍+)
 
 ### Study List

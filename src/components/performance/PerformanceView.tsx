@@ -30,6 +30,7 @@ export function PerformanceView({
   const [isAutoScrolling, setIsAutoScrolling] = useState(false)
   const [scrollSpeed, setScrollSpeed] = useState(50)
   const [showSettings, setShowSettings] = useState(false)
+  const [isFullscreen, setIsFullscreen] = useState(false)
   const [touchStart, setTouchStart] = useState<number | null>(null)
   const [touchEnd, setTouchEnd] = useState<number | null>(null)
   const lyricsRef = useRef<HTMLDivElement>(null)
@@ -50,7 +51,17 @@ export function PerformanceView({
           e.preventDefault()
           goToNext()
           break
+        case 'f':
+        case 'F':
+          e.preventDefault()
+          toggleFullscreen()
+          break
         case 'Escape':
+          if (isFullscreen) {
+            e.preventDefault()
+            exitFullscreen()
+            return
+          }
           exitPerformance()
           break
         case 'ArrowUp':
@@ -74,6 +85,16 @@ export function PerformanceView({
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [handleKeyDown])
+
+  // Fullscreen detection
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsFullscreen(!!document.fullscreenElement)
+    }
+
+    document.addEventListener('fullscreenchange', handleFullscreenChange)
+    return () => document.removeEventListener('fullscreenchange', handleFullscreenChange)
+  }, [])
 
   // Auto-scroll functionality
   useEffect(() => {
@@ -104,6 +125,28 @@ export function PerformanceView({
     }
     setIsAutoScrolling(false)
   }, [currentIndex])
+
+  const toggleFullscreen = async () => {
+    try {
+      if (!document.fullscreenElement) {
+        await document.documentElement.requestFullscreen()
+      } else {
+        await document.exitFullscreen()
+      }
+    } catch {
+      // ignore fullscreen errors
+    }
+  }
+
+  const exitFullscreen = async () => {
+    try {
+      if (document.fullscreenElement) {
+        await document.exitFullscreen()
+      }
+    } catch {
+      // ignore
+    }
+  }
 
   const goToNext = () => {
     if (currentIndex < totalMusicas - 1) {
@@ -233,8 +276,8 @@ export function PerformanceView({
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
     >
-      {/* Header */}
-      <header className="flex items-center justify-between px-4 sm:px-6 py-3 bg-gray-900/80 backdrop-blur-sm border-b border-gray-800 shrink-0">
+      {/* Header - hidden in fullscreen */}
+      <header className={`flex items-center justify-between px-4 sm:px-6 py-3 bg-gray-900/80 backdrop-blur-sm border-b border-gray-800 shrink-0 transition-all duration-300 ${isFullscreen ? 'opacity-0 h-0 py-0 border-none overflow-hidden' : ''}`}>
         <div className="flex items-center gap-4">
           <button
             onClick={exitPerformance}
@@ -254,6 +297,15 @@ export function PerformanceView({
         </div>
 
         <div className="flex items-center gap-2">
+          {/* Fullscreen toggle */}
+          <button
+            onClick={toggleFullscreen}
+            className="p-2 rounded-lg bg-gray-800 hover:bg-gray-700 transition-colors"
+            title={isFullscreen ? 'Sair tela cheia (F)' : 'Tela cheia (F)'}
+          >
+            {isFullscreen ? <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M8 3v3a2 2 0 0 1-2 2H3"/><path d="M21 8h-3a2 2 0 0 1-2-2V3"/><path d="M3 16h3a2 2 0 0 1 2 2v3"/><path d="M16 21v-3a2 2 0 0 1 2-2h3"/></svg> : <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3"/><path d="M21 8V5a2 2 0 0 0-2-2h-3"/><path d="M3 16v3a2 2 0 0 0 2 2h3"/><path d="M16 21h3a2 2 0 0 0 2-2v-3"/></svg>}
+          </button>
+
           {/* Auto-scroll toggle */}
           <button
             onClick={() => setIsAutoScrolling(!isAutoScrolling)}
@@ -343,8 +395,8 @@ export function PerformanceView({
         <div className="h-32" />
       </div>
 
-      {/* Navigation footer */}
-      <footer className="flex items-center justify-between px-4 sm:px-6 py-3 bg-gray-900/80 backdrop-blur-sm border-t border-gray-800 shrink-0">
+      {/* Navigation footer - hidden in fullscreen */}
+      <footer className={`flex items-center justify-between px-4 sm:px-6 py-3 bg-gray-900/80 backdrop-blur-sm border-t border-gray-800 shrink-0 transition-all duration-300 ${isFullscreen ? 'opacity-0 h-0 py-0 border-none overflow-hidden' : ''}`}>
         <button
           onClick={goToPrevious}
           disabled={currentIndex === 0}
@@ -369,6 +421,45 @@ export function PerformanceView({
           <ChevronRight size={24} />
         </button>
       </footer>
+
+      {/* Floating controls for fullscreen mode */}
+      {isFullscreen && (
+        <div className="fixed bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-2 bg-gray-900/90 backdrop-blur-sm rounded-full px-4 py-2 shadow-xl z-50">
+          <button
+            onClick={goToPrevious}
+            disabled={currentIndex === 0}
+            className="p-2 rounded-full hover:bg-gray-700 disabled:opacity-30 transition-colors"
+          >
+            <ChevronLeft size={20} />
+          </button>
+          <span className="text-sm text-gray-400 px-2">
+            {currentIndex + 1}/{totalMusicas}
+          </span>
+          <button
+            onClick={goToNext}
+            disabled={currentIndex === totalMusicas - 1}
+            className="p-2 rounded-full hover:bg-gray-700 disabled:opacity-30 transition-colors"
+          >
+            <ChevronRight size={20} />
+          </button>
+          <div className="w-px h-4 bg-gray-700 mx-1" />
+          <button
+            onClick={() => setIsAutoScrolling(!isAutoScrolling)}
+            className={`p-2 rounded-full transition-colors ${
+              isAutoScrolling ? 'text-amber-400' : 'text-gray-400 hover:text-white'
+            }`}
+          >
+            {isAutoScrolling ? <Pause size={18} /> : <Play size={18} />}
+          </button>
+          <button
+            onClick={toggleFullscreen}
+            className="p-2 rounded-full text-gray-400 hover:text-white transition-colors"
+            title="Sair tela cheia"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M8 3v3a2 2 0 0 1-2 2H3"/><path d="M21 8h-3a2 2 0 0 1-2-2V3"/><path d="M3 16h3a2 2 0 0 1 2 2v3"/><path d="M16 21v-3a2 2 0 0 1 2-2h3"/></svg>
+          </button>
+        </div>
+      )}
     </div>
   )
 }
