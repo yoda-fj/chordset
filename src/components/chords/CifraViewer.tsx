@@ -79,10 +79,10 @@ export function CifraViewer({
   }
 
   return (
-    <div className={`flex flex-col ${className}`}>
+    <div className={`flex flex-col h-full ${className}`}>
       {/* Controls Bar */}
       {showControls && (
-        <div className={`bg-white rounded-xl p-2 border border-slate-200 shadow-sm mb-2 flex flex-wrap items-center gap-2 ${isFullscreen ? 'fixed top-4 left-4 right-4 z-50' : ''}`}>
+        <div className={`bg-white rounded-xl p-2 border border-slate-200 shadow-sm mb-2 flex flex-wrap items-center gap-2 shrink-0 ${isFullscreen ? 'fixed top-4 left-4 right-4 z-50' : ''}`}>
         {/* Tom */}
         <div className="flex items-center gap-1 px-2">
           <Music2 className="w-4 h-4 text-indigo-600" />
@@ -147,16 +147,18 @@ export function CifraViewer({
       )}
 
       {/* Cifra */}
-      <div 
+      <div
         ref={scrollContainerRef}
-        className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-auto flex-1"
+        className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-auto flex-1 min-h-0"
+        style={isFullscreen ? { maxHeight: 'calc(100vh - 80px)' } : {}}
       >
-        <ChordViewer 
+        <ChordViewer
           chordProContent={currentCifra || cifra}
           semitones={0}
           title={titulo}
           artist={artista}
           fontSize={fontSize}
+          isFullscreen={isFullscreen}
         />
       </div>
     </div>

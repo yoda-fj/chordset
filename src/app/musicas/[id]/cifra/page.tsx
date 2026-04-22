@@ -332,6 +332,7 @@ export default function CifraPage() {
             showControls={true}
             isFullscreen={isFullscreen}
             onFullscreenChange={setIsFullscreen}
+            className={isFullscreen ? 'flex-1 min-h-0' : ''}
           />
         </div>
 
