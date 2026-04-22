@@ -366,7 +366,7 @@ export default function SetlistPage() {
       </header>
 
       {/* Main content */}
-      <div className="flex-1 flex overflow-hidden">
+      <div className="flex-1 flex overflow-hidden relative">
         {/* Sidebar */}
         <aside className={`
           ${showSidebar ? 'w-72' : 'w-0'}
@@ -476,7 +476,7 @@ export default function SetlistPage() {
         </aside>
 
         {/* Main content - Cifra */}
-        <main className="flex-1 min-h-0 overflow-hidden transition-all duration-300">
+        <div className={`flex flex-col h-full min-w-0 ${rightSidebarOpen ? 'w-1/2' : 'w-full'}`}>
           {musicas.length === 0 ? (
             <div className="flex items-center justify-center h-full">
               <div className="text-center text-gray-500">
@@ -499,19 +499,19 @@ export default function SetlistPage() {
               />
             </div>
           )}
-        </main>
+        </div>
 
         {/* Sidebar toggle button */}
         <button
           onClick={() => setRightSidebarOpen(!rightSidebarOpen)}
-          className={`fixed right-4 top-1/2 -translate-y-1/2 z-50 p-3 bg-white border shadow-lg rounded-full hover:bg-gray-50 transition-all duration-300 ${rightSidebarOpen ? 'mr-80' : ''}`}
+          className={`absolute top-1/2 -translate-y-1/2 z-50 p-3 bg-white border shadow-lg rounded-full hover:bg-gray-50 transition-all duration-300 ${rightSidebarOpen ? 'right-80' : 'right-4'}`}
           title={rightSidebarOpen ? 'Fechar painel' : 'Abrir painel'}
         >
           {rightSidebarOpen ? <ChevronRightIcon size={20} /> : <ChevronLeft size={20} />}
         </button>
 
         {/* Right Sidebar - Observations + Audio */}
-        <div className={`fixed right-0 top-16 bottom-0 bg-gray-50 p-4 overflow-y-auto transition-all duration-300 print:hidden ${rightSidebarOpen ? 'w-80 translate-x-0' : 'w-80 translate-x-full'}`}>
+        <div className={`h-full bg-gray-50 p-4 overflow-y-auto transition-all duration-300 print:hidden flex-shrink-0 ${rightSidebarOpen ? 'w-80' : 'w-0'}`}>
           <div className="w-full h-full flex flex-col space-y-4">
             {/* Observacao */}
             <div className="bg-white p-4 rounded-lg border">
