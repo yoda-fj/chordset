@@ -2,6 +2,13 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Hide site navigation when in fullscreen mode */
+:fullscreen .site-nav,
+:-webkit-full-screen .site-nav,
+:-moz-full-screen .site-nav {
+  display: none !important;
+}
+
 @media print {
   /* Hide everything except the cifra content */
   body * {
