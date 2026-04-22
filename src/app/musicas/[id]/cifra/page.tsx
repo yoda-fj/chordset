@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { useParams, useRouter } from 'next/navigation'
-import { ArrowLeft, Printer, Edit3, Music, Mic, Upload, Trash2, Play, Pause, X, Loader2, ChevronLeft, ChevronRight } from 'lucide-react'
+import { ArrowLeft, Printer, Edit3, Music, Mic, Upload, Trash2, Play, Pause, X, Loader2, ChevronLeft, ChevronRight, Guitar } from 'lucide-react'
 import Link from 'next/link'
 import { CifraViewer } from '@/components/chords'
 
@@ -329,22 +329,34 @@ export default function CifraPage() {
             artista={musica.artista}
             tomOriginal={musica.tom_original}
             showMetronome={true}
-            showControls={true}
-            onFullscreenChange={setIsFullscreen}
+            showControls={!isFullscreen}
           />
+
+          {/* Big Tocar button - hidden in fullscreen */}
+          {!isFullscreen && (
+            <div className={`mt-4 print:hidden`}>
+              <button
+                onClick={() => document.documentElement.requestFullscreen()}
+                className="w-full flex items-center justify-center gap-3 px-6 py-4 bg-indigo-600 hover:bg-indigo-700 text-white text-xl font-bold rounded-xl shadow-lg active:scale-95 transition-all"
+              >
+                <Guitar size={28} />
+                Tocar Música
+              </button>
+            </div>
+          )}
         </div>
 
-        {/* Sidebar toggle button */}
+        {/* Sidebar toggle button - hidden in fullscreen */}
         <button
           onClick={() => setSidebarOpen(!sidebarOpen)}
-          className="fixed right-4 top-1/2 -translate-y-1/2 z-50 p-3 bg-white border shadow-lg rounded-full hover:bg-gray-50 print:hidden"
+          className={`fixed right-4 top-1/2 -translate-y-1/2 z-50 p-3 bg-white border shadow-lg rounded-full hover:bg-gray-50 print:hidden transition-all duration-300 ${isFullscreen ? 'opacity-0 pointer-events-none' : ''}`}
           title={sidebarOpen ? 'Fechar painel' : 'Abrir painel'}
         >
           {sidebarOpen ? <ChevronRight size={20} /> : <ChevronLeft size={20} />}
         </button>
 
         {/* Sidebar - Observacao + Audio */}
-        <div className={`transition-all duration-300 overflow-hidden print:hidden ${sidebarOpen ? 'w-80 opacity-100' : 'w-0 opacity-0'}`}>
+        <div className={`transition-all duration-300 overflow-hidden print:hidden ${isFullscreen ? 'w-0 opacity-0' : (sidebarOpen ? 'w-80 opacity-100' : 'w-0 opacity-0')}`}>
           <div className="space-y-4">
             {/* Observacao */}
             <div className="bg-white p-4 rounded-lg border">
