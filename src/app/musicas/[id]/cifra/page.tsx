@@ -291,7 +291,7 @@ export default function CifraPage() {
   return (
     <div className="max-w-6xl mx-auto">
       {/* Header - hidden in fullscreen */}
-      <div className={`mb-6 print:hidden transition-all duration-300 ${isFullscreen ? 'opacity-0 h-0 mb-0 overflow-hidden' : ''}`}>
+      <div className={`mb-6 print:hidden ${isFullscreen ? 'hidden' : ''}`}>
         <div className="flex items-center justify-between">
           <button
             onClick={() => router.back()}
