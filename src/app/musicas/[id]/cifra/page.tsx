@@ -330,6 +330,7 @@ export default function CifraPage() {
             tomOriginal={musica.tom_original}
             showMetronome={true}
             showControls={!isFullscreen}
+            onFullscreenChange={setIsFullscreen}
           />
 
           {/* Big Tocar button - hidden in fullscreen */}
