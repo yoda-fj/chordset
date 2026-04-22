@@ -9,6 +9,17 @@
   display: none !important;
 }
 
+/* Remove max-width and padding from main in fullscreen */
+:fullscreen .site-main,
+:-webkit-full-screen .site-main,
+:-moz-full-screen .site-main {
+  max-width: none !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+}
+
 @media print {
   /* Hide everything except the cifra content */
   body * {
