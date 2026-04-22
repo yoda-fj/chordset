@@ -38,6 +38,14 @@ export default function SetlistPage() {
   const audioRef = useRef<HTMLAudioElement | null>(null)
   const timerRef = useRef<NodeJS.Timeout | null>(null)
 
+  // Sync audio element src when audioUrl changes
+  useEffect(() => {
+    if (audioRef.current && audioUrl) {
+      audioRef.current.src = audioUrl
+      setIsPlaying(false)
+    }
+  }, [audioUrl])
+
   // Load data
   useEffect(() => {
     async function loadData() {
@@ -544,7 +552,6 @@ export default function SetlistPage() {
                   </button>
                   <audio
                     ref={audioRef}
-                    src={audioUrl}
                     onEnded={() => setIsPlaying(false)}
                   />
                   <span className="flex-1 text-sm text-gray-600">Sua gravação</span>
