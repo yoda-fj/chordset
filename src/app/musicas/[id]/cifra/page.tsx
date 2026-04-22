@@ -289,7 +289,7 @@ export default function CifraPage() {
   }
 
   return (
-    <div className={`mx-auto ${isFullscreen ? 'w-full h-screen max-w-none p-0' : 'max-w-6xl'}`}>
+    <div className={`mx-auto flex flex-col ${isFullscreen ? 'w-full h-screen max-w-none p-0' : 'max-w-6xl min-h-[calc(100vh-8rem)]'}`}>
       {/* Header - hidden in fullscreen */}
       <div className={`mb-6 print:hidden ${isFullscreen ? 'hidden' : ''}`}>
         <div className="flex items-center justify-between">
@@ -319,9 +319,9 @@ export default function CifraPage() {
         </div>
       </div>
 
-      <div className="flex gap-4">
+      <div className="flex gap-4 flex-1 min-h-0">
         {/* Main content - Cifra */}
-        <div className={`transition-all duration-300 ${sidebarOpen ? 'flex-1' : 'w-full'}`}>
+        <div className={`transition-all duration-300 flex flex-col ${sidebarOpen ? 'flex-1' : 'w-full'}`}>
           {/* CifraViewer - reusa o mesmo componente */}
           <CifraViewer
             cifra={musica.cifra}

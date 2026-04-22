@@ -62,6 +62,7 @@
 ## 🔧 Pending / Bugs
 
 ### Pending
+- [x] Corrigir layout da cifra para ocupar altura total (removido maxHeight fixo, usando flex-1)
 - [ ] Testar import via foto em produção (precisa de API key configurada)
 - [ ] Testar reorder no mobile
 - [ ] Deploy no Coolify e testar persistent storage
