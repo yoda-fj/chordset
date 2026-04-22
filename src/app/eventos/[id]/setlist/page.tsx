@@ -310,11 +310,34 @@ export default function SetlistPage() {
       <div className="flex-1 flex overflow-hidden">
         {/* Sidebar */}
         <aside className={`
-          ${showSidebar ? 'w-72' : 'w-0'} 
+          ${showSidebar ? 'w-72' : 'w-0'}
           bg-white border-r transition-all duration-200 overflow-hidden flex-shrink-0 hidden lg:block
         `}>
-          <div className="w-72 overflow-y-auto h-full">
-            <div className="p-2">
+          <div className="w-72 overflow-y-auto h-full flex flex-col">
+            {/* Navigation buttons */}
+            <div className="p-2 border-b flex items-center justify-center gap-2 shrink-0">
+              <button
+                onClick={goPrev}
+                disabled={selectedIndex === 0}
+                className="p-2 rounded-lg hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed"
+              >
+                <ChevronLeft size={20} />
+              </button>
+              <button
+                onClick={() => toggleComplete(selectedIndex)}
+                className={`p-2 rounded-lg ${selectedMusica?.confirmada ? 'bg-green-100 text-green-700 hover:bg-green-200' : 'hover:bg-gray-100'}`}
+              >
+                <Check size={20} />
+              </button>
+              <button
+                onClick={goNext}
+                disabled={selectedIndex === musicas.length - 1}
+                className="p-2 rounded-lg hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed"
+              >
+                <ChevronRight size={20} />
+              </button>
+            </div>
+            <div className="p-2 flex-1 overflow-y-auto">
               {musicas.map((item, index) => (
                 <button
                   key={item.id}
@@ -344,12 +367,35 @@ export default function SetlistPage() {
         )}
         
         {/* Mobile sidebar */}
-        <aside className={`${showSidebar ? 'translate-x-0' : '-translate-x-full'} fixed left-0 top-0 bottom-0 w-72 bg-white z-50 transition-transform duration-200 md:hidden overflow-y-auto`}>
-          <div className="p-4 border-b flex items-center justify-between">
+        <aside className={`${showSidebar ? 'translate-x-0' : '-translate-x-full'} fixed left-0 top-0 bottom-0 w-72 bg-white z-50 transition-transform duration-200 md:hidden overflow-y-auto flex flex-col`}>
+          <div className="p-4 border-b flex items-center justify-between shrink-0">
             <h2 className="font-semibold">Repertório</h2>
             <button onClick={() => setShowSidebar(false)} className="p-2"><X size={20} /></button>
           </div>
-          <div className="p-2">
+          {/* Navigation buttons */}
+          <div className="p-2 border-b flex items-center justify-center gap-2 shrink-0">
+            <button
+              onClick={goPrev}
+              disabled={selectedIndex === 0}
+              className="p-2 rounded-lg hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed"
+            >
+              <ChevronLeft size={20} />
+            </button>
+            <button
+              onClick={() => toggleComplete(selectedIndex)}
+              className={`p-2 rounded-lg ${selectedMusica?.confirmada ? 'bg-green-100 text-green-700 hover:bg-green-200' : 'hover:bg-gray-100'}`}
+            >
+              <Check size={20} />
+            </button>
+            <button
+              onClick={goNext}
+              disabled={selectedIndex === musicas.length - 1}
+              className="p-2 rounded-lg hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed"
+            >
+              <ChevronRight size={20} />
+            </button>
+          </div>
+          <div className="p-2 flex-1 overflow-y-auto">
             {musicas.map((item, index) => (
               <button
                 key={item.id}
@@ -401,7 +447,7 @@ export default function SetlistPage() {
               </div>
 
               {/* Navigation */}
-              <div className="bg-white border-t px-4 py-3 shrink-0">
+              <div className="bg-white border-t px-4 py-3 shrink-0 hidden md:block">
                 <div className="flex items-center justify-between max-w-3xl mx-auto">
                   <button onClick={goPrev} disabled={selectedIndex === 0} className="flex items-center gap-2 px-4 py-2 rounded-lg hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed">
                     <ChevronLeft size={20} />
