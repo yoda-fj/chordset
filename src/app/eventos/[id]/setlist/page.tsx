@@ -476,7 +476,7 @@ export default function SetlistPage() {
         </aside>
 
         {/* Main content - Cifra */}
-        <main className={`flex-1 min-h-0 overflow-hidden transition-all duration-300 ${rightSidebarOpen ? 'mr-0' : ''}`}>
+        <main className="flex-1 min-h-0 overflow-hidden transition-all duration-300">
           {musicas.length === 0 ? (
             <div className="flex items-center justify-center h-full">
               <div className="text-center text-gray-500">
@@ -485,7 +485,7 @@ export default function SetlistPage() {
               </div>
             </div>
           ) : (
-            <div className="h-full p-4 md:p-6">
+            <div className="h-full p-4 md:p-6 pb-8">
               <CifraViewer
                 cifra={cifra}
                 titulo={selectedMusica?.musicas?.titulo || ''}

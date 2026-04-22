@@ -1,0 +1,26 @@
+[      46ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://192.168.15.3:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[      62ms] [LOG] %c * Tone.js v15.1.22 *  background: #000; color: #fff @ http://192.168.15.3:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[      71ms] [WARNING] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio @ http://192.168.15.3:3000/_next/static/chunks/node_modules_standardized-audio-context_build_es2019_056t0gf._.js:10222
+[      71ms] [WARNING] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio @ http://192.168.15.3:3000/_next/static/chunks/node_modules_standardized-audio-context_build_es2019_056t0gf._.js:3756
+[      73ms] [LOG] [HMR] connected @ http://192.168.15.3:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[   24761ms] [LOG] [Fast Refresh] rebuilding @ http://192.168.15.3:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[   24784ms] [LOG] [Fast Refresh] done in 38ms @ http://192.168.15.3:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[   27356ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://192.168.15.3:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[   27363ms] [LOG] [HMR] connected @ http://192.168.15.3:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[   27374ms] [LOG] %c * Tone.js v15.1.22 *  background: #000; color: #fff @ http://192.168.15.3:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[   27383ms] [WARNING] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio @ http://192.168.15.3:3000/_next/static/chunks/node_modules_standardized-audio-context_build_es2019_056t0gf._.js:10222
+[   27383ms] [WARNING] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio @ http://192.168.15.3:3000/_next/static/chunks/node_modules_standardized-audio-context_build_es2019_056t0gf._.js:3756
+[   31316ms] [LOG] [Fast Refresh] rebuilding @ http://192.168.15.3:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[   31340ms] [LOG] [Fast Refresh] done in 37ms @ http://192.168.15.3:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[   34356ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://192.168.15.3:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[   34362ms] [LOG] [HMR] connected @ http://192.168.15.3:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[   34372ms] [LOG] %c * Tone.js v15.1.22 *  background: #000; color: #fff @ http://192.168.15.3:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[   34381ms] [WARNING] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio @ http://192.168.15.3:3000/_next/static/chunks/node_modules_standardized-audio-context_build_es2019_056t0gf._.js:10222
+[   34382ms] [WARNING] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio @ http://192.168.15.3:3000/_next/static/chunks/node_modules_standardized-audio-context_build_es2019_056t0gf._.js:3756
+[   37829ms] [LOG] [Fast Refresh] rebuilding @ http://192.168.15.3:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[   37853ms] [LOG] [Fast Refresh] done in 36ms @ http://192.168.15.3:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[   40998ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://192.168.15.3:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[   41015ms] [LOG] %c * Tone.js v15.1.22 *  background: #000; color: #fff @ http://192.168.15.3:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[   41025ms] [WARNING] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio @ http://192.168.15.3:3000/_next/static/chunks/node_modules_standardized-audio-context_build_es2019_056t0gf._.js:10222
+[   41025ms] [WARNING] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio @ http://192.168.15.3:3000/_next/static/chunks/node_modules_standardized-audio-context_build_es2019_056t0gf._.js:3756
+[   41027ms] [LOG] [HMR] connected @ http://192.168.15.3:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431

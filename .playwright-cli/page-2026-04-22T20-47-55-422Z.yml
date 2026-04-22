@@ -1,0 +1,20 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - navigation [ref=e3]:
+      - generic [ref=e5]:
+        - link "Setlist Tools" [ref=e7] [cursor=pointer]:
+          - /url: /
+        - generic [ref=e8]:
+          - link "Eventos" [ref=e9] [cursor=pointer]:
+            - /url: /eventos
+          - link "Templates" [ref=e10] [cursor=pointer]:
+            - /url: /templates
+          - link "Músicas" [ref=e11] [cursor=pointer]:
+            - /url: /musicas
+          - link "Ensaios" [ref=e12] [cursor=pointer]:
+            - /url: /ensaios
+    - main [ref=e13]:
+      - generic [ref=e15]: Carregando...
+  - button "Open Next.js Dev Tools" [ref=e21] [cursor=pointer]:
+    - img [ref=e22]
+  - alert [ref=e25]
