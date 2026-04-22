@@ -148,7 +148,8 @@ export function CifraViewer({
       {/* Cifra */}
       <div 
         ref={scrollContainerRef}
-        className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-auto flex-1 min-h-0"
+        className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-auto"
+        style={{ maxHeight: isFullscreen ? 'calc(100vh - 100px)' : 'calc(100vh - 220px)' }}
       >
         <ChordViewer 
           chordProContent={currentCifra || cifra}
