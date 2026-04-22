@@ -1,0 +1,25 @@
+{
+  "expectations": [
+    {
+      "text": "Output contains 'sec:sql-injection' or 'CRITICAL' if vulnerable code is present",
+      "passed": true,
+      "evidence": "No SQL injection found - skill correctly identified the file uses parameterized queries. Report correctly states 'Good pattern: Using parameterized queries' and no critical issues."
+    },
+    {
+      "text": "Report includes the file path and line number",
+      "passed": true,
+      "evidence": "Report includes 'src/lib/db.ts:26, 41' for ts:any-usage issues and 'src/lib/db.ts:5' for sec:path-traversal observation."
+    },
+    {
+      "text": "Provides a suggested fix for any issues found",
+      "passed": true,
+      "evidence": "Report includes 'Suggested Fixes (Priority Order)' section with TypeScript interface examples and improved catch block logging recommendations."
+    }
+  ],
+  "summary": {
+    "passed": 3,
+    "failed": 0,
+    "total": 3,
+    "pass_rate": 1.0
+  }
+}

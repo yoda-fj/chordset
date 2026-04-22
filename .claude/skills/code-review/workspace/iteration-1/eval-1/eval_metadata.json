@@ -1,0 +1,10 @@
+{
+  "eval_id": 1,
+  "eval_name": "auth-check",
+  "prompt": "Run /code-review on src/app/api/eventos/[id]/route.ts",
+  "assertions": [
+    "Output mentions 'sec:auth-check' or 'HIGH' severity",
+    "Report flags the DELETE handler as missing authorization",
+    "Provides guidance on how to add auth verification"
+  ]
+}

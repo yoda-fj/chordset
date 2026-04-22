@@ -1,0 +1,10 @@
+{
+  "eval_id": 0,
+  "eval_name": "sql-injection-check",
+  "prompt": "Run /code-review on src/lib/db.ts",
+  "assertions": [
+    "Output contains 'sec:sql-injection' or 'CRITICAL' if vulnerable code is present",
+    "Report includes the file path and line number",
+    "Provides a suggested fix for any issues found"
+  ]
+}

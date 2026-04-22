@@ -1,0 +1,25 @@
+{
+  "expectations": [
+    {
+      "text": "Output mentions 'sec:auth-check' or 'HIGH' severity",
+      "passed": true,
+      "evidence": "Report explicitly flags 'sec:auth-check' with HIGH severity at lines 9, 32, 62 for GET, PUT, DELETE handlers."
+    },
+    {
+      "text": "Report flags the DELETE handler as missing authorization",
+      "passed": true,
+      "evidence": "Report identifies missing auth on all handlers including DELETE at line 62."
+    },
+    {
+      "text": "Provides guidance on how to add auth verification",
+      "passed": true,
+      "evidence": "Suggested fix section shows how to add auth check using authorization header with 401 response."
+    }
+  ],
+  "summary": {
+    "passed": 3,
+    "failed": 0,
+    "total": 3,
+    "pass_rate": 1.0
+  }
+}

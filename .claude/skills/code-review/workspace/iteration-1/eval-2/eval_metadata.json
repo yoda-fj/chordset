@@ -1,0 +1,10 @@
+{
+  "eval_id": 2,
+  "eval_name": "react-best-practices",
+  "prompt": "Run /code-review on src/app/eventos/[id]/setlist/page.tsx",
+  "assertions": [
+    "Output checks for inline handlers that could cause re-renders",
+    "Report mentions React hook dependencies if useEffect is missing deps",
+    "Checks for proper client/server boundary usage"
+  ]
+}

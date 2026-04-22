@@ -1,0 +1,38 @@
+{
+  "skill_name": "code-review",
+  "evals": [
+    {
+      "id": 0,
+      "prompt": "Run /code-review on src/lib/db.ts",
+      "expected_output": "Should identify SQL injection vulnerability if string concatenation is found",
+      "files": ["src/lib/db.ts"],
+      "expectations": [
+        "Output contains 'sec:sql-injection' or 'CRITICAL' if vulnerable code is present",
+        "Report includes the file path and line number",
+        "Provides a suggested fix for any issues found"
+      ]
+    },
+    {
+      "id": 1,
+      "prompt": "Run /code-review on src/app/api/eventos/[id]/route.ts",
+      "expected_output": "Should identify missing auth check in DELETE handler",
+      "files": ["src/app/api/eventos/[id]/route.ts"],
+      "expectations": [
+        "Output mentions 'sec:auth-check' or 'HIGH' severity",
+        "Report flags the DELETE handler as missing authorization",
+        "Provides guidance on how to add auth verification"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Run /code-review on src/app/eventos/[id]/setlist/page.tsx",
+      "expected_output": "Should identify any performance or React best practice issues",
+      "files": ["src/app/eventos/[id]/setlist/page.tsx"],
+      "expectations": [
+        "Output checks for inline handlers that could cause re-renders",
+        "Report mentions React hook dependencies if useEffect is missing deps",
+        "Checks for proper client/server boundary usage"
+      ]
+    }
+  ]
+}

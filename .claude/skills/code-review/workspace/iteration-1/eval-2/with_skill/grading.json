@@ -1,0 +1,25 @@
+{
+  "expectations": [
+    {
+      "text": "Output checks for inline handlers that could cause re-renders",
+      "passed": true,
+      "evidence": "Report flags 'react:inline-handler' at line 433 and multiple other locations (lines 394, 451) for inline arrow functions."
+    },
+    {
+      "text": "Report mentions React hook dependencies if useEffect is missing deps",
+      "passed": true,
+      "evidence": "Report mentions 'react:missing-deps' at line 82 for the useEffect dependency array."
+    },
+    {
+      "text": "Checks for proper client/server boundary usage",
+      "passed": true,
+      "evidence": "Skill notes this is a 'client component with hooks, state management, audio recording' - correctly identified file as 'use client'."
+    }
+  ],
+  "summary": {
+    "passed": 3,
+    "failed": 0,
+    "total": 3,
+    "pass_rate": 1.0
+  }
+}

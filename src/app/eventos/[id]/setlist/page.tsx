@@ -61,7 +61,11 @@ export default function SetlistPage() {
         setEvento(eventoData)
         setObservacao(eventoData.observacoes || '')
         if (eventoData.audio_url) {
-          setAudioUrl(eventoData.audio_url)
+          // Convert /eventos-audio/ path to /api/eventos-audio/ for Docker standalone mode
+          const audioPath = eventoData.audio_url.startsWith('/eventos-audio/')
+            ? eventoData.audio_url.replace('/eventos-audio/', '/api/eventos-audio/')
+            : eventoData.audio_url
+          setAudioUrl(audioPath)
         }
 
         if (musicasRes.ok) {
