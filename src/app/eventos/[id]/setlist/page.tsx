@@ -255,7 +255,7 @@ export default function SetlistPage() {
   return (
     <div className="h-screen flex flex-col bg-gray-100">
       {/* Header */}
-      <header className="bg-white border-b px-4 py-3 flex items-center justify-between">
+      <header className="bg-white border-b px-4 py-3 flex items-center justify-between shrink-0">
         <div className="flex items-center gap-3">
           <button onClick={() => router.back()} className="p-2 hover:bg-gray-100 rounded-lg">
             <ArrowLeft size={20} />
@@ -388,7 +388,7 @@ export default function SetlistPage() {
             </div>
           ) : (
             <>
-              <div className="flex-1 overflow-auto p-4 md:p-6" ref={scrollContainerRef}>
+              <div className="flex-1 overflow-auto p-4 md:p-6 min-h-0" ref={scrollContainerRef}>
                 <div className="max-w-3xl mx-auto">
                   <div className="mb-6 text-center">
                     <h2 className="text-2xl font-bold text-gray-900">{selectedMusica?.musicas?.titulo}</h2>
@@ -401,7 +401,7 @@ export default function SetlistPage() {
               </div>
 
               {/* Navigation */}
-              <div className="bg-white border-t px-4 py-3">
+              <div className="bg-white border-t px-4 py-3 shrink-0">
                 <div className="flex items-center justify-between max-w-3xl mx-auto">
                   <button onClick={goPrev} disabled={selectedIndex === 0} className="flex items-center gap-2 px-4 py-2 rounded-lg hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed">
                     <ChevronLeft size={20} />
