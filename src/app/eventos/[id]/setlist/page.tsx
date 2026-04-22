@@ -248,7 +248,11 @@ export default function SetlistPage() {
       if (res.ok) {
         const updated = await res.json()
         setEvento(updated)
-        setAudioUrl(updated.audio_url)
+        // Convert path for Docker standalone mode
+        const audioPath = updated.audio_url?.startsWith('/eventos-audio/')
+          ? updated.audio_url.replace('/eventos-audio/', '/api/eventos-audio/')
+          : updated.audio_url
+        setAudioUrl(audioPath)
         setAudioBlob(null)
       } else {
         const err = await res.json()
@@ -275,7 +279,11 @@ export default function SetlistPage() {
       if (res.ok) {
         const updated = await res.json()
         setEvento(updated)
-        setAudioUrl(updated.audio_url)
+        // Convert path for Docker standalone mode
+        const audioPath = updated.audio_url?.startsWith('/eventos-audio/')
+          ? updated.audio_url.replace('/eventos-audio/', '/api/eventos-audio/')
+          : updated.audio_url
+        setAudioUrl(audioPath)
         if (audioUrl?.startsWith('blob:')) {
           URL.revokeObjectURL(audioUrl)
         }
@@ -316,7 +324,11 @@ export default function SetlistPage() {
     if (audioUrl?.startsWith('blob:')) {
       URL.revokeObjectURL(audioUrl)
     }
-    setAudioUrl(evento?.audio_url || null)
+    // Convert path for Docker standalone mode
+    const audioPath = evento?.audio_url?.startsWith('/eventos-audio/')
+      ? evento.audio_url.replace('/eventos-audio/', '/api/eventos-audio/')
+      : evento?.audio_url || null
+    setAudioUrl(audioPath)
     setAudioBlob(null)
   }
 
