@@ -289,7 +289,7 @@ export default function CifraPage() {
   }
 
   return (
-    <div className="max-w-6xl mx-auto">
+    <div className={`mx-auto ${isFullscreen ? 'w-full h-screen max-w-none p-0' : 'max-w-6xl'}`}>
       {/* Header - hidden in fullscreen */}
       <div className={`mb-6 print:hidden ${isFullscreen ? 'hidden' : ''}`}>
         <div className="flex items-center justify-between">
