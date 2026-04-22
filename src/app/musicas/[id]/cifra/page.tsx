@@ -31,6 +31,7 @@ export default function CifraPage() {
   const timerRef = useRef<NodeJS.Timeout | null>(null)
 
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [isFullscreen, setIsFullscreen] = useState(false)
 
   useEffect(() => {
     async function loadMusica() {
@@ -280,8 +281,8 @@ export default function CifraPage() {
 
   return (
     <div className="max-w-6xl mx-auto">
-      {/* Header */}
-      <div className="mb-6 print:hidden">
+      {/* Header - hidden in fullscreen */}
+      <div className={`mb-6 print:hidden transition-all duration-300 ${isFullscreen ? 'opacity-0 h-0 mb-0 overflow-hidden' : ''}`}>
         <div className="flex items-center justify-between">
           <button
             onClick={() => router.back()}
@@ -320,6 +321,7 @@ export default function CifraPage() {
             tomOriginal={musica.tom_original}
             showMetronome={true}
             showControls={true}
+            onFullscreenChange={setIsFullscreen}
           />
         </div>
 
