@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { useParams, useRouter } from 'next/navigation'
-import { ArrowLeft, Printer, Edit3, Music, Mic, Upload, Trash2, Play, Pause, X, Loader2, ChevronLeft, ChevronRight, Guitar } from 'lucide-react'
+import { ArrowLeft, Printer, Edit3, Music, Mic, Upload, Trash2, Play, Pause, X, Loader2, ChevronLeft, ChevronRight } from 'lucide-react'
 import Link from 'next/link'
 import { CifraViewer } from '@/components/chords'
 
@@ -332,19 +332,6 @@ export default function CifraPage() {
             showControls={!isFullscreen}
             onFullscreenChange={setIsFullscreen}
           />
-
-          {/* Big Tocar button - hidden in fullscreen */}
-          {!isFullscreen && (
-            <div className={`mt-4 print:hidden`}>
-              <button
-                onClick={() => document.documentElement.requestFullscreen()}
-                className="w-full flex items-center justify-center gap-3 px-6 py-4 bg-indigo-600 hover:bg-indigo-700 text-white text-xl font-bold rounded-xl shadow-lg active:scale-95 transition-all"
-              >
-                <Guitar size={28} />
-                Tocar Música
-              </button>
-            </div>
-          )}
         </div>
 
         {/* Sidebar toggle button - hidden in fullscreen */}
