@@ -504,15 +504,15 @@ export default function SetlistPage() {
         {/* Sidebar toggle button */}
         <button
           onClick={() => setRightSidebarOpen(!rightSidebarOpen)}
-          className="fixed right-4 top-1/2 -translate-y-1/2 z-50 p-3 bg-white border shadow-lg rounded-full hover:bg-gray-50"
+          className={`fixed right-4 top-1/2 -translate-y-1/2 z-50 p-3 bg-white border shadow-lg rounded-full hover:bg-gray-50 transition-all duration-300 ${rightSidebarOpen ? 'mr-80' : ''}`}
           title={rightSidebarOpen ? 'Fechar painel' : 'Abrir painel'}
         >
           {rightSidebarOpen ? <ChevronRightIcon size={20} /> : <ChevronLeft size={20} />}
         </button>
 
         {/* Right Sidebar - Observations + Audio */}
-        <div className={`transition-all duration-300 overflow-hidden print:hidden ${rightSidebarOpen ? 'w-80 opacity-100' : 'w-0 opacity-0'}`}>
-          <div className="w-80 h-full bg-gray-50 p-4 overflow-y-auto space-y-4">
+        <div className={`fixed right-0 top-16 bottom-0 bg-gray-50 p-4 overflow-y-auto transition-all duration-300 print:hidden ${rightSidebarOpen ? 'w-80 translate-x-0' : 'w-80 translate-x-full'}`}>
+          <div className="w-full h-full flex flex-col space-y-4">
             {/* Observacao */}
             <div className="bg-white p-4 rounded-lg border">
               <h2 className="text-base font-semibold text-gray-900 mb-3">Observações</h2>
