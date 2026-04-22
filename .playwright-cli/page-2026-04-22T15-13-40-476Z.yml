@@ -1,0 +1,82 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - navigation [ref=e3]:
+      - generic [ref=e5]:
+        - link "Setlist Tools" [ref=e7] [cursor=pointer]:
+          - /url: /
+        - generic [ref=e8]:
+          - link "Eventos" [ref=e9] [cursor=pointer]:
+            - /url: /eventos
+          - link "Templates" [ref=e10] [cursor=pointer]:
+            - /url: /templates
+          - link "Músicas" [ref=e11] [cursor=pointer]:
+            - /url: /musicas
+          - link "Ensaios" [ref=e12] [cursor=pointer]:
+            - /url: /ensaios
+    - main [ref=e13]:
+      - generic [ref=e68]:
+        - generic [ref=e69]:
+          - generic [ref=e70]:
+            - button [ref=e71] [cursor=pointer]:
+              - img [ref=e72]
+            - generic [ref=e74]:
+              - heading "Teste" [level=1] [ref=e75]
+              - paragraph [ref=e76]: 1 de 2
+          - generic [ref=e77]:
+            - combobox [ref=e78]:
+              - option "C"
+              - option "C#"
+              - option "D"
+              - option "D#"
+              - option "E"
+              - option "F"
+              - option "F#"
+              - option "G" [selected]
+              - option "G#"
+              - option "A"
+              - option "A#"
+              - option "B"
+            - button "⏹" [ref=e79] [cursor=pointer]
+            - button [ref=e80] [cursor=pointer]:
+              - img [ref=e81]
+            - button [ref=e84] [cursor=pointer]:
+              - img [ref=e85]
+            - button [ref=e90] [cursor=pointer]:
+              - img [ref=e91]
+            - button [ref=e94] [cursor=pointer]:
+              - img [ref=e95]
+        - generic [ref=e98]:
+          - complementary [ref=e100]:
+            - generic [ref=e101]:
+              - heading "Repertório" [level=2] [ref=e102]
+              - button [ref=e103] [cursor=pointer]:
+                - img [ref=e104]
+            - generic [ref=e107]:
+              - button [disabled] [ref=e108]:
+                - img [ref=e109]
+              - button [ref=e111] [cursor=pointer]:
+                - img [ref=e112]
+              - button [ref=e114] [cursor=pointer]:
+                - img [ref=e115]
+            - generic [ref=e117]:
+              - button "1 Cowboy Fora da Lei Raul Seixas" [ref=e118] [cursor=pointer]:
+                - generic [ref=e119]:
+                  - generic [ref=e120]: "1"
+                  - generic [ref=e121]:
+                    - generic [ref=e122]: Cowboy Fora da Lei
+                    - generic [ref=e123]: Raul Seixas
+              - button "2 Sina Djavan" [ref=e124] [cursor=pointer]:
+                - generic [ref=e125]:
+                  - generic [ref=e126]: "2"
+                  - generic [ref=e127]:
+                    - generic [ref=e128]: Sina
+                    - generic [ref=e129]: Djavan
+          - main [ref=e130]:
+            - generic [ref=e132]:
+              - generic [ref=e133]:
+                - heading "Cowboy Fora da Lei" [level=2] [ref=e134]
+                - paragraph [ref=e135]: Raul Seixas
+              - generic [ref=e136]: "[Intro] C D G Em C D G [Primeira Parte] G Mamãe, não quero ser prefeito Bm Pode ser que eu seja eleito G Em D E alguém pode querer me assassinar C D Eu não preciso ler jornais G Em Mentir sozinho eu sou capaz C D G Não quero ir de encontro ao azar Papai não quero provar nada Bm Eu já servi à Pátria amada G Em D E todo mundo cobra minha luz C D Oh, coitado, foi tão cedo G Em Deus me livre, eu tenho medo C D G Morrer dependurado numa cruz [Refrão] G G/A G/B C Eu não sou besta D G Pra tirar onda de herói Em C Sou vacinado, eu sou cowboy D G Cowboy fora da lei G G/A G/B C O Duran__go Kid D G Só existe no gibi Em C E quem quiser que fique aqui D G Entrar pra história com vocês ( Bm G Em D ) ( C D G Em ) ( C D G ) [Primeira Parte] G Mamãe, não quero ser prefeito Bm Pode ser que eu seja eleito G Em D E alguém pode querer me assassinar C D Eu não preciso ler jornais G Em Mentir sozinho eu sou capaz C D G Não quero ir de encontro ao azar Papai não quero provar nada Bm Eu já servi à Pátria amada G Em D E todo mundo cobra minha luz C D Oh, coitado, foi tão cedo G Em Deus me livre, eu tenho medo C D G Morrer dependurado numa cruz [Refrão] G G/A G/B C Eu não sou besta D G Pra tirar onda de herói Em C Sou vacinado, eu sou cowboy D G Cowboy fora da lei G G/A G/B C O Duran__go Kid D G Só existe no gibi Em C E quem quiser que fique aqui D G Entrar pra história com vocês G G/A G/B C Eu não sou besta D G Pra tirar onda de herói Em C Sou vacinado, eu sou cowboy D G Cowboy fora da lei G G/A G/B C O Duran__go Kid D G Só existe no gibi Em C E quem quiser que fique aqui D G Entrar pra história com vocês [Final] C D G Em C D G"
+  - button "Open Next.js Dev Tools" [ref=e63] [cursor=pointer]:
+    - img [ref=e64]
+  - alert [ref=e67]

@@ -78,6 +78,7 @@ export interface Evento {
   template_id: number | null;
   tags: string[];
   observacoes: string | null;
+  audio_url: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -86,7 +87,8 @@ export type EventoInsert = Omit<Evento, 'id' | 'created_at' | 'updated_at'>;
 export type EventoUpdate = Partial<Omit<Evento, 'id' | 'created_at' | 'updated_at'>>;
 
 // Evento com template (para queries com join)
-export interface EventoWithTemplate extends Evento {
+export interface EventoWithTemplate extends Omit<Evento, 'audio_url'> {
+  audio_url: string | null;
   templates?: {
     id: number;
     nome: string;

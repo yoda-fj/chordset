@@ -1,0 +1,187 @@
+- generic [ref=e1]:
+  - main [ref=e13]:
+    - generic [ref=e14]:
+      - generic [ref=e27]:
+        - button [ref=e28] [cursor=pointer]:
+          - img [ref=e29]
+        - generic [ref=e31]:
+          - heading "Teste" [level=1] [ref=e32]
+          - paragraph [ref=e33]: 1 de 2
+      - generic [ref=e34]:
+        - complementary [ref=e35]:
+          - generic [ref=e36]:
+            - generic [ref=e37]:
+              - button [disabled] [ref=e38]:
+                - img [ref=e39]
+              - button [ref=e41] [cursor=pointer]:
+                - img [ref=e42]
+              - button [ref=e44] [cursor=pointer]:
+                - img [ref=e45]
+            - generic [ref=e47]:
+              - button "1 Cowboy Fora da Lei Raul Seixas" [ref=e48] [cursor=pointer]:
+                - generic [ref=e49]:
+                  - generic [ref=e50]: "1"
+                  - generic [ref=e51]:
+                    - generic [ref=e52]: Cowboy Fora da Lei
+                    - generic [ref=e53]: Raul Seixas
+              - button "2 Sina Djavan" [ref=e54] [cursor=pointer]:
+                - generic [ref=e55]:
+                  - generic [ref=e56]: "2"
+                  - generic [ref=e57]:
+                    - generic [ref=e58]: Sina
+                    - generic [ref=e59]: Djavan
+        - main [ref=e60]:
+          - generic [ref=e62]:
+            - generic [ref=e63]:
+              - generic [ref=e64]:
+                - img [ref=e65]
+                - generic [ref=e68]: G
+              - combobox [ref=e69] [cursor=pointer]:
+                - option "C"
+                - option "C#"
+                - option "D"
+                - option "D#"
+                - option "E"
+                - option "F"
+                - option "F#"
+                - option "G" [selected]
+                - option "G#"
+                - option "A"
+                - option "A#"
+                - option "B"
+              - button "Diminuir fonte" [ref=e70] [cursor=pointer]:
+                - img [ref=e71]
+              - generic [ref=e74]: 16px
+              - button "Aumentar fonte" [ref=e75] [cursor=pointer]:
+                - img [ref=e76]
+              - 'button "Auto-scroll: Off" [ref=e80] [cursor=pointer]':
+                - img [ref=e81]
+              - button "Sair fullscreen" [active] [ref=e229] [cursor=pointer]:
+                - img [ref=e230]
+            - generic [ref=e91]:
+              - generic [ref=e92]:
+                - heading "Cowboy Fora da Lei" [level=1] [ref=e93]
+                - paragraph [ref=e94]: Raul Seixas
+              - generic [ref=e95]:
+                - generic [ref=e96]:
+                  - generic:
+                    - generic: Intro
+                  - generic [ref=e97]: C D G Em
+                - generic [ref=e98]: C D G
+                - generic [ref=e100]:
+                  - generic:
+                    - generic: Primeira Parte
+                - generic [ref=e103]: G
+                - generic [ref=e104]: Mamãe, não quero ser prefeito
+                - generic [ref=e105]: Bm
+                - generic [ref=e106]: Pode ser que eu seja eleito
+                - generic [ref=e107]: G Em D
+                - generic [ref=e108]: E alguém pode querer me assassinar
+                - generic [ref=e110]: C D
+                - generic [ref=e111]: Eu não preciso ler jornais
+                - generic [ref=e112]: G Em
+                - generic [ref=e113]: Mentir sozinho eu sou capaz
+                - generic [ref=e114]: C D G
+                - generic [ref=e115]: Não quero ir de encontro ao azar
+                - generic [ref=e118]: Papai não quero provar nada
+                - generic [ref=e119]: Bm
+                - generic [ref=e120]: Eu já servi à Pátria amada
+                - generic [ref=e121]: G Em D
+                - generic [ref=e122]: E todo mundo cobra minha luz
+                - generic [ref=e124]: C D
+                - generic [ref=e125]: Oh, coitado, foi tão cedo
+                - generic [ref=e126]: G Em
+                - generic [ref=e127]: Deus me livre, eu tenho medo
+                - generic [ref=e128]: C D G
+                - generic [ref=e129]: Morrer dependurado numa cruz
+                - generic [ref=e131]:
+                  - generic:
+                    - generic: Refrão
+                - generic [ref=e134]: G G/A G/B C
+                - generic [ref=e135]: Eu não sou besta
+                - generic [ref=e136]: D G
+                - generic [ref=e137]: Pra tirar onda de herói
+                - generic [ref=e138]: Em C
+                - generic [ref=e139]: Sou vacinado, eu sou cowboy
+                - generic [ref=e140]: D G
+                - generic [ref=e141]: Cowboy fora da lei
+                - generic [ref=e143]: G G/A G/B C
+                - generic [ref=e144]: O Duran__go Kid
+                - generic [ref=e145]: D G
+                - generic [ref=e146]: Só existe no gibi
+                - generic [ref=e147]: Em C
+                - generic [ref=e148]: E quem quiser que fique aqui
+                - generic [ref=e149]: D G
+                - generic [ref=e150]: Entrar pra história com vocês
+                - generic [ref=e152]: ( Bm G Em D )
+                - generic [ref=e153]: ( C D G Em )
+                - generic [ref=e154]: ( C D G )
+                - generic [ref=e156]:
+                  - generic:
+                    - generic: Primeira Parte
+                - generic [ref=e159]: G
+                - generic [ref=e160]: Mamãe, não quero ser prefeito
+                - generic [ref=e161]: Bm
+                - generic [ref=e162]: Pode ser que eu seja eleito
+                - generic [ref=e163]: G Em D
+                - generic [ref=e164]: E alguém pode querer me assassinar
+                - generic [ref=e166]: C D
+                - generic [ref=e167]: Eu não preciso ler jornais
+                - generic [ref=e168]: G Em
+                - generic [ref=e169]: Mentir sozinho eu sou capaz
+                - generic [ref=e170]: C D G
+                - generic [ref=e171]: Não quero ir de encontro ao azar
+                - generic [ref=e174]: Papai não quero provar nada
+                - generic [ref=e175]: Bm
+                - generic [ref=e176]: Eu já servi à Pátria amada
+                - generic [ref=e177]: G Em D
+                - generic [ref=e178]: E todo mundo cobra minha luz
+                - generic [ref=e180]: C D
+                - generic [ref=e181]: Oh, coitado, foi tão cedo
+                - generic [ref=e182]: G Em
+                - generic [ref=e183]: Deus me livre, eu tenho medo
+                - generic [ref=e184]: C D G
+                - generic [ref=e185]: Morrer dependurado numa cruz
+                - generic [ref=e187]:
+                  - generic:
+                    - generic: Refrão
+                - generic [ref=e190]: G G/A G/B C
+                - generic [ref=e191]: Eu não sou besta
+                - generic [ref=e192]: D G
+                - generic [ref=e193]: Pra tirar onda de herói
+                - generic [ref=e194]: Em C
+                - generic [ref=e195]: Sou vacinado, eu sou cowboy
+                - generic [ref=e196]: D G
+                - generic [ref=e197]: Cowboy fora da lei
+                - generic [ref=e199]: G G/A G/B C
+                - generic [ref=e200]: O Duran__go Kid
+                - generic [ref=e201]: D G
+                - generic [ref=e202]: Só existe no gibi
+                - generic [ref=e203]: Em C
+                - generic [ref=e204]: E quem quiser que fique aqui
+                - generic [ref=e205]: D G
+                - generic [ref=e206]: Entrar pra história com vocês
+                - generic [ref=e208]: G G/A G/B C
+                - generic [ref=e209]: Eu não sou besta
+                - generic [ref=e210]: D G
+                - generic [ref=e211]: Pra tirar onda de herói
+                - generic [ref=e212]: Em C
+                - generic [ref=e213]: Sou vacinado, eu sou cowboy
+                - generic [ref=e214]: D G
+                - generic [ref=e215]: Cowboy fora da lei
+                - generic [ref=e217]: G G/A G/B C
+                - generic [ref=e218]: O Duran__go Kid
+                - generic [ref=e219]: D G
+                - generic [ref=e220]: Só existe no gibi
+                - generic [ref=e221]: Em C
+                - generic [ref=e222]: E quem quiser que fique aqui
+                - generic [ref=e223]: D G
+                - generic [ref=e224]: Entrar pra história com vocês
+                - generic [ref=e226]:
+                  - generic:
+                    - generic: Final
+                  - generic [ref=e227]: C D G Em
+                - generic [ref=e228]: C D G
+  - button "Open Next.js Dev Tools" [ref=e21] [cursor=pointer]:
+    - img [ref=e22]
+  - alert [ref=e25]

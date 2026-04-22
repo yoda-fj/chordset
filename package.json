@@ -14,7 +14,7 @@
     "@dnd-kit/utilities": "^3.2.2",
     "@supabase/supabase-js": "^2.39.0",
     "@tonaljs/tonal": "^4.10.0",
-    "better-sqlite3": "^12.8.0",
+    "better-sqlite3": "^12.9.0",
     "cheerio": "^1.2.0",
     "chordsheetjs": "^13.2.1",
     "lucide-react": "^0.294.0",

@@ -144,7 +144,7 @@ export const ChordViewer = ({
   }, [chordProContent, semitones]);
 
   return (
-    <div className={`chord-viewer bg-slate-50 dark:bg-slate-900 rounded-lg p-6 font-sans leading-relaxed overflow-x-auto ${isFullscreen ? 'min-h-full pt-16' : 'h-full'}`}>
+    <div className={`chord-viewer bg-slate-50 dark:bg-slate-900 rounded-lg p-6 font-sans leading-relaxed ${isFullscreen ? 'min-h-full pt-16' : 'min-h-0'}`}>
       {(title || artist) && (
         <div className="song-header mb-6 pb-4 border-b border-slate-200 dark:border-slate-700">
           {title && <h1 className="song-title text-2xl font-bold text-slate-900 dark:text-white mb-2">{title}</h1>}

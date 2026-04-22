@@ -1,0 +1,60 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - navigation [ref=e3]:
+      - generic [ref=e5]:
+        - link "Setlist Tools" [ref=e7] [cursor=pointer]:
+          - /url: /
+        - generic [ref=e8]:
+          - link "Eventos" [ref=e9] [cursor=pointer]:
+            - /url: /eventos
+          - link "Templates" [ref=e10] [cursor=pointer]:
+            - /url: /templates
+          - link "Músicas" [ref=e11] [cursor=pointer]:
+            - /url: /musicas
+          - link "Ensaios" [ref=e12] [cursor=pointer]:
+            - /url: /ensaios
+    - main [ref=e13]:
+      - generic [ref=e14]:
+        - generic [ref=e15]:
+          - link "Voltar" [ref=e16] [cursor=pointer]:
+            - /url: /eventos
+            - img [ref=e17]
+            - text: Voltar
+          - generic [ref=e19]:
+            - link [ref=e20] [cursor=pointer]:
+              - /url: /eventos/1/setlist
+              - img [ref=e21]
+            - link "Editar" [ref=e23] [cursor=pointer]:
+              - /url: /eventos/1/editar
+              - img [ref=e24]
+              - text: Editar
+            - button "Clonar" [ref=e27] [cursor=pointer]:
+              - img [ref=e28]
+              - text: Clonar
+        - generic [ref=e31]:
+          - generic [ref=e32]:
+            - heading "Teste" [level=1] [ref=e33]
+            - generic [ref=e34]: Rascunho
+          - generic [ref=e36]:
+            - img [ref=e37]
+            - generic [ref=e39]: segunda-feira, 1 de janeiro de 2024
+        - generic [ref=e40]:
+          - generic [ref=e41]:
+            - img [ref=e42]
+            - heading "Repertório (2)" [level=2] [ref=e46]
+          - generic [ref=e47]:
+            - link "1. Cowboy Fora da Lei Raul Seixas" [ref=e48] [cursor=pointer]:
+              - /url: /musicas/2/cifra
+              - generic [ref=e49]: "1."
+              - generic [ref=e50]:
+                - generic [ref=e51]: Cowboy Fora da Lei
+                - generic [ref=e52]: Raul Seixas
+            - link "2. Sina Djavan" [ref=e53] [cursor=pointer]:
+              - /url: /musicas/1/cifra
+              - generic [ref=e54]: "2."
+              - generic [ref=e55]:
+                - generic [ref=e56]: Sina
+                - generic [ref=e57]: Djavan
+  - button "Open Next.js Dev Tools" [ref=e63] [cursor=pointer]:
+    - img [ref=e64]
+  - alert [ref=e67]

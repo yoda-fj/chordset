@@ -1,0 +1,73 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - navigation [ref=e3]:
+      - generic [ref=e5]:
+        - link "Setlist Tools" [ref=e7] [cursor=pointer]:
+          - /url: /
+        - generic [ref=e8]:
+          - link "Eventos" [ref=e9] [cursor=pointer]:
+            - /url: /eventos
+          - link "Templates" [ref=e10] [cursor=pointer]:
+            - /url: /templates
+          - link "Músicas" [ref=e11] [cursor=pointer]:
+            - /url: /musicas
+          - link "Ensaios" [ref=e12] [cursor=pointer]:
+            - /url: /ensaios
+    - main [ref=e13]:
+      - generic [ref=e14]:
+        - generic [ref=e15]:
+          - heading "Eventos" [level=1] [ref=e16]
+          - link "Novo Evento" [ref=e17] [cursor=pointer]:
+            - /url: /eventos/new
+            - img [ref=e18]
+            - text: Novo Evento
+        - generic [ref=e19]:
+          - generic [ref=e20]:
+            - img [ref=e21]
+            - textbox "Buscar eventos..." [ref=e24]
+          - combobox [ref=e25]:
+            - option "Todos os status" [selected]
+            - option "Rascunho"
+            - option "Confirmado"
+            - option "Realizado"
+            - option "Cancelado"
+          - textbox [ref=e26]
+        - generic [ref=e27]:
+          - link "Teste Rascunho 31/12/2023 Editar" [ref=e28] [cursor=pointer]:
+            - /url: /eventos/1
+            - generic [ref=e30]:
+              - generic [ref=e31]:
+                - heading "Teste" [level=3] [ref=e32]
+                - generic [ref=e33]: Rascunho
+              - generic [ref=e34]:
+                - generic [ref=e35]:
+                  - img [ref=e36]
+                  - text: 31/12/2023
+                - link "Editar" [ref=e38]:
+                  - /url: /eventos/1
+          - link "Teste Migration Rascunho 31/12/1969 Editar" [ref=e39] [cursor=pointer]:
+            - /url: /eventos/2
+            - generic [ref=e41]:
+              - generic [ref=e42]:
+                - heading "Teste Migration" [level=3] [ref=e43]
+                - generic [ref=e44]: Rascunho
+              - generic [ref=e45]:
+                - generic [ref=e46]:
+                  - img [ref=e47]
+                  - text: 31/12/1969
+                - link "Editar" [ref=e49]:
+                  - /url: /eventos/2
+  - generic [ref=e54] [cursor=pointer]:
+    - button "Open Next.js Dev Tools" [ref=e55]:
+      - img [ref=e56]
+    - generic [ref=e59]:
+      - button "Open issues overlay" [ref=e60]:
+        - generic [ref=e61]:
+          - generic [ref=e62]: "1"
+          - generic [ref=e63]: "2"
+        - generic [ref=e64]:
+          - text: Issue
+          - generic [ref=e65]: s
+      - button "Collapse issues badge" [ref=e66]:
+        - img [ref=e67]
+  - alert [ref=e69]

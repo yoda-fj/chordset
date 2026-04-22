@@ -95,25 +95,23 @@ export const Autoscroll = ({ targetRef }: AutoscrollProps) => {
 
   return (
     <div className="flex items-center gap-2">
-      <button 
+      <button
         className={`p-2 rounded-lg transition-all ${speed > 0 ? 'bg-emerald-500 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}
         onClick={cycleSpeed}
         title={speed === 0 ? 'Auto-scroll: Off' : `Auto-scroll: ${speed}/5`}
       >
         {speed === 0 ? <Gauge size={18} /> : <Play size={16} className={speed >= 4 ? 'fill-current' : ''} />}
       </button>
-      
-      {speed > 0 && (
-        <div className="flex-1 flex items-center gap-2">
-          <div className="flex-1 h-1 bg-slate-200 rounded-full overflow-hidden">
-            <div 
-              className="h-full bg-emerald-500 rounded-full transition-all"
-              style={{ width: `${progress}%` }}
-            />
-          </div>
-          <span className="text-xs text-slate-500 w-8">{Math.round(progress)}%</span>
+
+      <div className="flex-1 flex items-center gap-2">
+        <div className="flex-1 h-1 bg-slate-200 rounded-full overflow-hidden">
+          <div
+            className="h-full bg-emerald-500 rounded-full transition-all"
+            style={{ width: `${progress}%` }}
+          />
         </div>
-      )}
+        <span className="text-xs text-slate-500 w-8">{Math.round(progress)}%</span>
+      </div>
     </div>
   );
 };

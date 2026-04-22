@@ -12,6 +12,7 @@ export interface Evento {
   template_id: number | null
   tags: string[]
   observacoes: string | null
+  audio_url: string | null
   created_at: string
   updated_at: string
 }
@@ -37,6 +38,7 @@ export interface CreateEventoInput {
   template_id?: number
   tags?: string[]
   observacoes?: string
+  audio_url?: string | null
 }
 
 export interface UpdateEventoInput {
@@ -48,6 +50,7 @@ export interface UpdateEventoInput {
   template_id?: number
   tags?: string[]
   observacoes?: string
+  audio_url?: string | null
 }
 
 export const eventosDb = {
@@ -70,6 +73,7 @@ export const eventosDb = {
       template_id: row.template_id,
       tags: JSON.parse(row.tags || '[]'),
       observacoes: row.observacoes,
+      audio_url: row.audio_url,
       created_at: row.created_at,
       updated_at: row.updated_at,
       templates: row.template_nome ? {
@@ -103,6 +107,7 @@ export const eventosDb = {
       template_id: row.template_id,
       tags: JSON.parse(row.tags || '[]'),
       observacoes: row.observacoes,
+      audio_url: row.audio_url,
       created_at: row.created_at,
       updated_at: row.updated_at,
       templates: row.template_nome ? {
@@ -169,6 +174,10 @@ export const eventosDb = {
     if (input.tags !== undefined) {
       sets.push('tags = ?')
       values.push(JSON.stringify(input.tags))
+    }
+    if (input.audio_url !== undefined) {
+      sets.push('audio_url = ?')
+      values.push(input.audio_url)
     }
     if (input.observacoes !== undefined) {
       sets.push('observacoes = ?')

@@ -71,9 +71,9 @@ export const mockTemplateMusicas: TemplateMusicaWithMusica[] = [
 ]
 
 export const mockEventos: EventoWithTemplate[] = [
-  { id: 1, nome: 'Culto - 14/01/2024', data: '2024-01-14', hora: '10:00:00', local: 'Templo Principal', status: 'confirmado', template_id: 1, tags: ['culto', 'domingo'], observacoes: null, created_at: '2024-01-01', updated_at: '2024-01-01', templates: mockTemplates[0] },
-  { id: 2, nome: 'Culto - 17/01/2024', data: '2024-01-17', hora: '19:30:00', local: 'Templo Principal', status: 'rascunho', template_id: 2, tags: ['culto', 'quarta'], observacoes: null, created_at: '2024-01-01', updated_at: '2024-01-01', templates: mockTemplates[1] },
-  { id: 3, nome: 'Conferência Jovem', data: '2024-02-10', hora: '18:00:00', local: 'Ginásio', status: 'confirmado', template_id: 3, tags: ['evento', 'jovens'], observacoes: null, created_at: '2024-01-01', updated_at: '2024-01-01', templates: mockTemplates[2] },
+  { id: 1, nome: 'Culto - 14/01/2024', data: '2024-01-14', hora: '10:00:00', local: 'Templo Principal', status: 'confirmado', template_id: 1, tags: ['culto', 'domingo'], observacoes: null, audio_url: null, created_at: '2024-01-01', updated_at: '2024-01-01', templates: mockTemplates[0] },
+  { id: 2, nome: 'Culto - 17/01/2024', data: '2024-01-17', hora: '19:30:00', local: 'Templo Principal', status: 'rascunho', template_id: 2, tags: ['culto', 'quarta'], observacoes: null, audio_url: null, created_at: '2024-01-01', updated_at: '2024-01-01', templates: mockTemplates[1] },
+  { id: 3, nome: 'Conferência Jovem', data: '2024-02-10', hora: '18:00:00', local: 'Ginásio', status: 'confirmado', template_id: 3, tags: ['evento', 'jovens'], observacoes: null, audio_url: null, created_at: '2024-01-01', updated_at: '2024-01-01', templates: mockTemplates[2] },
 ]
 
 export const mockEventoMusicas: EventoMusicaWithMusica[] = [

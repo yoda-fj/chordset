@@ -35,6 +35,18 @@ function initSchema() {
         console.log('[Migration] Adding audio_url column to musicas...')
         db.exec('ALTER TABLE musicas ADD COLUMN audio_url TEXT')
       }
+
+      // Migrate eventos table
+      try {
+        const eventosColumns = db.prepare("PRAGMA table_info(eventos)").all() as any[]
+        const hasEventoAudioUrl = eventosColumns.some(col => col.name === 'audio_url')
+        if (!hasEventoAudioUrl) {
+          console.log('[Migration] Adding audio_url column to eventos...')
+          db.exec('ALTER TABLE eventos ADD COLUMN audio_url TEXT')
+        }
+      } catch (e) {
+        // ignore
+      }
     } catch (e) {
       // Columns may already exist in some installations
     }
