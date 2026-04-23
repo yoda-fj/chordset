@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { useParams, useRouter } from 'next/navigation'
-import { ArrowLeft, Music, Check, ChevronLeft, ChevronRight, Menu, X, Mic, Upload, Trash2, Play, Pause, Loader2, ChevronRight as ChevronRightIcon } from 'lucide-react'
+import { Music, Check, ChevronLeft, ChevronRight, Menu, X, Mic, Upload, Trash2, Play, Pause, Loader2, ChevronRight as ChevronRightIcon } from 'lucide-react'
 import Link from 'next/link'
 import { CifraViewer } from '@/components/chords'
 
@@ -376,17 +376,15 @@ export default function SetlistPage() {
           <button onClick={() => setShowSidebar(!showSidebar)} className="p-2 hover:bg-gray-100 rounded-lg" title={showSidebar ? 'Fechar lista' : 'Abrir lista'}>
             {showSidebar ? <X size={20} /> : <Menu size={20} />}
           </button>
-        </div>
-
-        <div className="flex items-center gap-3">
-          <button onClick={() => router.back()} className="p-2 hover:bg-gray-100 rounded-lg">
-            <ArrowLeft size={20} />
-          </button>
           <div>
             <h1 className="font-bold text-gray-900">{evento.nome}</h1>
             <p className="text-sm text-gray-500">{selectedIndex + 1} de {musicas.length}</p>
           </div>
         </div>
+
+        <button onClick={() => router.back()} className="p-2 hover:bg-gray-100 rounded-lg" title="Fechar">
+          <X size={20} />
+        </button>
       </header>
 
       {/* Main content */}
