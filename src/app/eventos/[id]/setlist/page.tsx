@@ -372,6 +372,12 @@ export default function SetlistPage() {
     <div className="h-screen flex flex-col bg-gray-100 overflow-hidden">
       {/* Header */}
       <header className="bg-white border-b px-4 py-3 flex items-center justify-between shrink-0">
+        <div className="flex items-center gap-2">
+          <button onClick={() => setShowSidebar(!showSidebar)} className="p-2 hover:bg-gray-100 rounded-lg" title={showSidebar ? 'Fechar lista' : 'Abrir lista'}>
+            {showSidebar ? <X size={20} /> : <Menu size={20} />}
+          </button>
+        </div>
+
         <div className="flex items-center gap-3">
           <button onClick={() => router.back()} className="p-2 hover:bg-gray-100 rounded-lg">
             <ArrowLeft size={20} />
@@ -380,12 +386,6 @@ export default function SetlistPage() {
             <h1 className="font-bold text-gray-900">{evento.nome}</h1>
             <p className="text-sm text-gray-500">{selectedIndex + 1} de {musicas.length}</p>
           </div>
-        </div>
-
-        <div className="flex items-center gap-2">
-          <button onClick={() => setShowSidebar(!showSidebar)} className="p-2 hover:bg-gray-100 rounded-lg" title={showSidebar ? 'Fechar lista' : 'Abrir lista'}>
-            {showSidebar ? <X size={20} /> : <Menu size={20} />}
-          </button>
         </div>
       </header>
 
