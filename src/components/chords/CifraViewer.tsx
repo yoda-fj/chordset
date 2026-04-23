@@ -11,6 +11,8 @@ import {
   ZoomOut, 
   Maximize, 
   Minimize,
+  Menu,
+  X,
   ChevronDown,
   ChevronUp
 } from 'lucide-react';
@@ -26,6 +28,8 @@ interface CifraViewerProps {
   className?: string;
   isFullscreen?: boolean;
   onFullscreenChange?: (isFullscreen: boolean) => void;
+  onToggleSidebar?: () => void;
+  sidebarOpen?: boolean;
 }
 
 export function CifraViewer({
@@ -39,6 +43,8 @@ export function CifraViewer({
   className = '',
   isFullscreen = false,
   onFullscreenChange,
+  onToggleSidebar,
+  sidebarOpen = false,
 }: CifraViewerProps) {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   
@@ -83,6 +89,21 @@ export function CifraViewer({
       {/* Controls Bar */}
       {showControls && (
         <div className={`bg-white rounded-xl p-2 border border-slate-200 shadow-sm mb-2 flex flex-wrap items-center gap-2 shrink-0 ${isFullscreen ? 'fixed top-4 left-4 right-4 z-50' : ''}`}>
+        {/* Sidebar toggle - only in fullscreen */}
+        {isFullscreen && onToggleSidebar && (
+          <button
+            onClick={onToggleSidebar}
+            className="p-1.5 hover:bg-slate-100 rounded"
+            title={sidebarOpen ? 'Fechar lista' : 'Abrir lista'}
+          >
+            {sidebarOpen ? (
+              <X className="w-4 h-4 text-slate-600" />
+            ) : (
+              <Menu className="w-4 h-4 text-slate-600" />
+            )}
+          </button>
+        )}
+        
         {/* Tom */}
         <div className="flex items-center gap-1 px-2">
           <Music2 className="w-4 h-4 text-indigo-600" />
