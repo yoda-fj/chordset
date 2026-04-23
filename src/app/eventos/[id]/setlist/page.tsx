@@ -383,7 +383,7 @@ export default function SetlistPage() {
         </div>
 
         <div className="flex items-center gap-2">
-          <button onClick={() => setShowSidebar(!showSidebar)} className="p-2 hover:bg-gray-100 rounded-lg lg:hidden">
+          <button onClick={() => setShowSidebar(!showSidebar)} className="p-2 hover:bg-gray-100 rounded-lg" title={showSidebar ? 'Fechar lista' : 'Abrir lista'}>
             {showSidebar ? <X size={20} /> : <Menu size={20} />}
           </button>
         </div>
