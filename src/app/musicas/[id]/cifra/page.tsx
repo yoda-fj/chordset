@@ -52,7 +52,11 @@ export default function CifraPage() {
         setMusica(data)
         setObservacao(data.observacao || '')
         if (data.audio_url) {
-          setAudioUrl(data.audio_url)
+          // Convert path for Docker standalone mode
+          const audioPath = data.audio_url.startsWith('/musicas-audio/')
+            ? data.audio_url.replace('/musicas-audio/', '/api/musicas-audio/')
+            : data.audio_url
+          setAudioUrl(audioPath)
         }
       } catch (error) {
         console.error('Erro ao carregar música:', error)
@@ -146,7 +150,11 @@ export default function CifraPage() {
       if (res.ok) {
         const updated = await res.json()
         setMusica(updated)
-        setAudioUrl(updated.audio_url)
+        // Convert path for Docker standalone mode
+        const audioPath = updated.audio_url?.startsWith('/musicas-audio/')
+          ? updated.audio_url.replace('/musicas-audio/', '/api/musicas-audio/')
+          : updated.audio_url
+        setAudioUrl(audioPath)
         setAudioBlob(null)
       } else {
         const err = await res.json()
@@ -173,7 +181,11 @@ export default function CifraPage() {
       if (res.ok) {
         const updated = await res.json()
         setMusica(updated)
-        setAudioUrl(updated.audio_url)
+        // Convert path for Docker standalone mode
+        const audioPath = updated.audio_url?.startsWith('/musicas-audio/')
+          ? updated.audio_url.replace('/musicas-audio/', '/api/musicas-audio/')
+          : updated.audio_url
+        setAudioUrl(audioPath)
         if (audioUrl?.startsWith('blob:')) {
           URL.revokeObjectURL(audioUrl)
         }
@@ -214,7 +226,11 @@ export default function CifraPage() {
     if (audioUrl?.startsWith('blob:')) {
       URL.revokeObjectURL(audioUrl)
     }
-    setAudioUrl(musica?.audio_url || null)
+    // Convert path for Docker standalone mode
+    const audioPath = musica?.audio_url?.startsWith('/musicas-audio/')
+      ? musica.audio_url.replace('/musicas-audio/', '/api/musicas-audio/')
+      : musica?.audio_url || null
+    setAudioUrl(audioPath)
     setAudioBlob(null)
   }
 
