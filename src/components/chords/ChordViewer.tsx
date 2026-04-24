@@ -39,15 +39,6 @@ export const ChordViewer = ({
     return tabPattern.test(trimmed);
   };
 
-  // Detecta se uma linha é só acorde (sem letra), tipo "A D/F# Em7"
-  const isChordLine = (line: string): boolean => {
-    // Remove espaços e verifica se só tem acordes (entre colchetes) ou chord names
-    const cleanLine = line.trim().replace(/\s+/g, ' ');
-    // Se tem apenas notas de acorde (A, Am, A7, etc) separadas por espaço, sem letras minúsculas restantes
-    const chordOnlyPattern = /^(?:\[?[A-G][#b]?(?:m|maj|min|dim|aug|sus|add|7|9|11|13|4|5|6|7add9|7sus4)*\]?(?:\s+|$))+$/;
-    return chordOnlyPattern.test(cleanLine) && /[A-G]/.test(cleanLine);
-  };
-
   const parsedLines = useMemo(() => {
     const lines: { 
       type: 'section' | 'chords' | 'lyrics' | 'empty' | 'directive' | 'tab'; 
@@ -146,7 +137,7 @@ export const ChordViewer = ({
     }
     
     return lines;
-  }, [chordProContent, semitones]);
+  }, [chordProContent, semitones, showTablatura]);
 
   return (
     <div className={`chord-viewer bg-slate-50 dark:bg-slate-900 rounded-lg p-6 font-sans leading-relaxed ${isFullscreen ? 'min-h-full pt-16' : 'min-h-0'}`}>
