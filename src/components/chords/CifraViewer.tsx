@@ -13,8 +13,8 @@ import {
   Minimize,
   Menu,
   X,
-  ChevronDown,
-  ChevronUp
+  Eye,
+  EyeOff
 } from 'lucide-react';
 
 interface CifraViewerProps {
@@ -56,6 +56,7 @@ export function CifraViewer({
   // Display settings
   const [fontSize, setFontSize] = useState(16);
   const [showSidebar, setShowSidebar] = useState(false);
+  const [showTablatura, setShowTablatura] = useState(true);
 
   const handleTranspose = (newTom: string) => {
     if (!originalTom || !cifra) return;
@@ -142,6 +143,19 @@ export function CifraViewer({
           <ZoomIn className="w-4 h-4 text-slate-600" />
         </button>
 
+        {/* Tablatura toggle */}
+        <button
+          onClick={() => setShowTablatura(!showTablatura)}
+          className="p-1.5 hover:bg-slate-100 rounded"
+          title={showTablatura ? 'Esconder tablatura' : 'Mostrar tablatura'}
+        >
+          {showTablatura ? (
+            <Eye className="w-4 h-4 text-slate-600" />
+          ) : (
+            <EyeOff className="w-4 h-4 text-slate-400" />
+          )}
+        </button>
+
         {/* Autoscroll - always visible */}
         <Autoscroll targetRef={scrollContainerRef} />
         
@@ -173,14 +187,15 @@ export function CifraViewer({
         className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-auto flex-1 min-h-0"
         style={isFullscreen ? { maxHeight: 'calc(100vh - 80px)' } : {}}
       >
-        <ChordViewer
-          chordProContent={currentCifra || cifra}
-          semitones={0}
-          title={titulo}
-          artist={artista}
-          fontSize={fontSize}
-          isFullscreen={isFullscreen}
-        />
+      <ChordViewer
+        chordProContent={currentCifra || cifra}
+        semitones={0}
+        title={titulo}
+        artist={artista}
+        fontSize={fontSize}
+        isFullscreen={isFullscreen}
+        showTablatura={showTablatura}
+      />
       </div>
     </div>
   );

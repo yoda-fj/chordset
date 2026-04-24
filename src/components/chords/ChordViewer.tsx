@@ -10,6 +10,7 @@ interface ChordViewerProps {
   artist?: string;
   fontSize?: number;
   isFullscreen?: boolean;
+  showTablatura?: boolean;
 }
 
 interface ChordPosition {
@@ -24,7 +25,8 @@ export const ChordViewer = ({
   title,
   artist,
   fontSize = 16,
-  isFullscreen = false
+  isFullscreen = false,
+  showTablatura = true
 }: ChordViewerProps) => {
   
   // Detecta se uma linha é tablatura (e.g., e|--2-2---|)
@@ -79,6 +81,9 @@ export const ChordViewer = ({
       
       // Detect tablature lines
       if (isTabLine(line)) {
+        if (!showTablatura) {
+          continue; // skip tab lines when hidden
+        }
         lines.push({ type: 'tab', content: line });
         continue;
       }
