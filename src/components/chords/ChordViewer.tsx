@@ -73,6 +73,11 @@ export const ChordViewer = ({
       // Detect tablature lines
       if (isTabLine(line)) {
         if (!showTablatura) {
+          // Se a linha anterior for acordes, removemos também (é a cifra do riff)
+          const lastLine = lines.length > 0 ? lines[lines.length - 1] : null;
+          if (lastLine && lastLine.type === 'chords') {
+            lines.pop();
+          }
           continue; // skip tab lines when hidden
         }
         lines.push({ type: 'tab', content: line });
