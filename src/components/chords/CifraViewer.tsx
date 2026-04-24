@@ -89,14 +89,8 @@ export function CifraViewer({
       {/* Controls Bar */}
       {showControls && (
         <div className={`bg-white rounded-xl p-2 border border-slate-200 shadow-sm mb-2 flex flex-wrap items-center gap-2 shrink-0 ${isFullscreen ? 'fixed top-4 left-4 right-4 z-50' : ''}`}>
-        {/* Tom */}
-        <div className="flex items-center gap-1 px-2">
-          <Music2 className="w-4 h-4 text-indigo-600" />
-          <span className="text-sm font-medium text-slate-700">{currentTom}</span>
-        </div>
-        
-        {/* Sidebar toggle - only in fullscreen */}
-        {isFullscreen && onToggleSidebar && (
+        {/* Sidebar toggle */}
+        {onToggleSidebar && (
           <button
             onClick={onToggleSidebar}
             className="p-1.5 hover:bg-slate-100 rounded"
@@ -109,6 +103,12 @@ export function CifraViewer({
             )}
           </button>
         )}
+        
+        {/* Tom */}
+        <div className="flex items-center gap-1 px-2">
+          <Music2 className="w-4 h-4 text-indigo-600" />
+          <span className="text-sm font-medium text-slate-700">{currentTom}</span>
+        </div>
         
         {/* Transpose */}
         {originalTom && (
