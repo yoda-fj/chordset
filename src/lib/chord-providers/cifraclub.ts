@@ -4,6 +4,7 @@
 // =====================================
 
 import { ChordProvider, SearchResult, SongFromProvider, SongWithChords } from './types';
+import { ensureChordProFormat } from '@/utils/chordpro-converter';
 
 // URL da API interna do Cifra Club
 // Em desenvolvimento usa localhost, em produção usa a URL configurada
@@ -96,13 +97,17 @@ export const cifraClubProvider: ChordProvider = {
 
       const data = await response.json();
 
+      const rawCifra = Array.isArray(data.cifra) ? data.cifra.join('\n') : data.cifra;
+      // Converte formato texto do Cifra Club para ChordPro
+      const chordProCifra = ensureChordProFormat(rawCifra || '');
+
       return {
         id: songUrl,
         titulo: data.name || data.musica || '',
         artista: data.artist || data.artista || '',
         tom: data.key || data.tom || null,
         url: songUrl,
-        cifra: Array.isArray(data.cifra) ? data.cifra.join('\n') : data.cifra,
+        cifra: chordProCifra,
         youtubeUrl: data.youtube_url || null,
       };
     } catch (error) {
