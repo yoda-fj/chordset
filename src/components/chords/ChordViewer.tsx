@@ -265,14 +265,13 @@ export const ChordViewer = ({
 
       {/* ======== RENDERIZAÇÃO FORMATO TEXTO ======== */}
       {format === 'text' && (
-        <pre
+        <div
           className="font-mono text-slate-800 dark:text-slate-200"
-          style={{ 
+          style={{
             fontSize: `${fontSize}px`,
             whiteSpace: 'pre-wrap',
             wordBreak: 'normal',
             overflowWrap: 'break-word',
-            margin: 0 
           }}
         >
           {parsedTextLines.map((line, lineIndex) => {
@@ -298,7 +297,7 @@ export const ChordViewer = ({
 
             if (line.type === 'chords') {
               return (
-                <div key={lineIndex} className="text-emerald-600 dark:text-emerald-400 font-bold whitespace-pre">
+                <div key={lineIndex} className="text-emerald-600 dark:text-emerald-400 font-bold">
                   {line.content}
                 </div>
               );
@@ -306,12 +305,12 @@ export const ChordViewer = ({
 
             // lyrics
             return (
-              <div key={lineIndex} className="whitespace-pre">
+              <div key={lineIndex}>
                 {line.content}
               </div>
             );
           })}
-        </pre>
+        </div>
       )}
 
       {/* ======== RENDERIZAÇÃO FORMATO CHORDPRO ======== */}
