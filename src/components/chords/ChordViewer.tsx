@@ -271,7 +271,7 @@ export const ChordViewer = ({
             fontSize: `${fontSize}px`,
             whiteSpace: 'pre-wrap',
             wordBreak: 'normal',
-            overflowWrap: 'break-word',
+            overflowWrap: 'normal',
           }}
         >
           {parsedTextLines.map((line, lineIndex) => {
