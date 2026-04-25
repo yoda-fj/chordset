@@ -116,9 +116,9 @@ export const ChordViewer = ({
   const parsedChordProLines = useMemo(() => {
     if (format !== 'chordpro') return [];
 
-    const lines: {
-      type: 'section' | 'chords' | 'lyrics' | 'empty' | 'directive' | 'tab';
-      content?: string;
+    const lines: { 
+      type: 'section' | 'chords' | 'lyrics' | 'empty' | 'directive' | 'tab'; 
+      content?: string; 
       chords?: ChordPosition[];
     }[] = [];
 
@@ -241,10 +241,10 @@ export const ChordViewer = ({
       }
 
       if (chords.length > 0) {
-        lines.push({
-          type: 'chords',
+        lines.push({ 
+          type: 'chords', 
           content: plainText,
-          chords
+          chords 
         });
       } else {
         lines.push({ type: 'lyrics', content: line });
@@ -265,51 +265,46 @@ export const ChordViewer = ({
 
       {/* ======== RENDERIZAÇÃO FORMATO TEXTO ======== */}
       {format === 'text' && (
-        <pre
-          className="chord-sheet leading-relaxed font-mono text-slate-800 dark:text-slate-200"
-          style={{
-            fontSize: `${fontSize}px`,
-            whiteSpace: 'pre',
-            overflowX: 'auto'
-          }}
-        >
-          {parsedTextLines.map((line, lineIndex) => {
-            if (line.type === 'section') {
-              return (
-                <div key={lineIndex} className="text-indigo-600 dark:text-indigo-400 font-bold uppercase tracking-wider my-4 py-2 border-b-2 border-indigo-200 dark:border-indigo-800">
-                  [{line.content}]
-                </div>
-              );
-            }
+        <div className="overflow-x-auto" style={{ fontSize: `${fontSize}px` }}>
+          <pre className="font-mono text-slate-800 dark:text-slate-200" style={{ whiteSpace: 'pre', margin: 0, fontSize: 'inherit' }}>
+            {parsedTextLines.map((line, lineIndex) => {
+              if (line.type === 'section') {
+                return (
+                  <div key={lineIndex} className="text-indigo-600 dark:text-indigo-400 font-bold uppercase tracking-wider my-4 py-2 border-b-2 border-indigo-200 dark:border-indigo-800">
+                    [{line.content}]
+                  </div>
+                );
+              }
 
-            if (line.type === 'empty') {
-              return <div key={lineIndex} className="h-4" />;
-            }
+              if (line.type === 'empty') {
+                return <div key={lineIndex} className="h-4" />;
+              }
 
-            if (line.type === 'tab') {
+              if (line.type === 'tab') {
+                return (
+                  <div key={lineIndex} className="text-amber-600 dark:text-amber-400 opacity-80">
+                    {line.content}
+                  </div>
+                );
+              }
+
+              if (line.type === 'chords') {
+                return (
+                  <div key={lineIndex} className="text-emerald-600 dark:text-emerald-400 font-bold whitespace-pre">
+                    {line.content}
+                  </div>
+                );
+              }
+
+              // lyrics
               return (
-                <div key={lineIndex} className="text-amber-600 dark:text-amber-400 opacity-80">
+                <div key={lineIndex} className="whitespace-pre">
                   {line.content}
                 </div>
               );
-            }
-
-            if (line.type === 'chords') {
-              return (
-                <div key={lineIndex} className="text-emerald-600 dark:text-emerald-400 font-bold whitespace-pre">
-                  {line.content}
-                </div>
-              );
-            }
-
-            // lyrics
-            return (
-              <div key={lineIndex} className="whitespace-pre">
-                {line.content}
-              </div>
-            );
-          })}
-        </pre>
+            })}
+          </pre>
+        </div>
       )}
 
       {/* ======== RENDERIZAÇÃO FORMATO CHORDPRO ======== */}
