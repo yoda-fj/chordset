@@ -265,46 +265,53 @@ export const ChordViewer = ({
 
       {/* ======== RENDERIZAÇÃO FORMATO TEXTO ======== */}
       {format === 'text' && (
-        <div className="overflow-x-auto" style={{ fontSize: `${fontSize}px` }}>
-          <pre className="font-mono text-slate-800 dark:text-slate-200" style={{ whiteSpace: 'pre', margin: 0, fontSize: 'inherit' }}>
-            {parsedTextLines.map((line, lineIndex) => {
-              if (line.type === 'section') {
-                return (
-                  <div key={lineIndex} className="text-indigo-600 dark:text-indigo-400 font-bold uppercase tracking-wider my-4 py-2 border-b-2 border-indigo-200 dark:border-indigo-800">
-                    [{line.content}]
-                  </div>
-                );
-              }
-
-              if (line.type === 'empty') {
-                return <div key={lineIndex} className="h-4" />;
-              }
-
-              if (line.type === 'tab') {
-                return (
-                  <div key={lineIndex} className="text-amber-600 dark:text-amber-400 opacity-80">
-                    {line.content}
-                  </div>
-                );
-              }
-
-              if (line.type === 'chords') {
-                return (
-                  <div key={lineIndex} className="text-emerald-600 dark:text-emerald-400 font-bold whitespace-pre">
-                    {line.content}
-                  </div>
-                );
-              }
-
-              // lyrics
+        <pre
+          className="font-mono text-slate-800 dark:text-slate-200"
+          style={{ 
+            fontSize: `${fontSize}px`,
+            whiteSpace: 'pre-wrap',
+            wordBreak: 'normal',
+            overflowWrap: 'break-word',
+            margin: 0 
+          }}
+        >
+          {parsedTextLines.map((line, lineIndex) => {
+            if (line.type === 'section') {
               return (
-                <div key={lineIndex} className="whitespace-pre">
+                <div key={lineIndex} className="text-indigo-600 dark:text-indigo-400 font-bold uppercase tracking-wider my-4 py-2 border-b-2 border-indigo-200 dark:border-indigo-800">
+                  [{line.content}]
+                </div>
+              );
+            }
+
+            if (line.type === 'empty') {
+              return <div key={lineIndex} className="h-4" />;
+            }
+
+            if (line.type === 'tab') {
+              return (
+                <div key={lineIndex} className="text-amber-600 dark:text-amber-400 opacity-80">
                   {line.content}
                 </div>
               );
-            })}
-          </pre>
-        </div>
+            }
+
+            if (line.type === 'chords') {
+              return (
+                <div key={lineIndex} className="text-emerald-600 dark:text-emerald-400 font-bold whitespace-pre">
+                  {line.content}
+                </div>
+              );
+            }
+
+            // lyrics
+            return (
+              <div key={lineIndex} className="whitespace-pre">
+                {line.content}
+              </div>
+            );
+          })}
+        </pre>
       )}
 
       {/* ======== RENDERIZAÇÃO FORMATO CHORDPRO ======== */}
