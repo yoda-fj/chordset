@@ -2,6 +2,7 @@
 
 import { useMemo } from 'react';
 import { transposeChord } from '@/utils/chords';
+import { isTextChordFormat } from '@/utils/chordpro-converter';
 
 interface ChordViewerProps {
   chordProContent: string;
@@ -22,19 +23,6 @@ interface ChordPosition {
 // Detecta se o conteúdo é formato ChordPro (tem [acordes] entre colchetes)
 const isChordProFormat = (content: string): boolean => {
   return /\[[A-G][#b]?(?:m|maj|min|dim|aug|sus|add|[0-9]|M|°|ø|\+)*(?:\/[A-G][#b]?)?\]/.test(content);
-};
-
-// Detecta se é formato texto com acordes soltos (linha de acordes acima de letras)
-const isTextChordFormat = (content: string): boolean => {
-  const lines = content.split('\n');
-  let chordLineCount = 0;
-  const chordLineRegex = /^[\s]*[A-G][#b]?(?:m|maj|min|dim|aug|sus|add|[0-9]|M|°|ø|\+)*(?:\/[A-G][#b]?)?(?:\s+[A-G][#b]?(?:m|maj|min|dim|aug|sus|add|[0-9]|M|°|ø|\+)*(?:\/[A-G][#b]?)?)*\s*$/;
-  for (const line of lines) {
-    if (chordLineRegex.test(line)) {
-      chordLineCount++;
-    }
-  }
-  return chordLineCount >= 2 && !isChordProFormat(content);
 };
 
 export const ChordViewer = ({
