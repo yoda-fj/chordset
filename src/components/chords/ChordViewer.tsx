@@ -32,11 +32,16 @@ export const ChordViewer = ({
   // Detecta se uma linha é tablatura (e.g., e|--2-2---|)
   const isTabLine = (line: string): boolean => {
     const trimmed = line.trim();
-    // Tab lines start with a string identifier (e, B, G, D, A, E) followed by |
-    // and contain mostly tab characters (digits, -, |, /, \, h, ~)
-    // Allow repeat annotations like (8x) at the end
     const tabPattern = /^[a-gA-G]\|[-|0-9\-~h\//\\\s]+\(?[0-9]*x?\)?.*$/i;
     return tabPattern.test(trimmed);
+  };
+
+  // Detecta se uma linha é de palhetadas (e.g., ↓ ↓ ↑ ↓ ↑ ↓ ↓ ↓ ↑ ↓ ↑)
+  const isStrummingLine = (line: string): boolean => {
+    const trimmed = line.trim();
+    // Contém apenas palhetadas e espaços
+    const strumPattern = /^[↓↑→←↓↑→←\s]+$/;
+    return strumPattern.test(trimmed) && /[↓↑→←↓↑→←]/.test(trimmed);
   };
 
   const parsedLines = useMemo(() => {
@@ -48,8 +53,50 @@ export const ChordViewer = ({
     
     const rawLines = chordProContent.split('\n');
     
-    for (const line of rawLines) {
+    // Pré-análise: descobrir quais linhas fazem parte de blocos de tablatura
+    const linesToSkip = new Set<number>();
+    
+    if (!showTablatura) {
+      for (let i = 0; i < rawLines.length; i++) {
+        if (isTabLine(rawLines[i])) {
+          // Encontrou tablatura - marca o bloco inteiro
+          
+          // 1. Verifica se a linha anterior é acordes (cifra do riff)
+          if (i > 0) {
+            const prevLine = rawLines[i - 1].trim();
+            const hasChords = /\[[A-G][#b]?(?:m|maj|min|dim|aug|sus|add|7|9|11|13|4|5|6|7add9|7sus4)*\]/.test(prevLine) ||
+                              /^[A-G][#b]?(?:m|maj|min|dim|aug|sus|add|7|9|11|13|4|5|6|7add9|7sus4)*(?:\s+[A-G][#b]?(?:m|maj|min|dim|aug|sus|add|7|9|11|13|4|5|6|7add9|7sus4)*)*$/.test(prevLine);
+            if (hasChords) {
+              linesToSkip.add(i - 1);
+            }
+          }
+          
+          // 2. Marca todas as linhas de tablatura consecutivas
+          let j = i;
+          while (j < rawLines.length && isTabLine(rawLines[j])) {
+            linesToSkip.add(j);
+            j++;
+          }
+          
+          // 3. Marca a linha de palhetadas que vem depois (se houver)
+          if (j < rawLines.length && isStrummingLine(rawLines[j])) {
+            linesToSkip.add(j);
+          }
+          
+          // Avança o índice para depois do bloco
+          i = j;
+        }
+      }
+    }
+    
+    for (let i = 0; i < rawLines.length; i++) {
+      const line = rawLines[i];
       const trimmedLine = line.trim();
+      
+      // Se esta linha deve ser pulada (parte do bloco de tablatura escondido)
+      if (linesToSkip.has(i)) {
+        continue;
+      }
       
       // Section header {verse}, {chorus}, etc.
       const sectionMatch = line.match(/^\{\s*(verse|chorus|bridge|intro|outro|solo|pre-chorus|interlude)/i);
@@ -70,15 +117,10 @@ export const ChordViewer = ({
         continue;
       }
       
-      // Detect tablature lines
+      // Detect tablature lines (normalmente já pego pelo linesToSkip, mas mantém pra segurança)
       if (isTabLine(line)) {
         if (!showTablatura) {
-          // Se a linha anterior for acordes, removemos também (é a cifra do riff)
-          const lastLine = lines.length > 0 ? lines[lines.length - 1] : null;
-          if (lastLine && lastLine.type === 'chords') {
-            lines.pop();
-          }
-          continue; // skip tab lines when hidden
+          continue;
         }
         lines.push({ type: 'tab', content: line });
         continue;
@@ -87,13 +129,13 @@ export const ChordViewer = ({
       // Parse chord line
       const chords: ChordPosition[] = [];
       let plainText = '';
-      let i = 0;
+      let idx = 0;
       
-      while (i < line.length) {
-        if (line[i] === '[') {
-          const endBracket = line.indexOf(']', i);
+      while (idx < line.length) {
+        if (line[idx] === '[') {
+          const endBracket = line.indexOf(']', idx);
           if (endBracket !== -1) {
-            const chord = line.slice(i + 1, endBracket);
+            const chord = line.slice(idx + 1, endBracket);
             const transposedChord = semitones !== 0 
               ? transposeChord(chord, semitones) 
               : chord;
@@ -104,13 +146,13 @@ export const ChordViewer = ({
               displayPosition: plainText.length
             });
             
-            i = endBracket + 1;
+            idx = endBracket + 1;
             continue;
           }
         }
         
-        plainText += line[i];
-        i++;
+        plainText += line[idx];
+        idx++;
       }
       
       // Ajusta posições de acordes consecutivos para evitar sobreposição
@@ -119,11 +161,8 @@ export const ChordViewer = ({
           const prevChord = chords[j - 1];
           const currChord = chords[j];
 
-          // Calcula quanto espaço o acorde anterior ocupa
           const prevChordWidth = prevChord.chord.length;
 
-          // Se a posição atual é próxima ou sobrepõe a posição acumulada do anterior,
-          // ajusta para ficar logo após o acorde anterior
           if (currChord.position <= prevChord.position + prevChordWidth) {
             currChord.displayPosition = prevChord.displayPosition + prevChordWidth;
           }
@@ -190,7 +229,7 @@ export const ChordViewer = ({
           
           if (line.type === 'chords' && line.chords && line.chords.length > 0) {
             const text = line.content || '';
-            const CHAR_WIDTH = 8.5; // Approximate pixel width of a character (monospace)
+            const CHAR_WIDTH = 8.5;
 
             return (
               <div key={lineIndex} className="chord-line-container my-2 relative min-h-[3.2rem]">
