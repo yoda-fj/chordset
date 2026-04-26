@@ -227,6 +227,46 @@ export default function DrumDebugPage() {
           </div>
         </div>
 
+        {/* Teste Direto sem Transport */}
+        <div className="bg-white rounded-lg p-4 border">
+          <h2 className="font-bold mb-4">Teste Direto (sem Transport)</h2>
+          <div className="flex gap-2">
+            <button
+              onClick={() => {
+                if (!sampler || !isLoaded) return
+                addLog('Teste direto: C1')
+                sampler.triggerAttackRelease('C1', '8n')
+              }}
+              disabled={!isLoaded}
+              className="px-3 py-2 bg-red-500 text-white rounded disabled:opacity-50"
+            >
+              Kick
+            </button>
+            <button
+              onClick={() => {
+                if (!sampler || !isLoaded) return
+                addLog('Teste direto: D1')
+                sampler.triggerAttackRelease('D1', '8n')
+              }}
+              disabled={!isLoaded}
+              className="px-3 py-2 bg-orange-500 text-white rounded disabled:opacity-50"
+            >
+              Snare
+            </button>
+            <button
+              onClick={() => {
+                if (!sampler || !isLoaded) return
+                addLog('Teste direto: F#1')
+                sampler.triggerAttackRelease('F#1', '8n')
+              }}
+              disabled={!isLoaded}
+              className="px-3 py-2 bg-yellow-500 text-white rounded disabled:opacity-50"
+            >
+              Hi-Hat
+            </button>
+          </div>
+        </div>
+
         {/* Drum Pads */}
         <div className="bg-white rounded-lg p-4 border">
           <h2 className="font-bold mb-4">Pads</h2>
@@ -248,12 +288,20 @@ export default function DrumDebugPage() {
         <div className="bg-black rounded-lg p-4 border">
           <div className="flex justify-between items-center mb-2">
             <h2 className="font-bold text-white">Console</h2>
-            <button
-              onClick={() => setLogs([])}
-              className="text-xs text-gray-400 hover:text-white"
-            >
-              Limpar
-            </button>
+            <div className="flex gap-2">
+              <button
+                onClick={() => navigator.clipboard.writeText(logs.join('\n'))}
+                className="text-xs text-gray-400 hover:text-white px-2 py-1 border border-gray-600 rounded"
+              >
+                Copy
+              </button>
+              <button
+                onClick={() => setLogs([])}
+                className="text-xs text-gray-400 hover:text-white"
+              >
+                Limpar
+              </button>
+            </div>
           </div>
           <textarea
             value={logs.join('\n')}
