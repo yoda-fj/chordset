@@ -57,10 +57,9 @@ RUN mkdir -p /data
 COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
 
-# Drum samples are mounted from host at /app/public/samples/drums
-# via symlink: /app/public/samples/drums -> /data/samples/drums
-RUN mkdir -p /app/public/samples && \
-    ln -sf /data/samples/drums /app/public/samples/drums
+# Drum samples are mounted from host via Coolify volume mount
+# Host /opt/chordset -> container /data
+# Samples are at /opt/chordset/samples/drums/ on host = /data/samples/drums/ in container
 
 # Run as root to allow writing to volume mount (Coolify manages permissions)
 USER root
