@@ -61,12 +61,13 @@ COPY --from=builder /app/.next/static ./.next/static
 RUN mkdir -p public/samples/drums && \
     cd public/samples/drums && \
     git clone --depth 1 https://github.com/gregharvey/drum-samples.git && \
-    mv drum-samples/kick ./kick && \
-    mv drum-samples/snare ./snare && \
-    mv drum-samples/hihat-closed ./hihat-closed && \
-    mv drum-samples/crash ./crash && \
-    mv drum-samples/ride ./ride && \
-    mv drum-samples/tom ./tom && \
+    ls -la drum-samples/ && \
+    cp -r drum-samples/kick ./kick && \
+    cp -r drum-samples/snare ./snare && \
+    cp -r drum-samples/hihat-closed ./hihat-closed && \
+    cp -r drum-samples/crash ./crash && \
+    cp -r drum-samples/ride ./ride && \
+    cp -r drum-samples/tom ./tom && \
     rm -rf drum-samples
 
 # Run as root to allow writing to volume mount (Coolify manages permissions)
