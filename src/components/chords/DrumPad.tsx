@@ -6,8 +6,6 @@ import { getSamplerUrls } from '@/lib/drum-samples';
 import { Play, Pause, Square, Volume2, VolumeX, Music } from 'lucide-react';
 
 interface DrumPadProps {
-  groove?: string | null; // JSON string com o groove salvo
-  onGrooveChange?: (groove: string) => void;
   readOnly?: boolean;
 }
 
@@ -131,7 +129,7 @@ const DRUM_PADS = [
   { note: 'G2', label: 'Tom H', key: 'G', color: 'bg-rose-500' },
 ];
 
-export function DrumPad({ groove, onGrooveChange, readOnly = false }: DrumPadProps) {
+export function DrumPad({ readOnly = false }: DrumPadProps) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [selectedGroove, setSelectedGroove] = useState<string>('rock-8');
   const [bpm, setBpm] = useState(120);
@@ -168,22 +166,12 @@ export function DrumPad({ groove, onGrooveChange, readOnly = false }: DrumPadPro
     }
   }, [volume, isMuted, sampler]);
 
-  // Carrega groove salvo
+  // Carrega groove salvo (apenas inicializa com BPM padrão)
   useEffect(() => {
-    if (groove) {
-      try {
-        const saved = JSON.parse(groove);
-        if (saved.grooveId) {
-          setSelectedGroove(saved.grooveId);
-        }
-        if (saved.bpm) {
-          setBpm(saved.bpm);
-        }
-      } catch {
-        // ignore invalid groove
-      }
+    if (PRESET_GROOVES[selectedGroove]) {
+      setBpm(PRESET_GROOVES[selectedGroove].bpm);
     }
-  }, [groove]);
+  }, []);
 
   const playPad = useCallback((note: string) => {
     if (!sampler || !isLoaded) return;
@@ -300,19 +288,11 @@ export function DrumPad({ groove, onGrooveChange, readOnly = false }: DrumPadPro
     setSelectedGroove(grooveId);
     const newBpm = PRESET_GROOVES[grooveId]?.bpm || 120;
     setBpm(newBpm);
-    
-    if (onGrooveChange) {
-      onGrooveChange(JSON.stringify({ grooveId, bpm: newBpm }));
-    }
   };
 
   const handleBpmChange = (newBpm: number) => {
     setBpm(newBpm);
     Tone.Transport.bpm.value = newBpm;
-    
-    if (onGrooveChange) {
-      onGrooveChange(JSON.stringify({ grooveId: selectedGroove, bpm: newBpm }));
-    }
   };
 
   if (!isLoaded) {

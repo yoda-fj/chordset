@@ -361,9 +361,9 @@ export default function CifraPage() {
           {sidebarOpen ? <ChevronRight size={20} /> : <ChevronLeft size={20} />}
         </button>
 
-        {/* Sidebar - Observacao + Audio */}
-        <div className={`transition-all duration-300 overflow-hidden print:hidden ${sidebarOpen ? 'w-80 opacity-100' : 'w-0 opacity-0'}`}>
-          <div className="space-y-4">
+        {/* Sidebar - Observacao + Audio + Drum Pad */}
+        <div className={`transition-all duration-300 print:hidden overflow-y-auto ${sidebarOpen ? 'w-80 opacity-100' : 'w-0 opacity-0'}`}>
+          <div className="space-y-4 p-4">
             {/* Observacao */}
             <div className="bg-white p-4 rounded-lg border">
               <h2 className="text-base font-semibold text-gray-900 mb-3">Observações</h2>
@@ -382,24 +382,7 @@ export default function CifraPage() {
             </div>
 
             {/* Drum Pad / Groove */}
-            <DrumPad
-              groove={musica?.groove}
-              onGrooveChange={async (groove) => {
-                try {
-                  const res = await fetch(`/api/musicas/${musicaId}`, {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ groove })
-                  });
-                  if (res.ok) {
-                    const updated = await res.json();
-                    setMusica(updated);
-                  }
-                } catch (e) {
-                  console.error('Error saving groove:', e);
-                }
-              }}
-            />
+            <DrumPad />
 
             {/* Audio Recording/Upload */}
             <div className="bg-white p-4 rounded-lg border">
