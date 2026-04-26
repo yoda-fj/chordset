@@ -138,8 +138,8 @@ export function DrumPad({ readOnly = false }: DrumPadProps) {
   const [sampler, setSampler] = useState<Tone.Sampler | null>(null);
   const [isLoaded, setIsLoaded] = useState(false);
   const [activePads, setActivePads] = useState<Set<string>>(new Set());
-  const sequenceRef = useRef<Tone.Sequence | null>(null);
   const activePadsTimeoutRef = useRef<Map<string, NodeJS.Timeout>>(new Map());
+  const sequenceRef = useRef<Tone.Sequence | null>(null);
 
   // Inicializa o sampler
   useEffect(() => {
@@ -155,8 +155,8 @@ export function DrumPad({ readOnly = false }: DrumPadProps) {
       }
     }).toDestination();
 
-    // Volume inicial (0dB = full volume)
-    newSampler.volume.value = 0;
+    // Volume inicial (10dB boost para compensar samples baixos)
+    newSampler.volume.value = 10;
     setSampler(newSampler);
 
     return () => {
@@ -164,11 +164,11 @@ export function DrumPad({ readOnly = false }: DrumPadProps) {
     };
   }, []);
 
-  // Atualiza volume (0-1 linear para dB)
+  // Atualiza volume (0-1 linear para dB, com +10 boost)
   useEffect(() => {
     if (sampler) {
-      // Converte 0-1 para -20dB a 0dB
-      const dbValue = isMuted ? -Infinity : (volume - 1) * 20;
+      // Converte 0-1 para -10dB a +10dB (com boost)
+      const dbValue = isMuted ? -Infinity : ((volume - 0.5) * 20) + 10;
       sampler.volume.value = dbValue;
     }
   }, [volume, isMuted, sampler]);
@@ -207,66 +207,37 @@ export function DrumPad({ readOnly = false }: DrumPadProps) {
   }, [sampler, isLoaded]);
 
   const startPlayback = useCallback(async () => {
-    if (!sampler || !isLoaded) {
-      console.log('[DrumPad] Sampler not ready:', { sampler: !!sampler, isLoaded });
-      return;
-    }
+    if (!sampler || !isLoaded) return;
     
-    try {
-      await Tone.start();
-      console.log('[DrumPad] Audio context started');
-    } catch (e) {
-      console.error('[DrumPad] Tone.start error:', e);
-      return;
-    }
+    await Tone.start();
     
-    try {
-      const pattern = PRESET_GROOVES[selectedGroove]?.pattern || PRESET_GROOVES['rock-8'].pattern;
-      const currentBpm = bpm || PRESET_GROOVES[selectedGroove]?.bpm || 120;
-      
-      console.log('[DrumPad] Starting pattern:', selectedGroove, currentBpm, pattern.length, 'hits');
-      
-      Tone.Transport.bpm.value = currentBpm;
-      
-      // Convert pattern to 16th note steps
-      const steps: (string[] | null)[] = Array(16).fill(null).map(() => []);
-      pattern.forEach(hit => {
-        const step = Math.floor(hit.time * 2) % 16;
-        if (!steps[step]) steps[step] = [];
-        steps[step].push(hit.note);
-      });
-
-      const seq = new Tone.Sequence(
-        (time, stepNotes) => {
-          if (stepNotes && Array.isArray(stepNotes) && stepNotes.length > 0) {
-            stepNotes.forEach(note => {
-              sampler.triggerAttackRelease(note, '16n', time);
-              // Schedule visual update
-              Tone.Draw.schedule(() => {
-                setActivePads(prev => new Set(prev).add(note));
-                setTimeout(() => {
-                  setActivePads(prev => {
-                    const next = new Set(prev);
-                    next.delete(note);
-                    return next;
-                  });
-                }, 150);
-              }, time);
-            });
-          }
-        },
-        steps,
-        '8n'
-      );
-
-      seq.start(0);
-      Tone.Transport.start();
-      sequenceRef.current = seq;
-      setIsPlaying(true);
-      console.log('[DrumPad] Playback started!');
-    } catch (e) {
-      console.error('[DrumPad] Playback error:', e);
-    }
+    const pattern = PRESET_GROOVES[selectedGroove]?.pattern || PRESET_GROOVES['rock-8'].pattern;
+    const currentBpm = bpm || PRESET_GROOVES[selectedGroove]?.bpm || 120;
+    Tone.Transport.bpm.value = currentBpm;
+    
+    // Para cada hit no pattern, determina em qual step (0-15) ele cai
+    // e cria um array de 16 posições onde cada uma é um array de notas ou null
+    const steps: (string[] | null)[] = Array(16).fill(null);
+    pattern.forEach(hit => {
+      const stepIndex = Math.floor(hit.time * 2) % 16;
+      if (!steps[stepIndex]) steps[stepIndex] = [];
+      steps[stepIndex]!.push(hit.note);
+    });
+    
+    // Cria a sequência usando Tone.Sequence - o callback recebe o valor do step
+    const seq = new Tone.Sequence((time, stepNotes) => {
+      // stepNotes é o valor no array de steps, pode ser null ou um array de notas
+      if (stepNotes && Array.isArray(stepNotes) && stepNotes.length > 0) {
+        stepNotes.forEach(note => {
+          sampler.triggerAttackRelease(note, '16n', time);
+        });
+      }
+    }, steps, '16n');
+    
+    sequenceRef.current = seq;
+    seq.start(0);
+    Tone.Transport.start();
+    setIsPlaying(true);
   }, [sampler, isLoaded, selectedGroove, bpm]);
 
   const stopPlayback = useCallback(() => {
