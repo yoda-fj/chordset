@@ -145,7 +145,6 @@ export function DrumPad({ readOnly = false }: DrumPadProps) {
   useEffect(() => {
     const newSampler = new Tone.Sampler({
       urls: getSamplerUrls('kit1'),
-      baseUrl: '',
       onload: () => {
         console.log('[DrumPad] Samples loaded!');
         setIsLoaded(true);
