@@ -290,7 +290,20 @@ export default function DrumDebugPage() {
             <h2 className="font-bold text-white">Console</h2>
             <div className="flex gap-2">
               <button
-                onClick={() => navigator.clipboard.writeText(logs.join('\n'))}
+                onClick={() => {
+                  const text = logs.join('\n')
+                  if (navigator.clipboard) {
+                    navigator.clipboard.writeText(text)
+                  } else {
+                    // Fallback: criar textarea temporário
+                    const ta = document.createElement('textarea')
+                    ta.value = text
+                    document.body.appendChild(ta)
+                    ta.select()
+                    document.execCommand('copy')
+                    document.body.removeChild(ta)
+                  }
+                }}
                 className="text-xs text-gray-400 hover:text-white px-2 py-1 border border-gray-600 rounded"
               >
                 Copy
