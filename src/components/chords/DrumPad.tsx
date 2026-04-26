@@ -219,7 +219,7 @@ export function DrumPad({ readOnly = false }: DrumPadProps) {
 
     const seq = new Tone.Sequence(
       (time, stepNotes) => {
-        if (stepNotes) {
+        if (stepNotes && Array.isArray(stepNotes) && stepNotes.length > 0) {
           stepNotes.forEach(note => {
             sampler.triggerAttackRelease(note, '16n', time);
             // Schedule visual update
