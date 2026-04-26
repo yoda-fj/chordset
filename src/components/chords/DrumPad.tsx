@@ -139,7 +139,7 @@ export function DrumPad({ readOnly = false }: DrumPadProps) {
   const [isLoaded, setIsLoaded] = useState(false);
   const [activePads, setActivePads] = useState<Set<string>>(new Set());
   const activePadsTimeoutRef = useRef<Map<string, NodeJS.Timeout>>(new Map());
-  const sequenceRef = useRef<number | null>(null);
+  const sequenceRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   // Inicializa o sampler
   useEffect(() => {
@@ -237,13 +237,13 @@ export function DrumPad({ readOnly = false }: DrumPadProps) {
     }, intervalMs);
     
     Tone.Transport.start();
-    sequenceRef.current = timerId as unknown as Tone.Sequence | null;
+    sequenceRef.current = timerId;
     setIsPlaying(true);
   }, [sampler, isLoaded, selectedGroove, bpm]);
 
   const stopPlayback = useCallback(() => {
     if (sequenceRef.current) {
-      clearInterval(sequenceRef.current as unknown as number);
+      clearInterval(sequenceRef.current);
       sequenceRef.current = null;
     }
     Tone.Transport.stop();
