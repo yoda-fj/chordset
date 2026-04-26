@@ -58,16 +58,12 @@ COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
 
 # Download drum samples (not in git, 264MB)
+# Repo has "GSCW Drums Kit 1 Samples" and "GSCW Drums Kit 2 Samples" folders
 RUN mkdir -p public/samples/drums && \
     cd public/samples/drums && \
     git clone --depth 1 https://github.com/gregharvey/drum-samples.git && \
-    ls -la drum-samples/ && \
-    cp -r drum-samples/kick ./kick && \
-    cp -r drum-samples/snare ./snare && \
-    cp -r drum-samples/hihat-closed ./hihat-closed && \
-    cp -r drum-samples/crash ./crash && \
-    cp -r drum-samples/ride ./ride && \
-    cp -r drum-samples/tom ./tom && \
+    cp -r "drum-samples/GSCW Drums Kit 1 Samples" ./kit1 && \
+    cp -r "drum-samples/GSCW Drums Kit 2 Samples" ./kit2 && \
     rm -rf drum-samples
 
 # Run as root to allow writing to volume mount (Coolify manages permissions)
