@@ -10,33 +10,37 @@ export interface DrumSampleMap {
   tomHigh: string;
 }
 
-// Samples gratuitos do GSCW Drum Kits (gregharvey/drum-samples)
-// Licença: Creative Commons / Gratuito para uso
+// GSCW Drum Kits do gregharvey (organizados por instrumento)
+// Lokação: /opt/chordset/samples/drums/
+// Kick: Kick-V01 a V12 (Yamaha)
+// Snare: SNARE-V01 a V20 (CustomWorks)
+// Hihat: HHats-CL (closed), HHats-OP (open), HHats-PDL, HHats-Crash
+// Crash: 14-Crash-*, 18-Crash-*, HHats-Crash-*
+// Ride: Ride-V01 a V08
+// Tom: TOM10-*, TOM13-*
+
 export const DRUM_SAMPLES: Record<string, DrumSampleMap> = {
-  // Kit 1 - Sons acústicos/rock
   kit1: {
-    kick: '/samples/drums/kick/V01-EQ-KD.wav',
-    snare: '/samples/drums/snare/V01-EQ-SD.wav',
-    hihatClosed: '/samples/drums/hihat-closed/V01-Hats-CLD.wav',
-    hihatOpen: '/samples/drums/hihat-closed/V01-Hats-OP.wav',
+    kick: '/samples/drums/kick/Kick-V01-Yamaha-16x16.wav',
+    snare: '/samples/drums/snare/SNARE-V01-CustomWorks-6x13.wav',
+    hihatClosed: '/samples/drums/hihat-closed/HHats-CL-V01-SABIAN-AAX.wav',
+    hihatOpen: '/samples/drums/hihat-closed/HHats-OP-V01-SABIAN-AAX.wav',
     crash: '/samples/drums/crash/14-Crash-V01-SABIAN-14.wav',
-    ride: '/samples/drums/ride/V01-Ride-22.wav',
-    tomLow: '/samples/drums/tom/V01-TFlam-12.wav',
-    tomMid: '/samples/drums/tom/V01-TFlams-10.wav',
-    tomHigh: '/samples/drums/tom/V01-TFlams-13.wav',
+    ride: '/samples/drums/ride/Ride-V01-ROBMOR-SABIAN-22.wav',
+    tomLow: '/samples/drums/tom/TOM13-V01-StarClassic-13x13.wav',
+    tomMid: '/samples/drums/tom/TOM10-V01-StarClassic-10x10.wav',
+    tomHigh: '/samples/drums/tom/TOM10-V03-StarClassic-10x10.wav',
   },
-  
-  // Kit 2 - Variações alternativas
   kit2: {
-    kick: '/samples/drums/kick/V02-EQ-KD.wav',
-    snare: '/samples/drums/snare/V02-EQ-SD.wav',
-    hihatClosed: '/samples/drums/hihat-closed/V02-Hats-CLD.wav',
-    hihatOpen: '/samples/drums/hihat-closed/V02-Hats-OP.wav',
-    crash: '/samples/drums/crash/V02-crash-14.wav',
-    ride: '/samples/drums/ride/V02-Rbell-22.wav',
-    tomLow: '/samples/drums/tom/V02-TFlam-12.wav',
-    tomMid: '/samples/drums/tom/V02-TFlams-10.wav',
-    tomHigh: '/samples/drums/tom/V02-TFlams-13.wav',
+    kick: '/samples/drums/kick/Kick-V02-Yamaha-16x16.wav',
+    snare: '/samples/drums/snare/SNARE-V02-CustomWorks-6x13.wav',
+    hihatClosed: '/samples/drums/hihat-closed/HHats-CL-V02-SABIAN-AAX.wav',
+    hihatOpen: '/samples/drums/hihat-closed/HHats-OP-V02-SABIAN-AAX.wav',
+    crash: '/samples/drums/crash/14-Crash-V02-SABIAN-14.wav',
+    ride: '/samples/drums/ride/Ride-V02-ROBMOR-SABIAN-22.wav',
+    tomLow: '/samples/drums/tom/TOM13-V02-StarClassic-13x13.wav',
+    tomMid: '/samples/drums/tom/TOM10-V02-StarClassic-10x10.wav',
+    tomHigh: '/samples/drums/tom/TOM10-V04-StarClassic-10x10.wav',
   }
 };
 

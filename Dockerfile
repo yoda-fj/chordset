@@ -57,28 +57,8 @@ RUN mkdir -p /data
 COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
 
-# Download drum samples (not in git, 264MB)
-# Repo has "GSCW Drums Kit 1 Samples" and "GSCW Drums Kit 2 Samples" with subfolders
-RUN mkdir -p public/samples/drums/kick public/samples/drums/snare \
-    public/samples/drums/hihat-closed public/samples/drums/hihat-open \
-    public/samples/drums/crash public/samples/drums/ride \
-    public/samples/drums/tom && \
-    cd public/samples/drums && \
-    git clone --depth 1 https://github.com/gregharvey/drum-samples.git && \
-    echo "=== Kit 1 structure ===" && \
-    find drum-samples/GSCW\ Drums\ Kit\ 1\ Samples -type f -name "*.wav" | head -20 && \
-    echo "=== Copying files ===" && \
-    cp drum-samples/GSCW\ Drums\ Kit\ 1\ Samples/kick/*.wav kick/ 2>&1 || echo "kick failed" && \
-    cp drum-samples/GSCW\ Drums\ Kit\ 1\ Samples/snare/*.wav snare/ 2>&1 || echo "snare failed" && \
-    cp drum-samples/GSCW\ Drums\ Kit\ 1\ Samples/hihat/*.wav hihat-closed/ 2>&1 || echo "hihat failed" && \
-    cp drum-samples/GSCW\ Drums\ Kit\ 1\ Samples/crash/*.wav crash/ 2>&1 || echo "crash failed" && \
-    cp drum-samples/GSCW\ Drums\ Kit\ 1\ Samples/ride/*.wav ride/ 2>&1 || echo "ride failed" && \
-    cp drum-samples/GSCW\ Drums\ Kit\ 1\ Samples/tom/*.wav tom/ 2>&1 || echo "tom failed" && \
-    cp drum-samples/GSCW\ Drums\ Kit\ 2\ Samples/kick/*.wav kick/ 2>&1 || echo "kit2 kick failed" && \
-    cp drum-samples/GSCW\ Drums\ Kit\ 2\ Samples/snare/*.wav snare/ 2>&1 || echo "kit2 snare failed" && \
-    echo "=== Files copied ===" && \
-    ls kick/ snare/ hihat-closed/ crash/ ride/ tom/ && \
-    rm -rf drum-samples
+# Drum samples are mounted from host at /app/public/samples/drums
+# See Coolify volume mount: /opt/chordset/samples/drums -> /app/public/samples/drums
 
 # Run as root to allow writing to volume mount (Coolify manages permissions)
 USER root
