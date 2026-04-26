@@ -25,12 +25,55 @@ export const Autoscroll = ({ targetRef }: AutoscrollProps) => {
   const lastTimeRef = useRef<number>(0);
 
   const scroll = useCallback((timestamp: number) => {
-    if (!targetRef.current || speed === 0) return;
+    if (speed === 0) return;
     
     const element = targetRef.current;
+    
+    if (!element) {
+      // Fallback: scroll the window if no target element
+      if (lastTimeRef.current === 0) {
+        lastTimeRef.current = timestamp;
+      }
+      const deltaTime = (timestamp - lastTimeRef.current) / 1000;
+      lastTimeRef.current = timestamp;
+      const scrollAmount = SPEED_MAP[speed] * deltaTime;
+      const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
+      const newScrollTop = Math.min(window.scrollY + scrollAmount, maxScroll);
+      window.scrollTo(0, newScrollTop);
+      setProgress((newScrollTop / maxScroll) * 100);
+      
+      if (newScrollTop < maxScroll && speed > 0) {
+        animationRef.current = requestAnimationFrame(scroll);
+      } else {
+        setSpeed(0);
+        lastTimeRef.current = 0;
+      }
+      return;
+    }
+    
     const maxScroll = element.scrollHeight - element.clientHeight;
     
-    if (maxScroll <= 0) return;
+    if (maxScroll <= 0) {
+      // Element has no scroll, try window scroll as fallback
+      if (lastTimeRef.current === 0) {
+        lastTimeRef.current = timestamp;
+      }
+      const deltaTime = (timestamp - lastTimeRef.current) / 1000;
+      lastTimeRef.current = timestamp;
+      const scrollAmount = SPEED_MAP[speed] * deltaTime;
+      const windowMaxScroll = document.documentElement.scrollHeight - window.innerHeight;
+      const newScrollTop = Math.min(window.scrollY + scrollAmount, windowMaxScroll);
+      window.scrollTo(0, newScrollTop);
+      setProgress((newScrollTop / windowMaxScroll) * 100);
+      
+      if (newScrollTop < windowMaxScroll && speed > 0) {
+        animationRef.current = requestAnimationFrame(scroll);
+      } else {
+        setSpeed(0);
+        lastTimeRef.current = 0;
+      }
+      return;
+    }
 
     if (lastTimeRef.current === 0) {
       lastTimeRef.current = timestamp;
@@ -75,17 +118,33 @@ export const Autoscroll = ({ targetRef }: AutoscrollProps) => {
   // Atualiza progresso quando scrolla manualmente
   useEffect(() => {
     const element = targetRef.current;
-    if (!element) return;
-
-    const handleScroll = () => {
+    
+    const handleElementScroll = () => {
+      if (!element) return;
       const maxScroll = element.scrollHeight - element.clientHeight;
       if (maxScroll > 0) {
         setProgress((element.scrollTop / maxScroll) * 100);
       }
     };
+    
+    const handleWindowScroll = () => {
+      const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
+      if (maxScroll > 0) {
+        setProgress((window.scrollY / maxScroll) * 100);
+      }
+    };
 
-    element.addEventListener('scroll', handleScroll, { passive: true });
-    return () => element.removeEventListener('scroll', handleScroll);
+    if (element) {
+      element.addEventListener('scroll', handleElementScroll, { passive: true });
+    }
+    window.addEventListener('scroll', handleWindowScroll, { passive: true });
+    
+    return () => {
+      if (element) {
+        element.removeEventListener('scroll', handleElementScroll);
+      }
+      window.removeEventListener('scroll', handleWindowScroll);
+    };
   }, [targetRef]);
 
   const cycleSpeed = () => {
