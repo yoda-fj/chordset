@@ -1,19 +1,21 @@
 #!/bin/bash
 # Script para baixar drum samples no deploy
-# Adicione este comando no "Post Deploy" do Coolify:
-# bash scripts/download-drum-samples.sh
+# Rode manualmente uma vez ou adicione no pre-deploy do Coolify
 
 set -e
 
-SAMPLES_DIR="public/samples/drums"
+SAMPLES_DIR="/app/public/samples/drums"
 
 # Se já existem samples, não baixa de novo
 if [ -d "$SAMPLES_DIR/kick" ] && [ -d "$SAMPLES_DIR/snare" ]; then
-    echo "Drum samples já existem, pulando download..."
+    echo "Drum samples já existem em $SAMPLES_DIR, pulando download..."
     exit 0
 fi
 
 echo "Baixando drum samples..."
+
+# Cria diretório
+mkdir -p "$SAMPLES_DIR"
 
 # Temp directory
 TEMP_DIR=$(mktemp -d)
@@ -22,17 +24,13 @@ cd "$TEMP_DIR"
 # Clona o repo
 git clone --depth 1 https://github.com/gregharvey/drum-samples.git
 
-# Volta para o diretório do projeto
-cd - > /dev/null
-
-# Move as pastas para public/samples/drums/
-mkdir -p "$SAMPLES_DIR"
-mv "$TEMP_DIR/drum-samples/kick" "$SAMPLES_DIR/"
-mv "$TEMP_DIR/drum-samples/snare" "$SAMPLES_DIR/"
-mv "$TEMP_DIR/drum-samples/hihat-closed" "$SAMPLES_DIR/"
-mv "$TEMP_DIR/drum-samples/crash" "$SAMPLES_DIR/"
-mv "$TEMP_DIR/drum-samples/ride" "$SAMPLES_DIR/"
-mv "$TEMP_DIR/drum-samples/tom" "$SAMPLES_DIR/"
+# Move as pastas
+cp -r drum-samples/kick "$SAMPLES_DIR/"
+cp -r drum-samples/snare "$SAMPLES_DIR/"
+cp -r drum-samples/hihat-closed "$SAMPLES_DIR/"
+cp -r drum-samples/crash "$SAMPLES_DIR/"
+cp -r drum-samples/ride "$SAMPLES_DIR/"
+cp -r drum-samples/tom "$SAMPLES_DIR/"
 
 # Limpa
 rm -rf "$TEMP_DIR"
