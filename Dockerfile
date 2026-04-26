@@ -47,8 +47,8 @@ RUN apk add --no-cache \
 ENV PLAYWRIGHT_CHROMIUM_PATH=/usr/bin/chromium-browser
 ENV PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1
 
-# Install curl for healthcheck
-RUN apk add --no-cache curl
+# Install curl and git for healthcheck and drum samples download
+RUN apk add --no-cache curl git
 
 # Create data directory - volume will mount here
 RUN mkdir -p /data
