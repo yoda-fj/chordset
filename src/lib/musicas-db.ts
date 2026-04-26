@@ -9,6 +9,7 @@ export interface Musica {
   tags: string[]
   observacao: string | null
   audio_url: string | null
+  groove: string | null
   created_at: string
   updated_at: string
 }
@@ -29,6 +30,7 @@ export interface UpdateMusicaInput {
   tags?: string[]
   observacao?: string | null
   audio_url?: string | null
+  groove?: string | null
 }
 
 export const musicasDb = {
@@ -40,7 +42,8 @@ export const musicasDb = {
       ...row,
       tags: JSON.parse(row.tags || '[]'),
       observacao: row.observacao || null,
-      audio_url: row.audio_url || null
+      audio_url: row.audio_url || null,
+      groove: row.groove || null
     }))
   },
 
@@ -53,7 +56,8 @@ export const musicasDb = {
       ...row,
       tags: JSON.parse(row.tags || '[]'),
       observacao: row.observacao || null,
-      audio_url: row.audio_url || null
+      audio_url: row.audio_url || null,
+      groove: row.groove || null
     }
   },
 
@@ -109,6 +113,10 @@ export const musicasDb = {
       sets.push('audio_url = ?')
       values.push(input.audio_url)
     }
+    if (input.groove !== undefined) {
+      sets.push('groove = ?')
+      values.push(input.groove)
+    }
 
     if (sets.length === 0) {
       const musica = this.getById(id)
@@ -153,7 +161,8 @@ export const musicasDb = {
       ...row,
       tags: JSON.parse(row.tags || '[]'),
       observacao: row.observacao || null,
-      audio_url: row.audio_url || null
+      audio_url: row.audio_url || null,
+      groove: row.groove || null
     }))
   },
 

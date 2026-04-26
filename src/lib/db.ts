@@ -26,6 +26,7 @@ function initSchema() {
       const musicasColumns = db.prepare("PRAGMA table_info(musicas)").all() as any[]
       const hasObservacao = musicasColumns.some(col => col.name === 'observacao')
       const hasAudioUrl = musicasColumns.some(col => col.name === 'audio_url')
+      const hasGroove = musicasColumns.some(col => col.name === 'groove')
 
       if (!hasObservacao) {
         console.log('[Migration] Adding observacao column to musicas...')
@@ -34,6 +35,10 @@ function initSchema() {
       if (!hasAudioUrl) {
         console.log('[Migration] Adding audio_url column to musicas...')
         db.exec('ALTER TABLE musicas ADD COLUMN audio_url TEXT')
+      }
+      if (!hasGroove) {
+        console.log('[Migration] Adding groove column to musicas...')
+        db.exec('ALTER TABLE musicas ADD COLUMN groove TEXT')
       }
 
       // Migrate eventos table

@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { ArrowLeft, Printer, Edit3, Music, Mic, Upload, Trash2, Play, Pause, X, Loader2, ChevronLeft, ChevronRight } from 'lucide-react'
 import Link from 'next/link'
-import { CifraViewer } from '@/components/chords'
+import { CifraViewer, DrumPad } from '@/components/chords'
 
 export default function CifraPage() {
   const router = useRouter()
@@ -380,6 +380,26 @@ export default function CifraPage() {
                 )}
               </div>
             </div>
+
+            {/* Drum Pad / Groove */}
+            <DrumPad
+              groove={musica?.groove}
+              onGrooveChange={async (groove) => {
+                try {
+                  const res = await fetch(`/api/musicas/${musicaId}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ groove })
+                  });
+                  if (res.ok) {
+                    const updated = await res.json();
+                    setMusica(updated);
+                  }
+                } catch (e) {
+                  console.error('Error saving groove:', e);
+                }
+              }}
+            />
 
             {/* Audio Recording/Upload */}
             <div className="bg-white p-4 rounded-lg border">

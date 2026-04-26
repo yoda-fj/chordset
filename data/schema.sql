@@ -10,6 +10,7 @@ CREATE TABLE IF NOT EXISTS musicas (
   tags TEXT DEFAULT '[]', -- JSON array de tags
   observacao TEXT, -- Observação livre do usuário
   audio_url TEXT, -- URL/caminho para gravação de áudio de referência
+  groove TEXT, -- JSON com padrão de bateria (groove) para a música
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
