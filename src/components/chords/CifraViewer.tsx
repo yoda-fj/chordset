@@ -184,10 +184,11 @@ export function CifraViewer({
       {/* Cifra */}
       <div
         ref={scrollContainerRef}
-        className="bg-white rounded-xl border border-slate-200 shadow-sm flex-1 min-h-0 overflow-y-auto overflow-x-hidden touch-pan-y"
+        className="bg-white rounded-xl border border-slate-200 shadow-sm flex-1 min-h-0 overflow-y-auto overflow-x-hidden"
         style={{
           ...(isFullscreen ? { maxHeight: 'calc(100vh - 80px)' } : {}),
           WebkitOverflowScrolling: 'touch',
+          touchAction: 'auto',
         }}
       >
       <ChordViewer
