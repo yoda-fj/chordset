@@ -86,25 +86,26 @@ export default function DrumDebugPage() {
     Tone.Transport.bpm.value = bpm
     addLog('BPM: ' + bpm)
     
-    const steps = Array(16).fill(null)
-    PATTERN_ROCK_8.forEach(hit => {
-      const idx = Math.floor(hit.time * 2) % 16
-      if (!steps[idx]) steps[idx] = []
-      steps[idx].push(hit.note)
-    })
-    addLog('Steps: ' + steps.map(s => s?.length || 0).join('-'))
+    // Use setInterval to trigger sounds
+    let step = 0
+    const intervalMs = (60 / bpm) * 1000 / 4  // 16th notes
+    addLog('Interval: ' + intervalMs + 'ms')
     
-    const sequence = new Tone.Sequence((time, notes) => {
-      if (notes?.length) {
-        notes.forEach(note => sampler.triggerAttackRelease(note, '16n', time))
-      }
-    }, steps, '8n')
+    const timerId = setInterval(() => {
+      addLog('Timer tick: ' + step)
+      PATTERN_ROCK_8.forEach(hit => {
+        if (Math.floor(hit.time * 2) % 16 === step) {
+          addLog('Play: ' + hit.note)
+          sampler.triggerAttackRelease(hit.note, '16n')
+        }
+      })
+      step = (step + 1) % 16
+    }, intervalMs)
     
-    sequence.start(0)
     Tone.Transport.start()
-    setSeq(sequence)
+    setSeq({ stop: () => clearInterval(timerId) } as any)
     setIsPlaying(true)
-    addLog('Playing!')
+    addLog('Started with setInterval')
   }
 
   const stopSeq = () => {

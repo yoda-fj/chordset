@@ -139,7 +139,7 @@ export function DrumPad({ readOnly = false }: DrumPadProps) {
   const [isLoaded, setIsLoaded] = useState(false);
   const [activePads, setActivePads] = useState<Set<string>>(new Set());
   const activePadsTimeoutRef = useRef<Map<string, NodeJS.Timeout>>(new Map());
-  const sequenceRef = useRef<Tone.Sequence | null>(null);
+  const sequenceRef = useRef<number | null>(null);
 
   // Inicializa o sampler
   useEffect(() => {
@@ -212,41 +212,41 @@ export function DrumPad({ readOnly = false }: DrumPadProps) {
     
     const pattern = PRESET_GROOVES[selectedGroove]?.pattern || PRESET_GROOVES['rock-8'].pattern;
     const currentBpm = bpm || PRESET_GROOVES[selectedGroove]?.bpm || 120;
-    Tone.Transport.bpm.value = currentBpm;
     
-    // Para cada hit no pattern, determina em qual step (0-15) ele cai
-    // e cria um array de 16 posições onde cada uma é um array de notas ou null
-    const steps: (string[] | null)[] = Array(16).fill(null);
-    pattern.forEach(hit => {
-      const stepIndex = Math.floor(hit.time * 2) % 16;
-      if (!steps[stepIndex]) steps[stepIndex] = [];
-      steps[stepIndex]!.push(hit.note);
-    });
+    // Use setInterval instead of Tone.Transport
+    let step = 0;
+    const intervalMs = (60 / currentBpm) * 1000 / 4; // 16th notes
     
-    // Cria a sequência usando Tone.Sequence - o callback recebe o valor do step
-    const seq = new Tone.Sequence((time, stepNotes) => {
-      // stepNotes é o valor no array de steps, pode ser null ou um array de notas
-      if (stepNotes && Array.isArray(stepNotes) && stepNotes.length > 0) {
-        stepNotes.forEach(note => {
-          sampler.triggerAttackRelease(note, '16n', time);
-        });
-      }
-    }, steps, '16n');
+    const timerId = setInterval(() => {
+      pattern.forEach(hit => {
+        const hitStep = Math.floor(hit.time * 2) % 16;
+        if (hitStep === step) {
+          sampler!.triggerAttackRelease(hit.note, '16n');
+          // Visual feedback
+          setActivePads(prev => new Set(prev).add(hit.note));
+          setTimeout(() => {
+            setActivePads(prev => {
+              const next = new Set(prev);
+              next.delete(hit.note);
+              return next;
+            });
+          }, 150);
+        }
+      });
+      step = (step + 1) % 16;
+    }, intervalMs);
     
-    sequenceRef.current = seq;
-    seq.start(0);
     Tone.Transport.start();
+    sequenceRef.current = timerId as unknown as Tone.Sequence | null;
     setIsPlaying(true);
   }, [sampler, isLoaded, selectedGroove, bpm]);
 
   const stopPlayback = useCallback(() => {
     if (sequenceRef.current) {
-      sequenceRef.current.stop();
-      sequenceRef.current.dispose();
+      clearInterval(sequenceRef.current as unknown as number);
       sequenceRef.current = null;
     }
     Tone.Transport.stop();
-    Tone.Transport.cancel();
     setIsPlaying(false);
     setActivePads(new Set());
   }, []);
