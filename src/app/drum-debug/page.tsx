@@ -41,6 +41,7 @@ export default function DrumDebugPage() {
 
   useEffect(() => {
     addLog('Init sampler with explicit URLs...')
+    addLog('Version: 21dcaa2 - /data/samples/drums/')
     const s = new Tone.Sampler({
       urls: SAMPLE_URLS,
       onload: () => {
