@@ -16,15 +16,15 @@ const PATTERN_ROCK_8 = [
 ]
 
 const SAMPLE_URLS = {
-  'C1': '/samples/drums/kick/V01-EQ-KD.wav',
-  'D1': '/samples/drums/snare/V01-EQ-SD.wav',
-  'F#1': '/samples/drums/hihat-closed/HHats-CL-V01-SABIAN-AAX.wav',
-  'A#1': '/samples/drums/hihat-closed/HHats-OP-V01-SABIAN-AAX.wav',
-  'C2': '/samples/drums/crash/14-Crash-V01-SABIAN-14.wav',
-  'D2': '/samples/drums/ride/Ride-V01-ROBMOR-SABIAN-22.wav',
-  'E2': '/samples/drums/tom/V01-TTom13.wav',
-  'F2': '/samples/drums/tom/V01-TTom 10.wav',
-  'G2': '/samples/drums/tom/V03-TTom 10.wav',
+  'C1': '/drum-samples/kick/V01-EQ-KD.wav',
+  'D1': '/drum-samples/snare/V01-EQ-SD.wav',
+  'F#1': '/drum-samples/hihat-closed/HHats-CL-V01-SABIAN-AAX.wav',
+  'A#1': '/drum-samples/hihat-closed/HHats-OP-V01-SABIAN-AAX.wav',
+  'C2': '/drum-samples/crash/14-Crash-V01-SABIAN-14.wav',
+  'D2': '/drum-samples/ride/Ride-V01-ROBMOR-SABIAN-22.wav',
+  'E2': '/drum-samples/tom/V01-TTom13.wav',
+  'F2': '/drum-samples/tom/V01-TTom 10.wav',
+  'G2': '/drum-samples/tom/V03-TTom 10.wav',
 }
 
 export default function DrumDebugPage() {

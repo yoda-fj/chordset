@@ -58,7 +58,7 @@ COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
 
 # Create symlink for drum samples from /data volume (avoiding Docker volume loop)
-RUN mkdir -p /app/public/samples && ln -s /data/samples/drums /app/public/samples/drums
+RUN mkdir -p /app/public && ln -s /data/samples/drums /app/public/drum-samples
 
 # Run as root to allow writing to volume mount (Coolify manages permissions)
 USER root
