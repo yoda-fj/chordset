@@ -47,6 +47,7 @@ export default function MusicaPage() {
   const audioRef = useRef<HTMLAudioElement | null>(null)
   const timerRef = useRef<NodeJS.Timeout | null>(null)
   const ritmoSeqRef = useRef<any>(null)
+  const ToneRef = useRef<any>(null)
 
   useEffect(() => {
     async function loadData() {
@@ -302,6 +303,7 @@ export default function MusicaPage() {
     if (!selectedRitmo) return
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const Tone = (await import('tone') as any).Tone
+    ToneRef.current = Tone
     await Tone.start()
     
     if (ritmoSeqRef.current) {
@@ -330,7 +332,7 @@ export default function MusicaPage() {
     const stepArray = new Array(16).fill(0).map((_, i) => i)
 
     ritmoSeqRef.current = new Tone.Sequence(
-      (time, stepIdx) => {
+      (time: any, stepIdx: number) => {
         const instruments = ['kick', 'snare', 'hihatClosed', 'hihatOpen', 'crash', 'ride', 'tomLow', 'tomMid', 'tomHigh']
         instruments.forEach((inst, instIdx) => {
           if (steps[instIdx]?.[stepIdx]) {
@@ -356,7 +358,7 @@ export default function MusicaPage() {
       ritmoSeqRef.current.dispose()
       ritmoSeqRef.current = null
     }
-    Tone.Transport.stop()
+    ToneRef.current.Transport.stop()
   }
 
   if (loading) {
