@@ -300,7 +300,7 @@ export default function MusicaPage() {
 
   const playRitmo = async () => {
     if (!selectedRitmo) return
-    const { Tone } = await import('tone')
+    const Tone = (await import('tone')).default
     await Tone.start()
     
     if (ritmoSeqRef.current) {
