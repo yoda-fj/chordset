@@ -175,9 +175,32 @@ export default function DrumDebugPage() {
             <span style={{ fontWeight: 'bold' }}>Console</span>
             <div style={{ display: 'flex', gap: '0.5rem' }}>
               <button
-                onClick={() => {
-                  navigator.clipboard.writeText(logs.join('\n'))
-                  addLog('Copied to clipboard!')
+                onClick={async () => {
+                  const text = logs.join('\n')
+                  try {
+                    if (navigator.clipboard && navigator.clipboard.writeText) {
+                      await navigator.clipboard.writeText(text)
+                      addLog('Copied to clipboard!')
+                    } else {
+                      throw new Error('Clipboard API not available')
+                    }
+                  } catch (err) {
+                    // Fallback for HTTP or unsupported browsers
+                    const ta = document.createElement('textarea')
+                    ta.value = text
+                    ta.style.position = 'fixed'
+                    ta.style.left = '-9999px'
+                    document.body.appendChild(ta)
+                    ta.focus()
+                    ta.select()
+                    try {
+                      document.execCommand('copy')
+                      addLog('Copied to clipboard!')
+                    } catch {
+                      addLog('Copy failed. Select console text manually.')
+                    }
+                    document.body.removeChild(ta)
+                  }
                 }}
                 style={{ fontSize: '0.75rem', color: '#9ca3af', background: 'none', border: '1px solid #374151', borderRadius: '0.25rem', padding: '0.25rem 0.5rem', cursor: 'pointer' }}
               >
