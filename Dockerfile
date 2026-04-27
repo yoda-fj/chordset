@@ -56,10 +56,7 @@ RUN mkdir -p /data
 # Don't change ownership of /data - let volume handle it
 COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
-
-# Drum samples are mounted from host via Coolify volume mount
-# Host /opt/chordset -> container /data
-# Samples are at /opt/chordset/samples/drums/ on host = /data/samples/drums/ in container
+COPY --from=builder /app/public ./public
 
 # Run as root to allow writing to volume mount (Coolify manages permissions)
 USER root
