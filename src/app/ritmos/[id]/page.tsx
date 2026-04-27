@@ -89,16 +89,30 @@ export default function DrumPatternEditorPage() {
         setBpm(data.bpm)
         setKit(data.kit)
         if (data.steps) {
-          const parsed = typeof data.steps === 'string' ? JSON.parse(data.steps) : data.steps
-          // Convert array-of-arrays [instIdx][stepIdx] to Record<string, boolean[]> {kick: [...], snare: [...]}
+          let parsed = typeof data.steps === 'string' ? JSON.parse(data.steps) : data.steps
+          // Handle both formats:
+          // 1. Seed/API format: [[1,0,...], [0,1,...], ...] (array of arrays of numbers)
+          // 2. Editor save format: {kick: [true,...], snare: [true,...], ...} (object)
           const converted: Record<string, boolean[]> = {}
-          INSTRUMENTS.forEach((inst, idx) => {
-            if (parsed[idx]) {
-              converted[inst.key] = parsed[idx].map((v: number) => Boolean(v))
-            } else {
-              converted[inst.key] = new Array(16).fill(false)
-            }
-          })
+          if (Array.isArray(parsed)) {
+            // Array-of-arrays format (seed data from API)
+            INSTRUMENTS.forEach((inst, idx) => {
+              if (parsed[idx]) {
+                converted[inst.key] = parsed[idx].map((v: any) => Boolean(v))
+              } else {
+                converted[inst.key] = new Array(16).fill(false)
+              }
+            })
+          } else {
+            // Object format (saved from editor)
+            INSTRUMENTS.forEach((inst) => {
+              if (parsed[inst.key]) {
+                converted[inst.key] = parsed[inst.key].map((v: any) => Boolean(v))
+              } else {
+                converted[inst.key] = new Array(16).fill(false)
+              }
+            })
+          }
           setSteps(converted)
         }
       } catch {
