@@ -10,34 +10,34 @@ export interface DrumSampleMap {
   tomHigh: string;
 }
 
-// GSCW Drum Kits - Names must match actual files in public/samples/drums/
-// VERIFY FILES BEFORE UPDATING - Use /api/debug/samples to check production
+// PRODUCTION FILE NAMES - Match files from https://github.com/gregharvey/drum-samples
+// GSCW Drums Kit 1 Samples
 export const DRUM_SAMPLES: Record<string, DrumSampleMap> = {
   kit1: {
-    kick: 'V01-EQ-KD.wav',
-    snare: 'V01-EQ-SD.wav',
+    kick: 'Kick-V01-Yamaha-16x16.wav',
+    snare: 'SNARE-V01-CustomWorks-6x13.wav',
     hihatClosed: 'HHats-CL-V01-SABIAN-AAX.wav',
     hihatOpen: 'HHats-OP-V01-SABIAN-AAX.wav',
     crash: '14-Crash-V01-SABIAN-14.wav',
     ride: 'Ride-V01-ROBMOR-SABIAN-22.wav',
-    tomLow: 'V01-TTom13.wav',
-    tomMid: 'V01-TTom-12.wav',
-    tomHigh: 'V01-TTom13.wav',
+    tomLow: 'TOM13-V01-StarClassic-13x13.wav',
+    tomMid: 'TOM10-V01-StarClassic-10x10.wav',
+    tomHigh: 'TOM10-V01-StarClassic-10x10.wav',
   },
   kit2: {
-    kick: 'V02-EQ-KD.wav',
-    snare: 'V02-EQ-SD.wav',
+    kick: 'Kick-V02-Yamaha-16x16.wav',
+    snare: 'SNARE-V02-CustomWorks-6x13.wav',
     hihatClosed: 'HHats-CL-V02-SABIAN-AAX.wav',
     hihatOpen: 'HHats-OP-V02-SABIAN-AAX.wav',
     crash: '14-Crash-V02-SABIAN-14.wav',
     ride: 'Ride-V02-ROBMOR-SABIAN-22.wav',
-    tomLow: 'V02-TTom13.wav',
-    tomMid: 'V02-TTom 10.wav',
-    tomHigh: 'V02-TTom 10.wav',
+    tomLow: 'TOM13-V02-StarClassic-13x13.wav',
+    tomMid: 'TOM10-V02-StarClassic-10x10.wav',
+    tomHigh: 'TOM10-V02-StarClassic-10x10.wav',
   }
 };
 
-// Map to Tone.Sampler note names
+// Tone.Sampler note names
 // C1=kick, D1=snare, F#1=hihat-closed, A#1=hihat-open, C2=crash, D2=ride, E2=tom-low, F2=tom-mid, G2=tom-high
 export function getSamplerUrls(kitName: string = 'kit1'): Record<string, string> {
   const kit = DRUM_SAMPLES[kitName] || DRUM_SAMPLES.kit1;
@@ -54,7 +54,7 @@ export function getSamplerUrls(kitName: string = 'kit1'): Record<string, string>
   };
 }
 
-// Also export path map for Tone.Player (direct file URLs)
+// Direct sample paths for Tone.Player
 export function getSamplePaths(kitName: string = 'kit1'): Record<string, string> {
   const kit = DRUM_SAMPLES[kitName] || DRUM_SAMPLES.kit1;
   return {
