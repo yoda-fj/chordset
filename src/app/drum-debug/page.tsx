@@ -125,6 +125,22 @@ export default function DrumDebugPage() {
           <span style={{ color: isPlaying ? 'red' : 'gray' }}>
             {isPlaying ? '▶ Playing' : '⏹ Stopped'}
           </span>
+          {' | '}
+          <button
+            onClick={async () => {
+              addLog('Calling seed endpoint...')
+              try {
+                const res = await fetch('/api/drum-patterns/seed', { method: 'POST' })
+                const data = await res.json()
+                addLog('Seed result: ' + JSON.stringify(data))
+              } catch (e) {
+                addLog('Seed error: ' + e)
+              }
+            }}
+            style={{ fontSize: '0.75rem', color: '#2563eb', background: 'none', border: '1px solid #2563eb', borderRadius: '0.25rem', padding: '0.25rem 0.5rem', cursor: 'pointer', marginLeft: '0.5rem' }}
+          >
+            📥 Carregar Ritmos
+          </button>
         </div>
 
         <div style={{ background: 'white', padding: '1rem', borderRadius: '0.5rem', border: '1px solid #e5e7eb', display: 'flex', gap: '1rem', alignItems: 'center' }}>
