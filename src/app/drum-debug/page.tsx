@@ -16,15 +16,15 @@ const PATTERN_ROCK_8 = [
 ]
 
 const SAMPLE_URLS = {
-  'C1': '/samples/drums/kick/Kick-V01-Yamaha-16x16.wav',
-  'D1': '/samples/drums/snare/SNARE-V01-CustomWorks-6x13.wav',
+  'C1': '/samples/drums/kick/V01-EQ-KD.wav',
+  'D1': '/samples/drums/snare/V01-EQ-SD.wav',
   'F#1': '/samples/drums/hihat-closed/HHats-CL-V01-SABIAN-AAX.wav',
   'A#1': '/samples/drums/hihat-closed/HHats-OP-V01-SABIAN-AAX.wav',
   'C2': '/samples/drums/crash/14-Crash-V01-SABIAN-14.wav',
   'D2': '/samples/drums/ride/Ride-V01-ROBMOR-SABIAN-22.wav',
-  'E2': '/samples/drums/tom/TOM13-V01-StarClassic-13x13.wav',
-  'F2': '/samples/drums/tom/TOM10-V01-StarClassic-10x10.wav',
-  'G2': '/samples/drums/tom/TOM10-V03-StarClassic-10x10.wav',
+  'E2': '/samples/drums/tom/V01-TTom13.wav',
+  'F2': '/samples/drums/tom/V01-TTom 10.wav',
+  'G2': '/samples/drums/tom/V03-TTom 10.wav',
 }
 
 export default function DrumDebugPage() {
