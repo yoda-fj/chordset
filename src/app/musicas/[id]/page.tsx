@@ -314,15 +314,15 @@ export default function MusicaPage() {
     }
 
     const urls = {
-      'C1': '/drum-samples/Kick-V01-Yamaha-16x16.wav',
-      'D1': '/drum-samples/SNARE-V01-CustomWorks-6x13.wav',
-      'F#1': '/drum-samples/HiHat-closed-V01-Yamaha-14.wav',
-      'A#1': '/drum-samples/HiHat-open-V01-Yamaha-14.wav',
-      'C2': '/drum-samples/Crash-V01-Pure.wav',
-      'D2': '/drum-samples/Ride-V01-Pure.wav',
-      'E2': '/drum-samples/TOM-LOW-V01-Yamaha-12x8.wav',
-      'F2': '/drum-samples/TOM-MID-V01-Yamaha-10x9.wav',
-      'G2': '/drum-samples/TOM-HIGH-V01-Yamaha-7x5.wav',
+      'C1': '/drum-samples/kick/V01-EQ-KD.wav',
+      'D1': '/drum-samples/snare/V01-EQ-SD.wav',
+      'F#1': '/drum-samples/hihat-closed/HHats-CL-V01-SABIAN-AAX.wav',
+      'A#1': '/drum-samples/hihat-closed/HHats-OP-V01-SABIAN-AAX.wav',
+      'C2': '/drum-samples/crash/14-Crash-V01-SABIAN-14.wav',
+      'D2': '/drum-samples/ride/Ride-V01-ROBMOR-SABIAN-22.wav',
+      'E2': '/drum-samples/tom/V01-TTom13.wav',
+      'F2': '/drum-samples/tom/V01-TTom 10.wav',
+      'G2': '/drum-samples/tom/V01-TTom 10.wav',
     }
 
     const sampler = new Tone.Sampler({ urls }).toDestination()
