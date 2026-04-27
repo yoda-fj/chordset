@@ -314,7 +314,7 @@ export default function MusicaPage() {
       crash: 'C2', ride: 'D2', tomLow: 'E2', tomMid: 'F2', tomHigh: 'G2'
     }
 
-    const urls = getSamplerUrls('kit1')
+    const urls = getSamplerUrls(selectedRitmo.kit || 'kit1')
 
     const sampler = new Tone.Sampler({ urls }).toDestination()
     sampler.volume.value = 6
