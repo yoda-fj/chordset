@@ -90,7 +90,16 @@ export default function DrumPatternEditorPage() {
         setKit(data.kit)
         if (data.steps) {
           const parsed = typeof data.steps === 'string' ? JSON.parse(data.steps) : data.steps
-          setSteps(parsed)
+          // Convert array-of-arrays [instIdx][stepIdx] to Record<string, boolean[]> {kick: [...], snare: [...]}
+          const converted: Record<string, boolean[]> = {}
+          INSTRUMENTS.forEach((inst, idx) => {
+            if (parsed[idx]) {
+              converted[inst.key] = parsed[idx].map((v: number) => Boolean(v))
+            } else {
+              converted[inst.key] = new Array(16).fill(false)
+            }
+          })
+          setSteps(converted)
         }
       } catch {
         alert('Erro ao carregar ritmo')

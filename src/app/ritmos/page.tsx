@@ -14,6 +14,23 @@ interface DrumPattern {
   created_at: string
 }
 
+const NOTE_MAP: Record<string, string> = {
+  kick: 'C1', snare: 'D1', hihatClosed: 'F#1', hihatOpen: 'A#1',
+  crash: 'C2', ride: 'D2', tomLow: 'E2', tomMid: 'F2', tomHigh: 'G2'
+}
+
+const SAMPLE_URLS: Record<string, string> = {
+  'C1': '/drum-samples/kick/V01-EQ-KD.wav',
+  'D1': '/drum-samples/snare/V01-EQ-SD.wav',
+  'F#1': '/drum-samples/hihat-closed/HHats-CL-V01-SABIAN-AAX.wav',
+  'A#1': '/drum-samples/hihat-closed/HHats-OP-V01-SABIAN-AAX.wav',
+  'C2': '/drum-samples/crash/14-Crash-V01-SABIAN-14.wav',
+  'D2': '/drum-samples/ride/Ride-V01-ROBMOR-SABIAN-22.wav',
+  'E2': '/drum-samples/tom/V01-TTom13.wav',
+  'F2': '/drum-samples/tom/V01-TTom 10.wav',
+  'G2': '/drum-samples/tom/V01-TTom 10.wav',
+}
+
 export default function DrumPatternsPage() {
   const [patterns, setPatterns] = useState<DrumPattern[]>([])
   const [loading, setLoading] = useState(true)
@@ -61,31 +78,15 @@ export default function DrumPatternsPage() {
     }
 
     stopPlayback()
-
     await Tone.start()
 
-    const noteMap: Record<string, string> = {
-      kick: 'C1', snare: 'D1', hihatClosed: 'F#1', hihatOpen: 'A#1',
-      crash: 'C2', ride: 'D2', tomLow: 'E2', tomMid: 'F2', tomHigh: 'G2'
+    // Create one Tone.Player per note
+    const players: Tone.Player[] = []
+    for (const url of Object.values(SAMPLE_URLS)) {
+      const player = new Tone.Player(url).toDestination()
+      player.volume.value = 6
+      players.push(player)
     }
-
-    const urls = {
-      'C1': '/drum-samples/kick/V01-EQ-KD.wav',
-      'D1': '/drum-samples/snare/V01-EQ-SD.wav',
-      'F#1': '/drum-samples/hihat-closed/HHats-CL-V01-SABIAN-AAX.wav',
-      'A#1': '/drum-samples/hihat-closed/HHats-OP-V01-SABIAN-AAX.wav',
-      'C2': '/drum-samples/crash/14-Crash-V01-SABIAN-14.wav',
-      'D2': '/drum-samples/ride/Ride-V01-ROBMOR-SABIAN-22.wav',
-      'E2': '/drum-samples/tom/V01-TTom13.wav',
-      'F2': '/drum-samples/tom/V01-TTom 10.wav',
-      'G2': '/drum-samples/tom/V01-TTom 10.wav',
-    }
-
-    const sampler = new Tone.Sampler({ urls }).toDestination()
-    sampler.volume.value = 6
-
-    // Wait for samples to load (give them 1 second to load)
-    await new Promise<void>((resolve) => setTimeout(resolve, 1000))
 
     Tone.Transport.bpm.value = pattern.bpm
 
@@ -97,7 +98,12 @@ export default function DrumPatternsPage() {
       (time: any, stepIdx: number) => {
         instruments.forEach((inst, instIdx) => {
           if (steps[instIdx]?.[stepIdx]) {
-            sampler.triggerAttackRelease(noteMap[inst], '16n', time)
+            const note = NOTE_MAP[inst]
+            const noteIndex = Object.keys(NOTE_MAP).indexOf(inst)
+            const player = players[noteIndex]
+            if (player && player.loaded) {
+              player.start(time)
+            }
           }
         })
       },
