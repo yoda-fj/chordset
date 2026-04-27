@@ -57,9 +57,8 @@ RUN mkdir -p /data
 COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
 
-# NOTE: Drum samples are in .gitignore, so public/ is empty.
-# Samples must be mounted via Coolify volume:
-# Host: /opt/chordset/samples/drums -> Container: /app/public/samples/drums
+# Create symlink for drum samples from /data volume (avoiding Docker volume loop)
+RUN mkdir -p /app/public/samples && ln -s /data/samples/drums /app/public/samples/drums
 
 # Run as root to allow writing to volume mount (Coolify manages permissions)
 USER root
