@@ -15,28 +15,39 @@ export interface DrumSampleMap {
 // Container: /data/samples/drums/ (via volume mount /opt/chordset -> /data)
 // Symlink: /app/public/drum-samples -> /data/samples/drums
 // URL: /drum-samples/... (via Next.js static file serving)
+// Arquivos reais em public/samples/drums/
+
 export const DRUM_SAMPLES: Record<string, DrumSampleMap> = {
   kit1: {
-    kick: '/drum-samples/kick/Kick-V01-Yamaha-16x16.wav',
-    snare: '/drum-samples/snare/SNARE-V01-CustomWorks-6x13.wav',
+    // kick - usar V01 que é o mais comum
+    kick: '/drum-samples/kick/V01-EQ-KD.wav',
+    // snare - usar V01-EQ-SD que é o padrão
+    snare: '/drum-samples/snare/V01-EQ-SD.wav',
+    // hihat closed - primeiro arquivo HHats-CL
     hihatClosed: '/drum-samples/hihat-closed/HHats-CL-V01-SABIAN-AAX.wav',
+    // hihat open - HHats-OP
     hihatOpen: '/drum-samples/hihat-closed/HHats-OP-V01-SABIAN-AAX.wav',
+    // crash - primeiro crash de 14"
     crash: '/drum-samples/crash/14-Crash-V01-SABIAN-14.wav',
+    // ride - primeiro ride
     ride: '/drum-samples/ride/Ride-V01-ROBMOR-SABIAN-22.wav',
-    tomLow: '/drum-samples/tom/TOM13-V01-StarClassic-13x13.wav',
-    tomMid: '/drum-samples/tom/TOM10-V01-StarClassic-10x10.wav',
-    tomHigh: '/drum-samples/tom/TOM10-V03-StarClassic-10x10.wav',
+    // tom low - 13"汤姆
+    tomLow: '/drum-samples/tom/V01-TTom13.wav',
+    // tom mid - 10"汤姆
+    tomMid: '/drum-samples/tom/V01-TTom 10.wav',
+    // tom high - mesmo 10" (sem separate high)
+    tomHigh: '/drum-samples/tom/V01-TTom 10.wav',
   },
   kit2: {
-    kick: '/drum-samples/kick/Kick-V02-Yamaha-16x16.wav',
-    snare: '/drum-samples/snare/SNARE-V02-CustomWorks-6x13.wav',
+    kick: '/drum-samples/kick/V02-EQ-KD.wav',
+    snare: '/drum-samples/snare/V02-EQ-SD.wav',
     hihatClosed: '/drum-samples/hihat-closed/HHats-CL-V02-SABIAN-AAX.wav',
     hihatOpen: '/drum-samples/hihat-closed/HHats-OP-V02-SABIAN-AAX.wav',
     crash: '/drum-samples/crash/14-Crash-V02-SABIAN-14.wav',
     ride: '/drum-samples/ride/Ride-V02-ROBMOR-SABIAN-22.wav',
-    tomLow: '/drum-samples/tom/TOM13-V02-StarClassic-13x13.wav',
-    tomMid: '/drum-samples/tom/TOM10-V02-StarClassic-10x10.wav',
-    tomHigh: '/drum-samples/tom/TOM10-V04-StarClassic-10x10.wav',
+    tomLow: '/drum-samples/tom/V02-TTom13.wav',
+    tomMid: '/drum-samples/tom/V02-TTom 10.wav',
+    tomHigh: '/drum-samples/tom/V02-TTom 10.wav',
   }
 };
 
