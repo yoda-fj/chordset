@@ -21,8 +21,8 @@ export const DRUM_SAMPLES: Record<string, DrumSampleMap> = {
     crash: '14-Crash-V01-SABIAN-14.wav',
     ride: 'Ride-V01-ROBMOR-SABIAN-22.wav',
     tomLow: 'V01-TTom13.wav',
-    tomMid: 'V01-TTom 10.wav',
-    tomHigh: 'V01-TTom 10.wav',
+    tomMid: 'V01-TTom-12.wav',
+    tomHigh: 'V01-TTom13.wav',
   },
   kit2: {
     kick: 'V02-EQ-KD.wav',
