@@ -328,6 +328,9 @@ export default function MusicaPage() {
     const sampler = new Tone.Sampler({ urls }).toDestination()
     sampler.volume.value = 6
 
+    // Wait for samples to load
+    await new Promise<void>((resolve) => setTimeout(resolve, 1000))
+
     Tone.Transport.bpm.value = selectedRitmo.bpm || 120
 
     const steps = JSON.parse(selectedRitmo.steps)
