@@ -64,16 +64,21 @@ export default function DrumPatternsPage() {
 
     await Tone.start()
 
+    const noteMap: Record<string, string> = {
+      kick: 'C1', snare: 'D1', hihatClosed: 'F#1', hihatOpen: 'A#1',
+      crash: 'C2', ride: 'D2', tomLow: 'E2', tomMid: 'F2', tomHigh: 'G2'
+    }
+
     const urls = {
-      'kick': '/drum-samples/Kick-V01-Yamaha-16x16.wav',
-      'snare': '/drum-samples/SNARE-V01-CustomWorks-6x13.wav',
-      'hihatClosed': '/drum-samples/HiHat-closed-V01-Yamaha-14.wav',
-      'hihatOpen': '/drum-samples/HiHat-open-V01-Yamaha-14.wav',
-      'crash': '/drum-samples/Crash-V01-Pure.wav',
-      'ride': '/drum-samples/Ride-V01-Pure.wav',
-      'tomLow': '/drum-samples/TOM-LOW-V01-Yamaha-12x8.wav',
-      'tomMid': '/drum-samples/TOM-MID-V01-Yamaha-10x9.wav',
-      'tomHigh': '/drum-samples/TOM-HIGH-V01-Yamaha-7x5.wav',
+      'C1': '/drum-samples/Kick-V01-Yamaha-16x16.wav',
+      'D1': '/drum-samples/SNARE-V01-CustomWorks-6x13.wav',
+      'F#1': '/drum-samples/HiHat-closed-V01-Yamaha-14.wav',
+      'A#1': '/drum-samples/HiHat-open-V01-Yamaha-14.wav',
+      'C2': '/drum-samples/Crash-V01-Pure.wav',
+      'D2': '/drum-samples/Ride-V01-Pure.wav',
+      'E2': '/drum-samples/TOM-LOW-V01-Yamaha-12x8.wav',
+      'F2': '/drum-samples/TOM-MID-V01-Yamaha-10x9.wav',
+      'G2': '/drum-samples/TOM-HIGH-V01-Yamaha-7x5.wav',
     }
 
     const sampler = new Tone.Sampler({ urls }).toDestination()
@@ -83,10 +88,6 @@ export default function DrumPatternsPage() {
 
     const steps = JSON.parse(pattern.steps)
     const instruments = ['kick', 'snare', 'hihatClosed', 'hihatOpen', 'crash', 'ride', 'tomLow', 'tomMid', 'tomHigh']
-    const noteMap: Record<string, string> = {
-      kick: 'C1', snare: 'D1', hihatClosed: 'F#1', hihatOpen: 'A#1',
-      crash: 'C2', ride: 'D2', tomLow: 'E2', tomMid: 'F2', tomHigh: 'G2'
-    }
 
     const stepArray = new Array(16).fill(0).map((_, i) => i)
     const seq = new Tone.Sequence(
