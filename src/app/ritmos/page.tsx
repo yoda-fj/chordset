@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { Trash2, Plus, Play, Square } from 'lucide-react'
+import * as Tone from 'tone'
 
 interface DrumPattern {
   id: number
@@ -19,7 +20,6 @@ export default function DrumPatternsPage() {
   const [error, setError] = useState('')
   const [playingId, setPlayingId] = useState<number | null>(null)
   const seqRef = useRef<any>(null)
-  const ToneRef = useRef<any>(null)
 
   useEffect(() => {
     fetchPatterns()
@@ -50,9 +50,7 @@ export default function DrumPatternsPage() {
       seqRef.current.dispose()
       seqRef.current = null
     }
-    if (ToneRef.current) {
-      ToneRef.current.Transport.stop()
-    }
+    Tone.Transport.stop()
     setPlayingId(null)
   }
 
@@ -64,8 +62,6 @@ export default function DrumPatternsPage() {
 
     stopPlayback()
 
-    const Tone = (await import('tone') as any).Tone
-    ToneRef.current = Tone
     await Tone.start()
 
     const urls = {

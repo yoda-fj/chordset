@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowLeft, Play, Square, Save, Volume2 } from 'lucide-react'
+import * as Tone from 'tone'
 import { getSamplerUrls } from '@/lib/drum-samples'
 
 const INSTRUMENTS = [
@@ -54,14 +55,11 @@ export default function DrumPatternEditorPage() {
   const [isLoaded, setIsLoaded] = useState(false)
   const [seq, setSeq] = useState<any>(null)
   const [saving, setSaving] = useState(false)
-  const ToneRef = useRef<any>(null)
 
   // Load sampler
   useEffect(() => {
     let s: any = null
-    const loadSampler = async () => {
-      const Tone = (await import('tone') as any).Tone
-      ToneRef.current = Tone
+    const loadSampler = () => {
       const urls = getSamplerUrls(kit)
       s = new Tone.Sampler({
         urls,
@@ -111,7 +109,6 @@ export default function DrumPatternEditorPage() {
 
   const startPlayback = async () => {
     if (!sampler || !isLoaded) return
-    const Tone = ToneRef.current
     await Tone.start()
     Tone.Transport.bpm.value = bpm
 
@@ -137,7 +134,6 @@ export default function DrumPatternEditorPage() {
   }
 
   const stopPlayback = () => {
-    const Tone = ToneRef.current
     if (seq) {
       seq.stop()
       seq.dispose()

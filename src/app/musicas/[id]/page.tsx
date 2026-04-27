@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useParams } from 'next/navigation'
 import { ArrowLeft, Loader2, Music, Edit, FileText, Calendar, Mic, Upload, Trash2, Play, Pause, X, ChevronLeft, ChevronRight, Drum } from 'lucide-react'
+import * as Tone from 'tone'
 import Link from 'next/link'
 
 const STATUS_LABELS: Record<string, string> = {
@@ -47,7 +48,6 @@ export default function MusicaPage() {
   const audioRef = useRef<HTMLAudioElement | null>(null)
   const timerRef = useRef<NodeJS.Timeout | null>(null)
   const ritmoSeqRef = useRef<any>(null)
-  const ToneRef = useRef<any>(null)
 
   useEffect(() => {
     async function loadData() {
@@ -301,9 +301,6 @@ export default function MusicaPage() {
 
   const playRitmo = async () => {
     if (!selectedRitmo) return
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const Tone = (await import('tone') as any).Tone
-    ToneRef.current = Tone
     await Tone.start()
     
     if (ritmoSeqRef.current) {
@@ -358,7 +355,7 @@ export default function MusicaPage() {
       ritmoSeqRef.current.dispose()
       ritmoSeqRef.current = null
     }
-    ToneRef.current.Transport.stop()
+    Tone.Transport.stop()
   }
 
   if (loading) {
