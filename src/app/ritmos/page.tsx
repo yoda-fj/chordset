@@ -19,17 +19,9 @@ const NOTE_MAP: Record<string, string> = {
   crash: 'C2', ride: 'D2', tomLow: 'E2', tomMid: 'F2', tomHigh: 'G2'
 }
 
-const SAMPLE_URLS: Record<string, string> = {
-  'C1': '/drum-samples/kick/V01-EQ-KD.wav',
-  'D1': '/drum-samples/snare/V01-EQ-SD.wav',
-  'F#1': '/drum-samples/hihat-closed/HHats-CL-V01-SABIAN-AAX.wav',
-  'A#1': '/drum-samples/hihat-closed/HHats-OP-V01-SABIAN-AAX.wav',
-  'C2': '/drum-samples/crash/14-Crash-V01-SABIAN-14.wav',
-  'D2': '/drum-samples/ride/Ride-V01-ROBMOR-SABIAN-22.wav',
-  'E2': '/drum-samples/tom/V01-TTom13.wav',
-  'F2': '/drum-samples/tom/V01-TTom 10.wav',
-  'G2': '/drum-samples/tom/V01-TTom 10.wav',
-}
+import { getSamplePaths } from '@/lib/drum-samples'
+
+const SAMPLE_URLS = getSamplePaths('kit1')
 
 export default function DrumPatternsPage() {
   const [patterns, setPatterns] = useState<DrumPattern[]>([])

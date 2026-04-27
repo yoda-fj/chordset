@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react'
 import { useParams } from 'next/navigation'
 import { ArrowLeft, Loader2, Music, Edit, FileText, Calendar, Mic, Upload, Trash2, Play, Pause, X, ChevronLeft, ChevronRight, Drum } from 'lucide-react'
 import * as Tone from 'tone'
+import { getSamplerUrls } from '@/lib/drum-samples'
 import Link from 'next/link'
 
 const STATUS_LABELS: Record<string, string> = {
@@ -313,23 +314,13 @@ export default function MusicaPage() {
       crash: 'C2', ride: 'D2', tomLow: 'E2', tomMid: 'F2', tomHigh: 'G2'
     }
 
-    const urls = {
-      'C1': '/drum-samples/kick/V01-EQ-KD.wav',
-      'D1': '/drum-samples/snare/V01-EQ-SD.wav',
-      'F#1': '/drum-samples/hihat-closed/HHats-CL-V01-SABIAN-AAX.wav',
-      'A#1': '/drum-samples/hihat-closed/HHats-OP-V01-SABIAN-AAX.wav',
-      'C2': '/drum-samples/crash/14-Crash-V01-SABIAN-14.wav',
-      'D2': '/drum-samples/ride/Ride-V01-ROBMOR-SABIAN-22.wav',
-      'E2': '/drum-samples/tom/V01-TTom13.wav',
-      'F2': '/drum-samples/tom/V01-TTom 10.wav',
-      'G2': '/drum-samples/tom/V01-TTom 10.wav',
-    }
+    const urls = getSamplerUrls('kit1')
 
     const sampler = new Tone.Sampler({ urls }).toDestination()
     sampler.volume.value = 6
 
     // Wait for samples to load
-    await new Promise<void>((resolve) => setTimeout(resolve, 1000))
+    await new Promise<void>((resolve) => setTimeout(resolve, 1500))
 
     Tone.Transport.bpm.value = selectedRitmo.bpm || 120
 
