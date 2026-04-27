@@ -15,17 +15,7 @@ const PATTERN_ROCK_8 = [
   { time: 6, note: 'F#1' },
 ]
 
-const SAMPLE_URLS = {
-  'C1': '/drum-samples/kick/Kick-V01-Yamaha-16x16.wav',
-  'D1': '/drum-samples/snare/SNARE-V01-CustomWorks-6x13.wav',
-  'F#1': '/drum-samples/hihat-closed/HHats-CL-V01-SABIAN-AAX.wav',
-  'A#1': '/drum-samples/hihat-closed/HHats-OP-V01-SABIAN-AAX.wav',
-  'C2': '/drum-samples/crash/14-Crash-V01-SABIAN-14.wav',
-  'D2': '/drum-samples/ride/Ride-V01-ROBMOR-SABIAN-22.wav',
-  'E2': '/drum-samples/tom/TOM13-V01-StarClassic-13x13.wav',
-  'F2': '/drum-samples/tom/TOM10-V01-StarClassic-10x10.wav',
-  'G2': '/drum-samples/tom/TOM10-V03-StarClassic-10x10.wav',
-}
+const SAMPLE_URLS = getSamplerUrls('kit1')
 
 export default function DrumDebugPage() {
   const [logs, setLogs] = useState<string[]>([])
