@@ -173,7 +173,18 @@ export default function DrumDebugPage() {
         <div style={{ background: 'black', padding: '1rem', borderRadius: '0.5rem' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', color: 'white', marginBottom: '0.5rem' }}>
             <span style={{ fontWeight: 'bold' }}>Console</span>
-            <button onClick={() => setLogs([])} style={{ fontSize: '0.75rem', color: '#9ca3af' }}>Clear</button>
+            <div style={{ display: 'flex', gap: '0.5rem' }}>
+              <button
+                onClick={() => {
+                  navigator.clipboard.writeText(logs.join('\n'))
+                  addLog('Copied to clipboard!')
+                }}
+                style={{ fontSize: '0.75rem', color: '#9ca3af', background: 'none', border: '1px solid #374151', borderRadius: '0.25rem', padding: '0.25rem 0.5rem', cursor: 'pointer' }}
+              >
+                📋 Copy
+              </button>
+              <button onClick={() => setLogs([])} style={{ fontSize: '0.75rem', color: '#9ca3af', background: 'none', border: '1px solid #374151', borderRadius: '0.25rem', padding: '0.25rem 0.5rem', cursor: 'pointer' }}>Clear</button>
+            </div>
           </div>
           <textarea 
             readOnly 
