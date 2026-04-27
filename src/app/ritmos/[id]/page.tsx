@@ -1,10 +1,9 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowLeft, Play, Square, Save, Volume2 } from 'lucide-react'
-import * as Tone from 'tone'
 import { getSamplerUrls } from '@/lib/drum-samples'
 
 const INSTRUMENTS = [
@@ -51,26 +50,33 @@ export default function DrumPatternEditorPage() {
   })
   const [isPlaying, setIsPlaying] = useState(false)
   const [currentStep, setCurrentStep] = useState(-1)
-  const [sampler, setSampler] = useState<Tone.Sampler | null>(null)
+  const [sampler, setSampler] = useState<any>(null)
   const [isLoaded, setIsLoaded] = useState(false)
-  const [seq, setSeq] = useState<Tone.Sequence | null>(null)
+  const [seq, setSeq] = useState<any>(null)
   const [saving, setSaving] = useState(false)
+  const ToneRef = useRef<any>(null)
 
   // Load sampler
   useEffect(() => {
-    const urls = getSamplerUrls(kit)
-    const s = new Tone.Sampler({
-      urls,
-      onload: () => {
-        setIsLoaded(true)
-      },
-      onerror: (err) => {
-        console.error('Sampler load error:', err)
-      }
-    }).toDestination()
-    s.volume.value = 6
-    setSampler(s)
-    return () => { s.dispose() }
+    let s: any = null
+    const loadSampler = async () => {
+      const Tone = (await import('tone') as any).Tone
+      ToneRef.current = Tone
+      const urls = getSamplerUrls(kit)
+      s = new Tone.Sampler({
+        urls,
+        onload: () => {
+          setIsLoaded(true)
+        },
+        onerror: (err: any) => {
+          console.error('Sampler load error:', err)
+        }
+      }).toDestination()
+      s.volume.value = 6
+      setSampler(s)
+    }
+    loadSampler()
+    return () => { if (s) s.dispose() }
   }, [kit])
 
   // Load existing pattern
@@ -105,12 +111,13 @@ export default function DrumPatternEditorPage() {
 
   const startPlayback = async () => {
     if (!sampler || !isLoaded) return
+    const Tone = ToneRef.current
     await Tone.start()
     Tone.Transport.bpm.value = bpm
 
     const stepArray = new Array(TOTAL_STEPS).fill(0).map((_, i) => i)
     const sequence = new Tone.Sequence(
-      (time, stepIdx) => {
+      (time: any, stepIdx: number) => {
         setCurrentStep(stepIdx)
         INSTRUMENTS.forEach(inst => {
           if (steps[inst.key][stepIdx]) {
@@ -130,6 +137,7 @@ export default function DrumPatternEditorPage() {
   }
 
   const stopPlayback = () => {
+    const Tone = ToneRef.current
     if (seq) {
       seq.stop()
       seq.dispose()
