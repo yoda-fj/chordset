@@ -28,6 +28,12 @@ export default function RootLayout({
                 </div>
                 <div className="flex items-center space-x-4">
                   <a
+                    href="/ritmos"
+                    className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
+                  >
+                    Ritmos
+                  </a>
+                  <a
                     href="/eventos"
                     className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
                   >

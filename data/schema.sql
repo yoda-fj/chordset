@@ -93,3 +93,14 @@ CREATE TABLE IF NOT EXISTS practice_sessions (
 
 CREATE INDEX IF NOT EXISTS idx_practice_sessions_musica ON practice_sessions(musica_id);
 CREATE INDEX IF NOT EXISTS idx_practice_sessions_status ON practice_sessions(status);
+
+-- Tabela de Ritmos de Bateria (Drum Patterns)
+CREATE TABLE IF NOT EXISTS drum_patterns (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  nome TEXT NOT NULL,
+  bpm INTEGER DEFAULT 120,
+  kit TEXT DEFAULT 'kit1', -- kit1, kit2, etc
+  steps TEXT NOT NULL DEFAULT '[]', -- JSON array: [[kick],[snare],...] por step
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
