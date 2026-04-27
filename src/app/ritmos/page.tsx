@@ -21,8 +21,6 @@ const NOTE_MAP: Record<string, string> = {
 
 import { getSamplePaths } from '@/lib/drum-samples'
 
-const SAMPLE_URLS = getSamplePaths('kit1')
-
 export default function DrumPatternsPage() {
   const [patterns, setPatterns] = useState<DrumPattern[]>([])
   const [loading, setLoading] = useState(true)
@@ -72,9 +70,12 @@ export default function DrumPatternsPage() {
     stopPlayback()
     await Tone.start()
 
+    // Get sample URLs for the pattern's kit
+    const sampleUrls = getSamplePaths(pattern.kit || 'kit1')
+
     // Create one Tone.Player per note
     const players: Tone.Player[] = []
-    for (const url of Object.values(SAMPLE_URLS)) {
+    for (const url of Object.values(sampleUrls)) {
       const player = new Tone.Player(url).toDestination()
       player.volume.value = 6
       players.push(player)
