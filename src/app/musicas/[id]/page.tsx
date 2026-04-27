@@ -300,7 +300,8 @@ export default function MusicaPage() {
 
   const playRitmo = async () => {
     if (!selectedRitmo) return
-    const Tone = (await import('tone')).default
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const Tone = (await import('tone') as any).Tone
     await Tone.start()
     
     if (ritmoSeqRef.current) {
