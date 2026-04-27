@@ -84,6 +84,9 @@ export default function DrumPatternsPage() {
     const sampler = new Tone.Sampler({ urls }).toDestination()
     sampler.volume.value = 6
 
+    // Wait for samples to load (give them 1 second to load)
+    await new Promise<void>((resolve) => setTimeout(resolve, 1000))
+
     Tone.Transport.bpm.value = pattern.bpm
 
     const steps = JSON.parse(pattern.steps)
