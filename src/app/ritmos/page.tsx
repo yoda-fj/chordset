@@ -1,8 +1,8 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
-import { Trash2, Plus, Play } from 'lucide-react'
+import { Trash2, Plus, Play, Square } from 'lucide-react'
 
 interface DrumPattern {
   id: number
@@ -17,9 +17,18 @@ export default function DrumPatternsPage() {
   const [patterns, setPatterns] = useState<DrumPattern[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const [playingId, setPlayingId] = useState<number | null>(null)
+  const seqRef = useRef<any>(null)
+  const ToneRef = useRef<any>(null)
 
   useEffect(() => {
     fetchPatterns()
+    return () => {
+      if (seqRef.current) {
+        seqRef.current.stop()
+        seqRef.current.dispose()
+      }
+    }
   }, [])
 
   const fetchPatterns = async () => {
@@ -35,11 +44,82 @@ export default function DrumPatternsPage() {
     }
   }
 
+  const stopPlayback = () => {
+    if (seqRef.current) {
+      seqRef.current.stop()
+      seqRef.current.dispose()
+      seqRef.current = null
+    }
+    if (ToneRef.current) {
+      ToneRef.current.Transport.stop()
+    }
+    setPlayingId(null)
+  }
+
+  const playPattern = async (pattern: DrumPattern) => {
+    if (playingId === pattern.id) {
+      stopPlayback()
+      return
+    }
+
+    stopPlayback()
+
+    const Tone = (await import('tone') as any).Tone
+    ToneRef.current = Tone
+    await Tone.start()
+
+    const urls = {
+      'kick': '/drum-samples/Kick-V01-Yamaha-16x16.wav',
+      'snare': '/drum-samples/SNARE-V01-CustomWorks-6x13.wav',
+      'hihatClosed': '/drum-samples/HiHat-closed-V01-Yamaha-14.wav',
+      'hihatOpen': '/drum-samples/HiHat-open-V01-Yamaha-14.wav',
+      'crash': '/drum-samples/Crash-V01-Pure.wav',
+      'ride': '/drum-samples/Ride-V01-Pure.wav',
+      'tomLow': '/drum-samples/TOM-LOW-V01-Yamaha-12x8.wav',
+      'tomMid': '/drum-samples/TOM-MID-V01-Yamaha-10x9.wav',
+      'tomHigh': '/drum-samples/TOM-HIGH-V01-Yamaha-7x5.wav',
+    }
+
+    const sampler = new Tone.Sampler({ urls }).toDestination()
+    sampler.volume.value = 6
+
+    Tone.Transport.bpm.value = pattern.bpm
+
+    const steps = JSON.parse(pattern.steps)
+    const instruments = ['kick', 'snare', 'hihatClosed', 'hihatOpen', 'crash', 'ride', 'tomLow', 'tomMid', 'tomHigh']
+    const noteMap: Record<string, string> = {
+      kick: 'C1', snare: 'D1', hihatClosed: 'F#1', hihatOpen: 'A#1',
+      crash: 'C2', ride: 'D2', tomLow: 'E2', tomMid: 'F2', tomHigh: 'G2'
+    }
+
+    const stepArray = new Array(16).fill(0).map((_, i) => i)
+    const seq = new Tone.Sequence(
+      (time: any, stepIdx: number) => {
+        instruments.forEach((inst, instIdx) => {
+          if (steps[instIdx]?.[stepIdx]) {
+            sampler.triggerAttackRelease(noteMap[inst], '16n', time)
+          }
+        })
+      },
+      stepArray,
+      '16n'
+    )
+
+    seqRef.current = seq
+    seq.start(0)
+    Tone.Transport.start()
+    setPlayingId(pattern.id)
+  }
+
   const deletePattern = async (id: number) => {
     if (!confirm('Tem certeza que deseja excluir este ritmo?')) return
     try {
       const res = await fetch(`/api/drum-patterns/${id}`, { method: 'DELETE' })
-      if (!res.ok) throw new Error('Erro ao excluir')
+      if (!res.ok) {
+        const data = await res.json()
+        alert(data.error || 'Erro ao excluir')
+        return
+      }
       setPatterns(patterns.filter(p => p.id !== id))
     } catch {
       alert('Erro ao excluir ritmo')
@@ -82,12 +162,19 @@ export default function DrumPatternsPage() {
           {patterns.map(pattern => (
             <div
               key={pattern.id}
-              className="flex items-center justify-between p-4 bg-white border rounded-lg hover:shadow-md transition"
+              className={`flex items-center justify-between p-4 bg-white border rounded-lg hover:shadow-md transition ${playingId === pattern.id ? 'ring-2 ring-blue-500' : ''}`}
             >
               <div className="flex items-center gap-4">
-                <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-                  <Play size={18} className="text-blue-600" />
-                </div>
+                <button
+                  onClick={() => playPattern(pattern)}
+                  className={`w-10 h-10 rounded-full flex items-center justify-center transition ${
+                    playingId === pattern.id
+                      ? 'bg-red-500 text-white hover:bg-red-600'
+                      : 'bg-blue-100 text-blue-600 hover:bg-blue-200'
+                  }`}
+                >
+                  {playingId === pattern.id ? <Square size={18} /> : <Play size={18} />}
+                </button>
                 <div>
                   <h3 className="font-semibold text-lg">{pattern.nome}</h3>
                   <p className="text-sm text-gray-500">
