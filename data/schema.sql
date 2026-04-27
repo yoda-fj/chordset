@@ -11,6 +11,8 @@ CREATE TABLE IF NOT EXISTS musicas (
   observacao TEXT, -- Observação livre do usuário
   audio_url TEXT, -- URL/caminho para gravação de áudio de referência
   groove TEXT, -- JSON com padrão de bateria (groove) para a música
+  drum_pattern_id INTEGER, -- FK para drum_patterns (ritmo associado)
+  FOREIGN KEY (drum_pattern_id) REFERENCES drum_patterns(id) ON DELETE SET NULL
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );

@@ -41,7 +41,8 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
       cifra: body.cifra,
       tags: body.tags,
       observacao: body.observacao,
-      groove: body.groove
+      groove: body.groove,
+      drum_pattern_id: body.drum_pattern_id
     })
     
     return NextResponse.json(musica)

@@ -10,6 +10,7 @@ export interface Musica {
   observacao: string | null
   audio_url: string | null
   groove: string | null
+  drum_pattern_id: number | null
   created_at: string
   updated_at: string
 }
@@ -31,6 +32,7 @@ export interface UpdateMusicaInput {
   observacao?: string | null
   audio_url?: string | null
   groove?: string | null
+  drum_pattern_id?: number | null
 }
 
 export const musicasDb = {
@@ -43,7 +45,8 @@ export const musicasDb = {
       tags: JSON.parse(row.tags || '[]'),
       observacao: row.observacao || null,
       audio_url: row.audio_url || null,
-      groove: row.groove || null
+      groove: row.groove || null,
+      drum_pattern_id: row.drum_pattern_id || null
     }))
   },
 
@@ -57,7 +60,8 @@ export const musicasDb = {
       tags: JSON.parse(row.tags || '[]'),
       observacao: row.observacao || null,
       audio_url: row.audio_url || null,
-      groove: row.groove || null
+      groove: row.groove || null,
+      drum_pattern_id: row.drum_pattern_id || null
     }
   },
 
@@ -118,6 +122,11 @@ export const musicasDb = {
       values.push(input.groove)
     }
 
+    if (input.drum_pattern_id !== undefined) {
+      sets.push('drum_pattern_id = ?')
+      values.push(input.drum_pattern_id)
+    }
+
     if (sets.length === 0) {
       const musica = this.getById(id)
       if (!musica) throw new Error('Música não encontrada')
@@ -162,7 +171,8 @@ export const musicasDb = {
       tags: JSON.parse(row.tags || '[]'),
       observacao: row.observacao || null,
       audio_url: row.audio_url || null,
-      groove: row.groove || null
+      groove: row.groove || null,
+      drum_pattern_id: row.drum_pattern_id || null
     }))
   },
 

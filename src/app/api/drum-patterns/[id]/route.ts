@@ -49,6 +49,15 @@ export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ 
       return NextResponse.json({ error: 'Ritmo não encontrado' }, { status: 404 })
     }
 
+    // Safe delete: check if any music is using this pattern
+    const inUse = db.prepare('SELECT COUNT(*) as count FROM musicas WHERE drum_pattern_id = ?').get(id) as any
+    if (inUse.count > 0) {
+      return NextResponse.json(
+        { error: 'Este ritmo está em uso por uma ou mais músicas. Desassocie-o primeiro.' },
+        { status: 409 }
+      )
+    }
+
     db.prepare('DELETE FROM drum_patterns WHERE id = ?').run(id)
     return NextResponse.json({ success: true })
   } catch (error) {

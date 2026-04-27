@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { useParams } from 'next/navigation'
-import { ArrowLeft, Loader2, Music, Edit, FileText, Calendar, Mic, Upload, Trash2, Play, Pause, X, ChevronLeft, ChevronRight } from 'lucide-react'
+import { ArrowLeft, Loader2, Music, Edit, FileText, Calendar, Mic, Upload, Trash2, Play, Pause, X, ChevronLeft, ChevronRight, Drum } from 'lucide-react'
 import Link from 'next/link'
 
 const STATUS_LABELS: Record<string, string> = {
@@ -25,6 +25,8 @@ export default function MusicaPage() {
 
   const [musica, setMusica] = useState<any>(null)
   const [eventos, setEventos] = useState<any[]>([])
+  const [drumPatterns, setDrumPatterns] = useState<any[]>([])
+  const [selectedRitmo, setSelectedRitmo] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -44,6 +46,7 @@ export default function MusicaPage() {
   const mediaRecorderRef = useRef<MediaRecorder | null>(null)
   const audioRef = useRef<HTMLAudioElement | null>(null)
   const timerRef = useRef<NodeJS.Timeout | null>(null)
+  const ritmoSeqRef = useRef<any>(null)
 
   useEffect(() => {
     async function loadData() {
@@ -70,7 +73,19 @@ export default function MusicaPage() {
           const eventosData = await eventosRes.json()
           setEventos(eventosData)
         }
-      } catch (err) {
+
+        // Load drum patterns
+        const ritmosRes = await fetch('/api/drum-patterns')
+        if (ritmosRes.ok) {
+          const ritmosData = await ritmosRes.json()
+          setDrumPatterns(ritmosData)
+          // Set selected ritmo if music has one
+          if (musicaData.drum_pattern_id) {
+            const found = ritmosData.find((r: any) => r.id === musicaData.drum_pattern_id)
+            setSelectedRitmo(found || null)
+          }
+        }
+      } catch (err){
         setError(err instanceof Error ? err.message : 'Erro desconhecido')
       } finally {
         setLoading(false)
@@ -261,6 +276,88 @@ export default function MusicaPage() {
     return `${mins}:${secs.toString().padStart(2, '0')}`
   }
 
+  const saveRitmo = async (ritmoId: number | null) => {
+    try {
+      const res = await fetch(`/api/musicas/${musicaId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ drum_pattern_id: ritmoId })
+      })
+      if (res.ok) {
+        const updated = await res.json()
+        setMusica(updated)
+        if (ritmoId) {
+          const found = drumPatterns.find((r: any) => r.id === ritmoId)
+          setSelectedRitmo(found || null)
+        } else {
+          setSelectedRitmo(null)
+        }
+      }
+    } catch (e) {
+      console.error('Error saving ritmo:', e)
+    }
+  }
+
+  const playRitmo = async () => {
+    if (!selectedRitmo) return
+    const { Tone } = await import('tone')
+    await Tone.start()
+    
+    if (ritmoSeqRef.current) {
+      ritmoSeqRef.current.stop()
+      ritmoSeqRef.current.dispose()
+    }
+
+    const urls = {
+      'kick': '/drum-samples/Kick-V01-Yamaha-16x16.wav',
+      'snare': '/drum-samples/SNARE-V01-CustomWorks-6x13.wav',
+      'hihatClosed': '/drum-samples/HiHat-closed-V01-Yamaha-14.wav',
+      'hihatOpen': '/drum-samples/HiHat-open-V01-Yamaha-14.wav',
+      'crash': '/drum-samples/Crash-V01-Pure.wav',
+      'ride': '/drum-samples/Ride-V01-Pure.wav',
+      'tomLow': '/drum-samples/TOM-LOW-V01-Yamaha-12x8.wav',
+      'tomMid': '/drum-samples/TOM-MID-V01-Yamaha-10x9.wav',
+      'tomHigh': '/drum-samples/TOM-HIGH-V01-Yamaha-7x5.wav',
+    }
+
+    const sampler = new Tone.Sampler({ urls }).toDestination()
+    sampler.volume.value = 6
+
+    Tone.Transport.bpm.value = selectedRitmo.bpm || 120
+
+    const steps = JSON.parse(selectedRitmo.steps)
+    const stepArray = new Array(16).fill(0).map((_, i) => i)
+
+    ritmoSeqRef.current = new Tone.Sequence(
+      (time, stepIdx) => {
+        const instruments = ['kick', 'snare', 'hihatClosed', 'hihatOpen', 'crash', 'ride', 'tomLow', 'tomMid', 'tomHigh']
+        instruments.forEach((inst, instIdx) => {
+          if (steps[instIdx]?.[stepIdx]) {
+            const noteMap: Record<string, string> = {
+              kick: 'C1', snare: 'D1', hihatClosed: 'F#1', hihatOpen: 'A#1',
+              crash: 'C2', ride: 'D2', tomLow: 'E2', tomMid: 'F2', tomHigh: 'G2'
+            }
+            sampler.triggerAttackRelease(noteMap[inst], '16n', time)
+          }
+        })
+      },
+      stepArray,
+      '16n'
+    )
+
+    ritmoSeqRef.current.start(0)
+    Tone.Transport.start()
+  }
+
+  const stopRitmo = () => {
+    if (ritmoSeqRef.current) {
+      ritmoSeqRef.current.stop()
+      ritmoSeqRef.current.dispose()
+      ritmoSeqRef.current = null
+    }
+    Tone.Transport.stop()
+  }
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
@@ -323,6 +420,47 @@ export default function MusicaPage() {
               </span>
             ))}
           </div>
+        )}
+      </div>
+
+      {/* Ritmo (Drum Pattern) */}
+      <div className="bg-white p-6 rounded-lg border">
+        <div className="flex items-center gap-2 mb-4">
+          <Drum size={20} className="text-indigo-500" />
+          <h2 className="text-lg font-semibold text-gray-900">Ritmo de Bateria</h2>
+        </div>
+        <div className="flex items-center gap-4">
+          <select
+            value={selectedRitmo?.id || ''}
+            onChange={(e) => {
+              const val = e.target.value
+              saveRitmo(val ? parseInt(val) : null)
+            }}
+            className="flex-1 px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          >
+            <option value="">Nenhum ritmo selecionado</option>
+            {drumPatterns.map((p: any) => (
+              <option key={p.id} value={p.id}>
+                {p.nome} ({p.bpm} BPM)
+              </option>
+            ))}
+          </select>
+          {selectedRitmo ? (
+            <button
+              onClick={playRitmo}
+              className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700"
+            >
+              <Play size={18} />
+              Tocar
+            </button>
+          ) : (
+            <span className="text-sm text-gray-400">Selecione um ritmo</span>
+          )}
+        </div>
+        {selectedRitmo && (
+          <p className="text-sm text-gray-500 mt-2">
+            Kit: {selectedRitmo.kit} • BPM: {selectedRitmo.bpm}
+          </p>
         )}
       </div>
 

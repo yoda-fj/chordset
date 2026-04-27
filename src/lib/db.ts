@@ -40,6 +40,12 @@ function initSchema() {
         console.log('[Migration] Adding groove column to musicas...')
         db.exec('ALTER TABLE musicas ADD COLUMN groove TEXT')
       }
+      
+      const hasDrumPatternId = musicasColumns.some(col => col.name === 'drum_pattern_id')
+      if (!hasDrumPatternId) {
+        console.log('[Migration] Adding drum_pattern_id column to musicas...')
+        db.exec('ALTER TABLE musicas ADD COLUMN drum_pattern_id INTEGER REFERENCES drum_patterns(id) ON DELETE SET NULL')
+      }
 
       // Migrate eventos table
       try {
