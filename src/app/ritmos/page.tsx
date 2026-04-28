@@ -70,31 +70,22 @@ export default function DrumPatternsPage() {
     stopPlayback()
     await Tone.start()
 
-    console.log('[playPattern] pattern.id:', pattern.id, 'pattern.kit:', pattern.kit, 'pattern.nome:', pattern.nome)
-
     // Get sample URLs for the pattern's kit (returns { 'C1': '/path/to/kick.wav', ... })
     const sampleUrls = getSamplePaths(pattern.kit || 'kit1')
-    console.log('[playPattern] sampleUrls:', sampleUrls)
 
     // Create one Tone.Player per note key (C1, D1, F#1, etc.)
     const players: Tone.Player[] = []
     const noteKeys = Object.keys(sampleUrls)
-    console.log('[playPattern] noteKeys order:', noteKeys)
     for (const noteKey of noteKeys) {
       const player = new Tone.Player(sampleUrls[noteKey]).toDestination()
       player.volume.value = 6
       players.push(player)
-      console.log('[playPattern] created player for', noteKey, 'url:', sampleUrls[noteKey], 'loaded:', player.loaded)
     }
 
     // Wait for all samples to load before playing
-    console.log('[playPattern] waiting for samples to load...')
     await new Promise<void>((resolve) => {
       const waitForLoaded = () => {
-        const allLoaded = players.every(p => p.loaded)
-        console.log('[playPattern] loaded status:', players.map(p => p.loaded))
-        if (allLoaded) {
-          console.log('[playPattern] all samples loaded!')
+        if (players.every(p => p.loaded)) {
           resolve()
         } else {
           setTimeout(waitForLoaded, 50)
@@ -106,9 +97,7 @@ export default function DrumPatternsPage() {
     Tone.Transport.bpm.value = pattern.bpm
 
     const steps = JSON.parse(pattern.steps)
-    console.log('[playPattern] parsed steps:', steps)
     const instruments = ['kick', 'snare', 'hihatClosed', 'hihatOpen', 'crash', 'ride', 'tomLow', 'tomMid', 'tomHigh']
-    console.log('[playPattern] instruments:', instruments)
 
     const stepArray = new Array(16).fill(0).map((_, i) => i)
     const seq = new Tone.Sequence(
@@ -120,7 +109,6 @@ export default function DrumPatternsPage() {
             const note = NOTE_MAP[inst]
             const noteIndex = noteKeys.indexOf(note)
             const player = players[noteIndex]
-            console.log('[playPattern] triggering:', inst, '->', note, '-> index', noteIndex, 'player:', player ? 'exists' : 'null', 'loaded:', player?.loaded)
             if (player && player.loaded) {
               player.start(time)
             }
