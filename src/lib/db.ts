@@ -47,6 +47,18 @@ function initSchema() {
         db.exec('ALTER TABLE musicas ADD COLUMN drum_pattern_id INTEGER REFERENCES drum_patterns(id) ON DELETE SET NULL')
       }
 
+      const hasBpm = musicasColumns.some(col => col.name === 'bpm')
+      if (!hasBpm) {
+        console.log('[Migration] Adding bpm column to musicas...')
+        db.exec('ALTER TABLE musicas ADD COLUMN bpm INTEGER DEFAULT 120')
+      }
+
+      const hasVolume = musicasColumns.some(col => col.name === 'volume')
+      if (!hasVolume) {
+        console.log('[Migration] Adding volume column to musicas...')
+        db.exec('ALTER TABLE musicas ADD COLUMN volume REAL DEFAULT 0.7')
+      }
+
       // Migrate eventos table
       try {
         const eventosColumns = db.prepare("PRAGMA table_info(eventos)").all() as any[]
