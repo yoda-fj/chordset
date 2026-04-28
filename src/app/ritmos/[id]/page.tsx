@@ -49,6 +49,7 @@ export default function DrumPatternEditorPage() {
     })
     return initial
   })
+  const stepsRef = useRef(steps)
   const [isPlaying, setIsPlaying] = useState(false)
   const [currentStep, setCurrentStep] = useState(-1)
   const [sampler, setSampler] = useState<any>(null)
@@ -76,6 +77,11 @@ export default function DrumPatternEditorPage() {
     loadSampler()
     return () => { if (s) s.dispose() }
   }, [kit])
+
+  // Keep stepsRef in sync with steps state
+  useEffect(() => {
+    stepsRef.current = steps
+  }, [steps])
 
   // Load existing pattern
   useEffect(() => {
@@ -140,7 +146,7 @@ export default function DrumPatternEditorPage() {
       (time: any, stepIdx: number) => {
         setCurrentStep(stepIdx)
         INSTRUMENTS.forEach(inst => {
-          if (steps[inst.key][stepIdx]) {
+          if (stepsRef.current[inst.key][stepIdx]) {
             const note = NOTE_MAP[inst.key]
             sampler.triggerAttackRelease(note, '16n', time)
           }
