@@ -149,6 +149,7 @@ export function DrumPad({ readOnly = false }: DrumPadProps) {
   const [customPatterns, setCustomPatterns] = useState<DrumPattern[]>([]);
   const activePadsTimeoutRef = useRef<Map<string, NodeJS.Timeout>>(new Map());
   const sequenceRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const currentPatternRef = useRef<{ pattern: DrumHit[]; bpm: number } | null>(null);
 
   // Fetch custom patterns from database
   useEffect(() => {
@@ -244,20 +245,32 @@ export function DrumPad({ readOnly = false }: DrumPadProps) {
       const dbPattern = customPatterns.find(p => p.id === patternId);
       if (dbPattern) {
         currentBpm = dbPattern.bpm;
-        const stepsData = JSON.parse(dbPattern.steps);
+        // Steps may already be parsed or be a JSON string
+        let stepsData: boolean[][];
+        if (typeof dbPattern.steps === 'string') {
+          stepsData = JSON.parse(dbPattern.steps);
+        } else {
+          stepsData = dbPattern.steps;
+        }
         patternToPlay = [];
         const trackNotes = ['C1', 'D1', 'F#1', 'A#1', 'C2', 'D2', 'E2', 'F2', 'G2'];
-        stepsData.forEach((track: boolean[], trackIndex: number) => {
-          track.forEach((hit: boolean, stepIndex: number) => {
-            if (hit) {
-              patternToPlay.push({
-                time: stepIndex / 2, // convert step to time in 16ths
-                note: trackNotes[trackIndex],
-                velocity: 0.8
+        if (Array.isArray(stepsData)) {
+          stepsData.forEach((track: boolean[], trackIndex: number) => {
+            if (Array.isArray(track)) {
+              track.forEach((hit: boolean, stepIndex: number) => {
+                if (hit) {
+                  patternToPlay.push({
+                    time: stepIndex / 2, // convert step to time in 16ths
+                    note: trackNotes[trackIndex],
+                    velocity: 0.8
+                  });
+                }
               });
             }
           });
-        });
+        } else {
+          console.error('[DrumPad] Invalid steps format:', stepsData);
+        }
       } else {
         patternToPlay = PRESET_GROOVES['rock-8'].pattern;
       }
@@ -291,8 +304,43 @@ export function DrumPad({ readOnly = false }: DrumPadProps) {
 
     Tone.Transport.start();
     sequenceRef.current = timerId;
+    currentPatternRef.current = { pattern: patternToPlay, bpm: currentBpm };
     setIsPlaying(true);
   }, [sampler, isLoaded, selectedGroove, bpm, customPatterns]);
+
+  // Restart playback when BPM changes during playback
+  useEffect(() => {
+    if (isPlaying && currentPatternRef.current && sequenceRef.current) {
+      // Stop current playback
+      clearInterval(sequenceRef.current);
+      sequenceRef.current = null;
+
+      const { pattern: patternToPlay, bpm: currentBpm } = currentPatternRef.current;
+      const intervalMs = (60 / bpm) * 1000 / 4; // 16th notes
+
+      let step = 0;
+      const timerId = setInterval(() => {
+        patternToPlay.forEach(hit => {
+          const hitStep = Math.floor(hit.time * 2) % 16;
+          if (hitStep === step) {
+            sampler!.triggerAttackRelease(hit.note, '16n');
+            setActivePads(prev => new Set(prev).add(hit.note));
+            setTimeout(() => {
+              setActivePads(prev => {
+                const next = new Set(prev);
+                next.delete(hit.note);
+                return next;
+              });
+            }, 150);
+          }
+        });
+        step = (step + 1) % 16;
+      }, intervalMs);
+
+      sequenceRef.current = timerId;
+      currentPatternRef.current = { pattern: patternToPlay, bpm };
+    }
+  }, [bpm, isPlaying, sampler]);
 
   const stopPlayback = useCallback(() => {
     if (sequenceRef.current) {
@@ -398,11 +446,11 @@ export function DrumPad({ readOnly = false }: DrumPadProps) {
       </div>
 
       {/* Groove Selector */}
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-3 flex-wrap">
         <select
           value={selectedGroove}
           onChange={(e) => handleGrooveChange(e.target.value)}
-          className="px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-sm flex-1"
+          className="px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-sm min-w-[140px] max-w-[200px]"
         >
           <optgroup label="Presets">
             {Object.entries(PRESET_GROOVES).map(([id, groove]) => (
@@ -417,7 +465,7 @@ export function DrumPad({ readOnly = false }: DrumPadProps) {
             </optgroup>
           )}
         </select>
-        
+
         <div className="flex items-center gap-2">
           <span className="text-xs text-slate-500">BPM</span>
           <input
@@ -429,16 +477,24 @@ export function DrumPad({ readOnly = false }: DrumPadProps) {
             className="w-16 px-2 py-1 bg-slate-50 border border-slate-200 rounded text-sm text-center"
           />
         </div>
-        
-        <input
-          type="range"
-          min={0}
-          max={1}
-          step={0.1}
-          value={isMuted ? 0 : volume}
-          onChange={(e) => setVolume(Number(e.target.value))}
-          className="flex-1 min-w-[80px]"
-        />
+
+        <div className="flex items-center gap-2 flex-1 min-w-[100px]">
+          <button
+            onClick={() => setIsMuted(!isMuted)}
+            className="p-1.5 hover:bg-slate-100 rounded"
+          >
+            {isMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
+          </button>
+          <input
+            type="range"
+            min={0}
+            max={1}
+            step={0.1}
+            value={isMuted ? 0 : volume}
+            onChange={(e) => setVolume(Number(e.target.value))}
+            className="flex-1"
+          />
+        </div>
       </div>
 
       {/* Drum Pads Grid */}
