@@ -180,8 +180,8 @@ export function DrumPad({ readOnly = false }: DrumPadProps) {
       }
     }).toDestination();
 
-    // Volume inicial (10dB boost para compensar samples baixos)
-    newSampler.volume.value = 10;
+    // Volume inicial (15dB boost para compensar samples baixos)
+    newSampler.volume.value = 15;
     setSampler(newSampler);
 
     return () => {
@@ -189,11 +189,11 @@ export function DrumPad({ readOnly = false }: DrumPadProps) {
     };
   }, []);
 
-  // Atualiza volume (0-1 linear para dB, com +10 boost)
+  // Atualiza volume (0-1 linear para dB, com +15 boost para som mais alto)
   useEffect(() => {
     if (sampler) {
-      // Converte 0-1 para -10dB a +10dB (com boost)
-      const dbValue = isMuted ? -Infinity : ((volume - 0.5) * 20) + 10;
+      // Converte 0-1 para -5dB a +25dB (com boost de +15)
+      const dbValue = isMuted ? -Infinity : ((volume - 0.5) * 20) + 15;
       sampler.volume.value = dbValue;
     }
   }, [volume, isMuted, sampler]);
@@ -446,11 +446,11 @@ export function DrumPad({ readOnly = false }: DrumPadProps) {
       </div>
 
       {/* Groove Selector */}
-      <div className="flex items-center gap-3 flex-wrap">
+      <div className="flex items-center gap-2 flex-wrap">
         <select
           value={selectedGroove}
           onChange={(e) => handleGrooveChange(e.target.value)}
-          className="px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-sm min-w-[140px] max-w-[200px]"
+          className="px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-sm min-w-[120px]"
         >
           <optgroup label="Presets">
             {Object.entries(PRESET_GROOVES).map(([id, groove]) => (
@@ -466,7 +466,7 @@ export function DrumPad({ readOnly = false }: DrumPadProps) {
           )}
         </select>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1">
           <span className="text-xs text-slate-500">BPM</span>
           <input
             type="number"
@@ -474,11 +474,11 @@ export function DrumPad({ readOnly = false }: DrumPadProps) {
             onChange={(e) => handleBpmChange(Number(e.target.value))}
             min={40}
             max={200}
-            className="w-16 px-2 py-1 bg-slate-50 border border-slate-200 rounded text-sm text-center"
+            className="w-14 px-1 py-1 bg-slate-50 border border-slate-200 rounded text-sm text-center"
           />
         </div>
 
-        <div className="flex items-center gap-2 flex-1 min-w-[100px]">
+        <div className="flex items-center gap-1">
           <button
             onClick={() => setIsMuted(!isMuted)}
             className="p-1.5 hover:bg-slate-100 rounded"
@@ -492,7 +492,7 @@ export function DrumPad({ readOnly = false }: DrumPadProps) {
             step={0.1}
             value={isMuted ? 0 : volume}
             onChange={(e) => setVolume(Number(e.target.value))}
-            className="flex-1"
+            className="w-20"
           />
         </div>
       </div>

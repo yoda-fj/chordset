@@ -78,7 +78,7 @@ export default function DrumPatternsPage() {
     const noteKeys = Object.keys(sampleUrls)
     for (const noteKey of noteKeys) {
       const player = new Tone.Player(sampleUrls[noteKey]).toDestination()
-      player.volume.value = 6
+      player.volume.value = 15 // 15dB boost for louder sound
       players.push(player)
     }
 

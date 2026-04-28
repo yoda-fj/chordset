@@ -71,7 +71,7 @@ export default function DrumPatternEditorPage() {
           console.error('Sampler load error:', err)
         }
       }).toDestination()
-      s.volume.value = 6
+      s.volume.value = 15
       setSampler(s)
     }
     loadSampler()

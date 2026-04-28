@@ -42,7 +42,7 @@ export default function DrumDebugPage() {
         addLog('Load error: ' + err)
       }
     }).toDestination()
-    s.volume.value = 6
+    s.volume.value = 15
     setSampler(s)
     return () => { s.dispose() }
   }, [])

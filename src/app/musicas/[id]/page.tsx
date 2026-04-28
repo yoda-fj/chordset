@@ -317,7 +317,7 @@ export default function MusicaPage() {
     const urls = getSamplerUrls(selectedRitmo.kit || 'kit1')
 
     const sampler = new Tone.Sampler({ urls }).toDestination()
-    sampler.volume.value = 6
+    sampler.volume.value = 15
 
     // Wait for samples to load
     await new Promise<void>((resolve) => setTimeout(resolve, 1500))
