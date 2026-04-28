@@ -70,13 +70,17 @@ export default function DrumPatternsPage() {
     stopPlayback()
     await Tone.start()
 
-    // Get sample URLs for the pattern's kit
-    const sampleUrls = getSamplePaths(pattern.kit || 'kit1')
+    console.log('[playPattern] pattern.id:', pattern.id, 'pattern.kit:', pattern.kit, 'pattern.nome:', pattern.nome)
 
-    // Create one Tone.Player per note
+    // Get sample URLs for the pattern's kit (returns { 'C1': '/path/to/kick.wav', ... })
+    const sampleUrls = getSamplePaths(pattern.kit || 'kit1')
+    console.log('[playPattern] sampleUrls:', sampleUrls)
+
+    // Create one Tone.Player per note key (C1, D1, F#1, etc.)
     const players: Tone.Player[] = []
-    for (const url of Object.values(sampleUrls)) {
-      const player = new Tone.Player(url).toDestination()
+    const noteKeys = Object.keys(sampleUrls)
+    for (const noteKey of noteKeys) {
+      const player = new Tone.Player(sampleUrls[noteKey]).toDestination()
       player.volume.value = 6
       players.push(player)
     }
@@ -92,7 +96,7 @@ export default function DrumPatternsPage() {
         instruments.forEach((inst, instIdx) => {
           if (steps[instIdx]?.[stepIdx]) {
             const note = NOTE_MAP[inst]
-            const noteIndex = Object.keys(NOTE_MAP).indexOf(inst)
+            const noteIndex = noteKeys.indexOf(note)
             const player = players[noteIndex]
             if (player && player.loaded) {
               player.start(time)
