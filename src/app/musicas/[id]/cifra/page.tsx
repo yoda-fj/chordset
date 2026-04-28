@@ -33,6 +33,13 @@ export default function CifraPage() {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [isFullscreen, setIsFullscreen] = useState(false)
 
+  // Drum pad settings
+  const [drumPadGroove, setDrumPadGroove] = useState('rock-8')
+  const [drumPadBpm, setDrumPadBpm] = useState(120)
+  const [drumPadVolume, setDrumPadVolume] = useState(0.7)
+  const drumPadBpmTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+  const drumPadVolumeTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+
   // Listen to fullscreen changes at page level
   useEffect(() => {
     const handleFullscreenChange = () => {
@@ -51,6 +58,16 @@ export default function CifraPage() {
         const data = await response.json()
         setMusica(data)
         setObservacao(data.observacao || '')
+
+        // Load drum pad settings from musica
+        if (data.drum_pattern_id) {
+          setDrumPadGroove(`db-${data.drum_pattern_id}`)
+        } else if (data.groove) {
+          setDrumPadGroove(data.groove)
+        }
+        if (data.bpm) setDrumPadBpm(data.bpm)
+        if (data.volume != null) setDrumPadVolume(data.volume)
+
         if (data.audio_url) {
           // Convert path for Docker standalone mode
           const audioPath = data.audio_url.startsWith('/musicas-audio/')
@@ -98,6 +115,70 @@ export default function CifraPage() {
     setObservacao(value)
     if (obsTimeoutRef.current) clearTimeout(obsTimeoutRef.current)
     obsTimeoutRef.current = setTimeout(saveObservacao, 1500)
+  }
+
+  // Save drum pad groove/drum_pattern_id
+  const saveDrumPadGroove = async (grooveId: string, drumPatternId: number | null) => {
+    if (!musicaId) return
+    try {
+      await fetch(`/api/musicas/${musicaId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          groove: grooveId.startsWith('db-') ? null : grooveId,
+          drum_pattern_id: drumPatternId
+        })
+      })
+    } catch (e) {
+      console.error('Error saving drum pad groove:', e)
+    }
+  }
+
+  // Save drum pad BPM
+  const saveDrumPadBpm = async (bpm: number) => {
+    if (!musicaId) return
+    try {
+      await fetch(`/api/musicas/${musicaId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ bpm })
+      })
+    } catch (e) {
+      console.error('Error saving drum pad bpm:', e)
+    }
+  }
+
+  // Save drum pad volume
+  const saveDrumPadVolume = async (volume: number) => {
+    if (!musicaId) return
+    try {
+      await fetch(`/api/musicas/${musicaId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ volume })
+      })
+    } catch (e) {
+      console.error('Error saving drum pad volume:', e)
+    }
+  }
+
+  // Handlers for drum pad changes
+  const handleDrumPadGrooveChange = (grooveId: string, drumPatternId: number | null) => {
+    setDrumPadGroove(grooveId)
+    if (drumPadBpmTimeoutRef.current) clearTimeout(drumPadBpmTimeoutRef.current)
+    drumPadBpmTimeoutRef.current = setTimeout(() => saveDrumPadGroove(grooveId, drumPatternId), 1000)
+  }
+
+  const handleDrumPadBpmChange = (bpm: number) => {
+    setDrumPadBpm(bpm)
+    if (drumPadBpmTimeoutRef.current) clearTimeout(drumPadBpmTimeoutRef.current)
+    drumPadBpmTimeoutRef.current = setTimeout(() => saveDrumPadBpm(bpm), 1000)
+  }
+
+  const handleDrumPadVolumeChange = (volume: number) => {
+    setDrumPadVolume(volume)
+    if (drumPadVolumeTimeoutRef.current) clearTimeout(drumPadVolumeTimeoutRef.current)
+    drumPadVolumeTimeoutRef.current = setTimeout(() => saveDrumPadVolume(volume), 1000)
   }
 
   // Recording functions
@@ -477,7 +558,14 @@ export default function CifraPage() {
             </div>
 
             {/* Drum Pad / Groove */}
-            <DrumPad />
+            <DrumPad
+              initialGroove={drumPadGroove}
+              initialBpm={drumPadBpm}
+              initialVolume={drumPadVolume}
+              onGrooveChange={handleDrumPadGrooveChange}
+              onBpmChange={handleDrumPadBpmChange}
+              onVolumeChange={handleDrumPadVolumeChange}
+            />
           </div>
         </div>
       </div>

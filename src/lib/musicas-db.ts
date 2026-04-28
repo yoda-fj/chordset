@@ -11,6 +11,8 @@ export interface Musica {
   audio_url: string | null
   groove: string | null
   drum_pattern_id: number | null
+  bpm: number
+  volume: number
   created_at: string
   updated_at: string
 }
@@ -33,6 +35,8 @@ export interface UpdateMusicaInput {
   audio_url?: string | null
   groove?: string | null
   drum_pattern_id?: number | null
+  bpm?: number
+  volume?: number
 }
 
 export const musicasDb = {
@@ -46,7 +50,9 @@ export const musicasDb = {
       observacao: row.observacao || null,
       audio_url: row.audio_url || null,
       groove: row.groove || null,
-      drum_pattern_id: row.drum_pattern_id || null
+      drum_pattern_id: row.drum_pattern_id || null,
+      bpm: row.bpm || 120,
+      volume: row.volume ?? 0.7
     }))
   },
 
@@ -61,7 +67,9 @@ export const musicasDb = {
       observacao: row.observacao || null,
       audio_url: row.audio_url || null,
       groove: row.groove || null,
-      drum_pattern_id: row.drum_pattern_id || null
+      drum_pattern_id: row.drum_pattern_id || null,
+      bpm: row.bpm || 120,
+      volume: row.volume ?? 0.7
     }
   },
 
@@ -127,6 +135,16 @@ export const musicasDb = {
       values.push(input.drum_pattern_id)
     }
 
+    if (input.bpm !== undefined) {
+      sets.push('bpm = ?')
+      values.push(input.bpm)
+    }
+
+    if (input.volume !== undefined) {
+      sets.push('volume = ?')
+      values.push(input.volume)
+    }
+
     if (sets.length === 0) {
       const musica = this.getById(id)
       if (!musica) throw new Error('Música não encontrada')
@@ -172,7 +190,9 @@ export const musicasDb = {
       observacao: row.observacao || null,
       audio_url: row.audio_url || null,
       groove: row.groove || null,
-      drum_pattern_id: row.drum_pattern_id || null
+      drum_pattern_id: row.drum_pattern_id || null,
+      bpm: row.bpm || 120,
+      volume: row.volume ?? 0.7
     }))
   },
 

@@ -7,6 +7,12 @@ import { Play, Pause, Square, Volume2, VolumeX, Music } from 'lucide-react';
 
 interface DrumPadProps {
   readOnly?: boolean;
+  initialGroove?: string;
+  initialBpm?: number;
+  initialVolume?: number;
+  onGrooveChange?: (grooveId: string, drumPatternId: number | null) => void;
+  onBpmChange?: (bpm: number) => void;
+  onVolumeChange?: (volume: number) => void;
 }
 
 interface DrumHit {
@@ -137,11 +143,11 @@ const DRUM_PADS = [
   { note: 'G2', label: 'Tom H', key: 'G', color: 'bg-rose-500' },
 ];
 
-export function DrumPad({ readOnly = false }: DrumPadProps) {
+export function DrumPad({ readOnly = false, initialGroove, initialBpm, initialVolume, onGrooveChange, onBpmChange, onVolumeChange }: DrumPadProps) {
   const [isPlaying, setIsPlaying] = useState(false);
-  const [selectedGroove, setSelectedGroove] = useState<string>('rock-8');
-  const [bpm, setBpm] = useState(120);
-  const [volume, setVolume] = useState(0.7);
+  const [selectedGroove, setSelectedGroove] = useState<string>(initialGroove || 'rock-8');
+  const [bpm, setBpm] = useState(initialBpm || 120);
+  const [volume, setVolume] = useState(initialVolume ?? 0.7);
   const [isMuted, setIsMuted] = useState(false);
   const [sampler, setSampler] = useState<Tone.Sampler | null>(null);
   const [isLoaded, setIsLoaded] = useState(false);
@@ -151,6 +157,8 @@ export function DrumPad({ readOnly = false }: DrumPadProps) {
   const activePadsTimeoutRef = useRef<Map<string, NodeJS.Timeout>>(new Map());
   const sequenceRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const currentPatternRef = useRef<{ pattern: DrumHit[]; bpm: number } | null>(null);
+  const bpmTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const volumeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Fetch custom patterns from database
   useEffect(() => {
@@ -421,6 +429,8 @@ export function DrumPad({ readOnly = false }: DrumPadProps) {
       const pattern = customPatterns.find(p => p.id === patternId);
       if (pattern) {
         setBpm(pattern.bpm);
+        onBpmChange?.(pattern.bpm);
+        onGrooveChange?.(grooveId, pattern.id);
         if (pattern.kit && pattern.kit !== selectedKit) {
           setSelectedKit(pattern.kit);
         }
@@ -429,6 +439,8 @@ export function DrumPad({ readOnly = false }: DrumPadProps) {
       // Preset groove
       const newBpm = PRESET_GROOVES[grooveId]?.bpm || 120;
       setBpm(newBpm);
+      onBpmChange?.(newBpm);
+      onGrooveChange?.(grooveId, null);
       // Presets use kit1
       if (selectedKit !== 'kit1') {
         setSelectedKit('kit1');
@@ -439,6 +451,20 @@ export function DrumPad({ readOnly = false }: DrumPadProps) {
   const handleBpmChange = (newBpm: number) => {
     setBpm(newBpm);
     Tone.Transport.bpm.value = newBpm;
+    // Debounce save to API
+    if (bpmTimeoutRef.current) clearTimeout(bpmTimeoutRef.current);
+    bpmTimeoutRef.current = setTimeout(() => {
+      onBpmChange?.(newBpm);
+    }, 1000);
+  };
+
+  const handleVolumeChange = (newVolume: number) => {
+    setVolume(newVolume);
+    // Debounce save to API
+    if (volumeTimeoutRef.current) clearTimeout(volumeTimeoutRef.current);
+    volumeTimeoutRef.current = setTimeout(() => {
+      onVolumeChange?.(newVolume);
+    }, 1000);
   };
 
   if (!isLoaded) {
@@ -533,7 +559,7 @@ export function DrumPad({ readOnly = false }: DrumPadProps) {
             max={1}
             step={0.1}
             value={isMuted ? 0 : volume}
-            onChange={(e) => setVolume(Number(e.target.value))}
+            onChange={(e) => handleVolumeChange(Number(e.target.value))}
             className="w-20"
           />
         </div>

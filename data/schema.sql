@@ -23,6 +23,8 @@ CREATE TABLE IF NOT EXISTS musicas (
   audio_url TEXT, -- URL/caminho para gravação de áudio de referência
   groove TEXT, -- JSON com padrão de bateria (groove) para a música
   drum_pattern_id INTEGER, -- FK para drum_patterns (ritmo associado)
+  bpm INTEGER DEFAULT 120, -- BPM do drum pad
+  volume REAL DEFAULT 0.7, -- Volume do drum pad
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (drum_pattern_id) REFERENCES drum_patterns(id) ON DELETE SET NULL
