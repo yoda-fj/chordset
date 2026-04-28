@@ -85,6 +85,18 @@ export default function DrumPatternsPage() {
       players.push(player)
     }
 
+    // Wait for all samples to load before playing
+    await new Promise<void>((resolve) => {
+      const waitForLoaded = () => {
+        if (players.every(p => p.loaded)) {
+          resolve()
+        } else {
+          setTimeout(waitForLoaded, 50)
+        }
+      }
+      waitForLoaded()
+    })
+
     Tone.Transport.bpm.value = pattern.bpm
 
     const steps = JSON.parse(pattern.steps)
