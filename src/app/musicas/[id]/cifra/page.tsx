@@ -136,13 +136,17 @@ export default function CifraPage() {
 
   // Save drum pad BPM
   const saveDrumPadBpm = async (bpm: number) => {
-    if (!musicaId) return
+    if (!musicaId || bpm == null) return
     try {
-      await fetch(`/api/musicas/${musicaId}`, {
+      const res = await fetch(`/api/musicas/${musicaId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ bpm })
       })
+      if (!res.ok) {
+        const err = await res.json()
+        console.error('Error saving drum pad bpm:', err)
+      }
     } catch (e) {
       console.error('Error saving drum pad bpm:', e)
     }
