@@ -114,7 +114,9 @@ export default function DrumPatternsPage() {
     const seq = new Tone.Sequence(
       (time: any, stepIdx: number) => {
         instruments.forEach((inst, instIdx) => {
-          if (steps[instIdx]?.[stepIdx]) {
+          // steps can be either {kick: [16], snare: [16], ...} or [[16], [16], ...]
+          const stepData = Array.isArray(steps) ? steps[instIdx]?.[stepIdx] : steps[inst]?.[stepIdx]
+          if (stepData) {
             const note = NOTE_MAP[inst]
             const noteIndex = noteKeys.indexOf(note)
             const player = players[noteIndex]
