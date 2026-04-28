@@ -381,9 +381,6 @@ export default function CifraPage() {
               </div>
             </div>
 
-            {/* Drum Pad / Groove */}
-            <DrumPad />
-
             {/* Audio Recording/Upload */}
             <div className="bg-white p-4 rounded-lg border">
               <h2 className="text-base font-semibold text-gray-900 mb-3">Gravação de Referência</h2>
@@ -478,6 +475,9 @@ export default function CifraPage() {
                 )}
               </div>
             </div>
+
+            {/* Drum Pad / Groove */}
+            <DrumPad />
           </div>
         </div>
       </div>
