@@ -147,6 +147,7 @@ export function DrumPad({ readOnly = false }: DrumPadProps) {
   const [isLoaded, setIsLoaded] = useState(false);
   const [activePads, setActivePads] = useState<Set<string>>(new Set());
   const [customPatterns, setCustomPatterns] = useState<DrumPattern[]>([]);
+  const [selectedKit, setSelectedKit] = useState<string>('kit1');
   const activePadsTimeoutRef = useRef<Map<string, NodeJS.Timeout>>(new Map());
   const sequenceRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const currentPatternRef = useRef<{ pattern: DrumHit[]; bpm: number } | null>(null);
@@ -170,7 +171,7 @@ export function DrumPad({ readOnly = false }: DrumPadProps) {
   // Inicializa o sampler
   useEffect(() => {
     const newSampler = new Tone.Sampler({
-      urls: getSamplerUrls('kit1'),
+      urls: getSamplerUrls(selectedKit),
       onload: () => {
         console.log('[DrumPad] Samples loaded!');
         setIsLoaded(true);
@@ -187,7 +188,7 @@ export function DrumPad({ readOnly = false }: DrumPadProps) {
     return () => {
       newSampler.dispose();
     };
-  }, []);
+  }, [selectedKit]);
 
   // Atualiza volume (0-1 linear para dB, com +15 boost para som mais alto)
   useEffect(() => {
@@ -245,16 +246,41 @@ export function DrumPad({ readOnly = false }: DrumPadProps) {
       const dbPattern = customPatterns.find(p => p.id === patternId);
       if (dbPattern) {
         currentBpm = dbPattern.bpm;
-        // Steps may already be parsed or be a JSON string
-        let stepsData: boolean[][];
+        // Steps may already be parsed, be a JSON string, or be object format
+        let stepsData: boolean[][] | Record<string, boolean[]>;
         if (typeof dbPattern.steps === 'string') {
           stepsData = JSON.parse(dbPattern.steps);
         } else {
           stepsData = dbPattern.steps;
         }
         patternToPlay = [];
-        const trackNotes = ['C1', 'D1', 'F#1', 'A#1', 'C2', 'D2', 'E2', 'F2', 'G2'];
-        if (Array.isArray(stepsData)) {
+
+        // Object format: {kick: [16], snare: [16], ...}
+        if (!Array.isArray(stepsData) && typeof stepsData === 'object') {
+          const noteMap: Record<string, string> = {
+            kick: 'C1', snare: 'D1', hihatClosed: 'F#1', hihatOpen: 'A#1',
+            crash: 'C2', ride: 'D2', tomLow: 'E2', tomMid: 'F2', tomHigh: 'G2'
+          };
+          Object.entries(stepsData).forEach(([trackName, steps]) => {
+            if (Array.isArray(steps)) {
+              const note = noteMap[trackName];
+              if (note) {
+                steps.forEach((hit: boolean, stepIndex: number) => {
+                  if (hit) {
+                    patternToPlay.push({
+                      time: stepIndex / 2,
+                      note: note,
+                      velocity: 0.8
+                    });
+                  }
+                });
+              }
+            }
+          });
+        }
+        // Array format: [[16], [16], ...] (9 tracks x 16 steps)
+        else if (Array.isArray(stepsData)) {
+          const trackNotes = ['C1', 'D1', 'F#1', 'A#1', 'C2', 'D2', 'E2', 'F2', 'G2'];
           stepsData.forEach((track: boolean[], trackIndex: number) => {
             if (Array.isArray(track)) {
               track.forEach((hit: boolean, stepIndex: number) => {
@@ -307,6 +333,15 @@ export function DrumPad({ readOnly = false }: DrumPadProps) {
     currentPatternRef.current = { pattern: patternToPlay, bpm: currentBpm };
     setIsPlaying(true);
   }, [sampler, isLoaded, selectedGroove, bpm, customPatterns]);
+
+  // Auto-restart playback when groove selection or kit changes
+  useEffect(() => {
+    if (isPlaying && isLoaded) {
+      stopPlayback();
+      // Small delay to ensure cleanup before starting new playback
+      setTimeout(() => startPlayback(), 50);
+    }
+  }, [selectedGroove, selectedKit]);
 
   // Restart playback when BPM changes during playback
   useEffect(() => {
@@ -386,11 +421,18 @@ export function DrumPad({ readOnly = false }: DrumPadProps) {
       const pattern = customPatterns.find(p => p.id === patternId);
       if (pattern) {
         setBpm(pattern.bpm);
+        if (pattern.kit && pattern.kit !== selectedKit) {
+          setSelectedKit(pattern.kit);
+        }
       }
     } else {
       // Preset groove
       const newBpm = PRESET_GROOVES[grooveId]?.bpm || 120;
       setBpm(newBpm);
+      // Presets use kit1
+      if (selectedKit !== 'kit1') {
+        setSelectedKit('kit1');
+      }
     }
   };
 
