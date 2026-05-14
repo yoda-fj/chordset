@@ -1,4 +1,5 @@
 import { getDb } from './db'
+import { parseTags, stringifyTags } from '@/utils/tag-utils'
 
 export type EventoStatus = 'rascunho' | 'confirmado' | 'realizado' | 'cancelado'
 
@@ -71,7 +72,7 @@ export const eventosDb = {
       local: row.local,
       status: row.status,
       template_id: row.template_id,
-      tags: JSON.parse(row.tags || '[]'),
+      tags: parseTags(row.tags),
       observacoes: row.observacoes,
       audio_url: row.audio_url,
       created_at: row.created_at,
@@ -80,7 +81,7 @@ export const eventosDb = {
         id: row.template_id,
         nome: row.template_nome,
         descricao: row.template_descricao,
-        tags: JSON.parse(row.template_tags || '[]'),
+        tags: parseTags(row.template_tags),
         created_at: row.template_created_at
       } : null
     }))
@@ -105,7 +106,7 @@ export const eventosDb = {
       local: row.local,
       status: row.status,
       template_id: row.template_id,
-      tags: JSON.parse(row.tags || '[]'),
+      tags: parseTags(row.tags),
       observacoes: row.observacoes,
       audio_url: row.audio_url,
       created_at: row.created_at,
@@ -114,7 +115,7 @@ export const eventosDb = {
         id: row.template_id,
         nome: row.template_nome,
         descricao: row.template_descricao,
-        tags: JSON.parse(row.template_tags || '[]'),
+        tags: parseTags(row.template_tags),
         created_at: row.template_created_at
       } : null
     }
@@ -133,7 +134,7 @@ export const eventosDb = {
       input.local || null,
       input.status || 'rascunho',
       input.template_id || null,
-      JSON.stringify(input.tags || []),
+      stringifyTags(input.tags),
       input.observacoes || null
     )
     
@@ -173,7 +174,7 @@ export const eventosDb = {
     }
     if (input.tags !== undefined) {
       sets.push('tags = ?')
-      values.push(JSON.stringify(input.tags))
+      values.push(stringifyTags(input.tags))
     }
     if (input.audio_url !== undefined) {
       sets.push('audio_url = ?')
@@ -218,7 +219,7 @@ export const templatesDb = {
     const rows = stmt.all() as any[]
     return rows.map(row => ({
       ...row,
-      tags: JSON.parse(row.tags || '[]')
+      tags: parseTags(row.tags)
     }))
   },
 
@@ -229,7 +230,7 @@ export const templatesDb = {
     if (!row) return null
     return {
       ...row,
-      tags: JSON.parse(row.tags || '[]')
+      tags: parseTags(row.tags)
     }
   },
 
@@ -239,7 +240,7 @@ export const templatesDb = {
       INSERT INTO templates (nome, descricao, tags)
       VALUES (?, ?, ?)
     `)
-    const result = stmt.run(nome, descricao || null, JSON.stringify(tags || []))
+    const result = stmt.run(nome, descricao || null, stringifyTags(tags))
     
     const template = this.getById(result.lastInsertRowid as number)
     if (!template) throw new Error('Erro ao criar template')

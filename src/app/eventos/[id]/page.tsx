@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useParams } from 'next/navigation'
 import { ArrowLeft, Loader2, Edit, Calendar, Clock, MapPin, Music, Play, Copy } from 'lucide-react'
 import Link from 'next/link'
+import { useToast } from '@/components/ui/Toast'
 
 const STATUS_LABELS: Record<string, string> = {
   rascunho: 'Rascunho',
@@ -21,6 +22,7 @@ const STATUS_COLORS: Record<string, string> = {
 
 export default function EventoPage() {
   const params = useParams()
+  const { showToast } = useToast()
   const eventoId = parseInt(params.id as string)
 
   const [evento, setEvento] = useState<any>(null)
@@ -45,10 +47,10 @@ export default function EventoPage() {
       if (res.ok) {
         window.location.href = `/eventos/${data.evento.id}`
       } else {
-        alert(data.error || 'Erro ao clonar')
+        showToast(data.error || 'Erro ao clonar', 'error')
       }
     } catch (err) {
-      alert('Erro ao clonar evento')
+      showToast('Erro ao clonar evento', 'error')
     } finally {
       setCloneLoading(false)
     }

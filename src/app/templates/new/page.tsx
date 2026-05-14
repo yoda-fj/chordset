@@ -6,12 +6,14 @@ import { ArrowLeft, Save } from 'lucide-react'
 import Link from 'next/link'
 import { TagInput } from '@/components/setlist/TagInput'
 import { SetlistBuilder } from '@/components/setlist/SetlistBuilder'
+import { useToast } from '@/components/ui/Toast'
 import { Template, TemplateMusicaWithMusica } from '@/types/database'
 
 const TAG_SUGGESTIONS = ['culto', 'domingo', 'quarta', 'sabado', 'evento', 'especial', 'louvor', 'adoracao', 'jovens', 'criancas']
 
 export default function NewTemplatePage() {
   const router = useRouter()
+  const { showToast } = useToast()
   const [nome, setNome] = useState('')
   const [descricao, setDescricao] = useState('')
   const [tags, setTags] = useState<string[]>([])
@@ -42,7 +44,7 @@ export default function NewTemplatePage() {
       router.push('/templates')
     } catch (err) {
       console.error('Erro:', err)
-      alert('Erro ao criar template')
+      showToast('Erro ao criar template', 'error')
       setSaving(false)
     }
   }

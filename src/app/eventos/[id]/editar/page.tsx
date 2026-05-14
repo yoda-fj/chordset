@@ -6,6 +6,8 @@ import { ArrowLeft, Save, Loader2, Trash2, FileText, X } from 'lucide-react'
 import Link from 'next/link'
 import { TagInput } from '@/components/setlist/TagInput'
 import { SetlistBuilder } from '@/components/setlist/SetlistBuilder'
+import { useToast } from '@/components/ui/Toast'
+import { parseTags } from '@/utils/tag-utils'
 import type { EventoWithTemplate } from '@/lib/eventos-db'
 
 const STATUS_OPCOES = [
@@ -20,6 +22,7 @@ const TAG_SUGGESTIONS = ['culto', 'evento', 'casamento', 'formatura', 'natal', '
 export default function EditEventoPage() {
   const router = useRouter()
   const params = useParams()
+  const { showToast } = useToast()
   const eventoId = parseInt(params.id as string)
 
   const [evento, setEvento] = useState<EventoWithTemplate | null>(null)
@@ -151,11 +154,11 @@ export default function EditEventoPage() {
         setShowImportModal(false)
       } else {
         const data = await response.json()
-        alert(data.error || 'Erro ao importar do template')
+        showToast(data.error || 'Erro ao importar do template', 'error')
       }
     } catch (err) {
       console.error('Erro ao importar:', err)
-      alert('Erro ao importar músicas do template')
+      showToast('Erro ao importar músicas do template', 'error')
     } finally {
       setImporting(false)
     }
@@ -397,6 +400,7 @@ export default function EditEventoPage() {
           onChange={setEventoMusicas}
           isEvento={true}
           eventoId={eventoId}
+          onError={(msg) => showToast(msg, 'error')}
         />
       </div>
 

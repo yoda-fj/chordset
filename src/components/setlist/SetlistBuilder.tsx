@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import {
   DndContext,
   closestCenter,
@@ -20,6 +20,14 @@ import {
 import { Plus, Search } from 'lucide-react'
 import { MusicaCard } from './MusicaCard'
 import { Musica } from '@/types/database'
+import { parseTags } from '@/utils/tag-utils'
+import {
+  SetlistType,
+  addMusicaToSetlist,
+  removeMusicaFromSetlist,
+  reorderSetlistMusicas,
+  updateSetlistMusica,
+} from '@/utils/setlist-api'
 
 interface SetlistBuilderProps {
   musicas: any[]
@@ -27,6 +35,7 @@ interface SetlistBuilderProps {
   isEvento?: boolean
   eventoId?: number
   templateId?: number
+  onError?: (message: string) => void
 }
 
 export function SetlistBuilder({
@@ -35,6 +44,7 @@ export function SetlistBuilder({
   isEvento = false,
   eventoId,
   templateId,
+  onError,
 }: SetlistBuilderProps) {
   const [showAddModal, setShowAddModal] = useState(false)
   const [searchTerm, setSearchTerm] = useState('')
@@ -43,16 +53,23 @@ export function SetlistBuilder({
   const [activeId, setActiveId] = useState<number | string | null>(null)
   const activeMusica = musicas.find((m) => m.id === activeId)
 
+  const setlistType: SetlistType = isEvento ? 'evento' : 'template'
+  const setlistId = eventoId || templateId
+
+  const handleError = useCallback((message: string) => {
+    console.error(message)
+    onError?.(message)
+  }, [onError])
+
   useEffect(() => {
     async function fetchMusicas() {
       try {
         const response = await fetch('/api/musicas')
         if (response.ok) {
           const data = await response.json()
-          // Parse tags se vier como string JSON
           const parsed = data.map((m: any) => ({
             ...m,
-            tags: typeof m.tags === 'string' ? JSON.parse(m.tags) : m.tags || []
+            tags: parseTags(m.tags),
           }))
           setAvailableMusicas(parsed)
         }
@@ -83,168 +100,82 @@ export function SetlistBuilder({
     if (over && active.id !== over.id) {
       const oldIndex = musicas.findIndex((m) => m.id === active.id)
       const newIndex = musicas.findIndex((m) => m.id === over.id)
-      
+
       const newMusicas = arrayMove(musicas, oldIndex, newIndex)
-      // Atualizar ordem
       const reordered = newMusicas.map((m, idx) => ({ ...m, ordem: idx + 1 }))
       onChange(reordered)
-      
-      // Salvar nova ordem no banco
-      const orderedIds = reordered.map((m) => m.id)
-      if (isEvento && eventoId) {
-        fetch(`/api/eventos/${eventoId}/musicas/reorder`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ orderedIds }),
-        }).catch((err) => console.error('Erro ao reordenar:', err))
-      } else if (templateId) {
-        fetch(`/api/templates/${templateId}/musicas/reorder`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ orderedIds }),
-        }).catch((err) => console.error('Erro ao reordenar:', err))
+
+      if (setlistId) {
+        const orderedIds = reordered.map((m) => m.id)
+        reorderSetlistMusicas(setlistType, setlistId, orderedIds).catch((err) =>
+          console.error('Erro ao reordenar:', err)
+        )
       }
     }
   }
 
   const handleRemove = async (id: string) => {
-    // Se for um ID numérico (já salvo no banco), chamar DELETE
-    if (isEvento && eventoId && !id.toString().startsWith('temp-')) {
+    if (setlistId && !id.toString().startsWith('temp-')) {
       try {
-        const response = await fetch(`/api/eventos/${eventoId}/musicas/${id}`, {
-          method: 'DELETE',
-        })
-        if (!response.ok) {
-          console.error('Erro ao remover música')
-          return
-        }
-      } catch (err) {
-        console.error('Erro ao remover música:', err)
-        return
-      }
-    } else if (templateId && !id.toString().startsWith('temp-')) {
-      // Para templates, chamar DELETE na API
-      try {
-        const response = await fetch(`/api/templates/${templateId}/musicas?musica_id=${id}`, {
-          method: 'DELETE',
-        })
-        if (!response.ok) {
-          console.error('Erro ao remover música')
-          return
-        }
+        await removeMusicaFromSetlist(setlistType, setlistId, id)
       } catch (err) {
         console.error('Erro ao remover música:', err)
         return
       }
     }
-    
+
     const filtered = musicas.filter((m) => m.id !== id)
     const reordered = filtered.map((m, idx) => ({ ...m, ordem: idx + 1 }))
     onChange(reordered)
   }
 
-  const handleUpdate = (id: string, updates: { tom?: string; observacoes?: string; confirmada?: boolean; responsavel?: string }) => {
+  const handleUpdate = (
+    id: string,
+    updates: { tom?: string; observacoes?: string; confirmada?: boolean; responsavel?: string }
+  ) => {
     const updated = musicas.map((m) => {
       if (m.id !== id) return m
-      
+
       if (isEvento) {
-        const em = m as any
         return {
-          ...em,
-          tom_evento: updates.tom !== undefined ? updates.tom : em.tom_evento,
-          observacoes: updates.observacoes !== undefined ? updates.observacoes : em.observacoes,
-          confirmada: updates.confirmada !== undefined ? updates.confirmada : em.confirmada,
-          responsavel: updates.responsavel !== undefined ? updates.responsavel : em.responsavel,
+          ...m,
+          tom_evento: updates.tom !== undefined ? updates.tom : m.tom_evento,
+          observacoes: updates.observacoes !== undefined ? updates.observacoes : m.observacoes,
+          confirmada: updates.confirmada !== undefined ? updates.confirmada : m.confirmada,
+          responsavel: updates.responsavel !== undefined ? updates.responsavel : m.responsavel,
         }
       } else {
-        const tm = m as any
         return {
-          ...tm,
-          tom_sugerido: updates.tom !== undefined ? updates.tom : tm.tom_sugerido,
-          observacoes: updates.observacoes !== undefined ? updates.observacoes : tm.observacoes,
+          ...m,
+          tom_sugerido: updates.tom !== undefined ? updates.tom : m.tom_sugerido,
+          observacoes: updates.observacoes !== undefined ? updates.observacoes : m.observacoes,
         }
       }
     })
     onChange(updated)
-    
-    // Auto-save to server for events
-    if (isEvento && eventoId && !id.toString().startsWith('temp-')) {
-      fetch(`/api/eventos/${eventoId}/musicas/${id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          tom_evento: updates.tom,
-          observacoes: updates.observacoes,
-          confirmada: updates.confirmada,
-          responsavel: updates.responsavel,
-        }),
-      }).catch((err) => console.error('Erro ao salvar música:', err))
-    } else if (templateId && !id.toString().startsWith('temp-')) {
-      // For templates, save tom_sugerido and observacoes
-      fetch(`/api/templates/${templateId}/musicas/${id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          tom_sugerido: updates.tom,
-          observacoes: updates.observacoes,
-        }),
+
+    if (setlistId && !id.toString().startsWith('temp-')) {
+      updateSetlistMusica(setlistType, setlistId, id, {
+        tom: updates.tom,
+        observacoes: updates.observacoes,
+        confirmada: updates.confirmada,
+        responsavel: updates.responsavel,
       }).catch((err) => console.error('Erro ao salvar música:', err))
     }
   }
 
   const handleAddMusica = async (musica: Musica) => {
-    // Para eventos, salvar imediatamente no banco
-    if (isEvento && eventoId) {
+    if (setlistId) {
       try {
-        const response = await fetch(`/api/eventos/${eventoId}/musicas`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            musica_id: musica.id,
-            ordem: musicas.length + 1,
-          }),
-        })
-        
-        if (response.ok) {
-          const savedMusica = await response.json()
-          // Buscar dados completos da música
-          const musicaData = availableMusicas.find(m => m.id === musica.id) || musica
-          onChange([...musicas, { ...savedMusica, musicas: musicaData }])
-        } else {
-          console.error('Erro ao adicionar música:', await response.text())
-          alert('Erro ao adicionar música')
-        }
+        const savedMusica = await addMusicaToSetlist(setlistType, setlistId, musica.id, musicas.length + 1)
+        const musicaData = availableMusicas.find((m) => m.id === musica.id) || musica
+        onChange([...musicas, { ...savedMusica, musicas: musicaData }])
       } catch (err) {
         console.error('Erro ao adicionar música:', err)
-        alert('Erro ao adicionar música')
-      }
-    } else if (templateId) {
-      // Para templates, salvar no banco via API
-      try {
-        const response = await fetch(`/api/templates/${templateId}/musicas`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            musica_id: musica.id,
-            ordem: musicas.length + 1,
-          }),
-        })
-        
-        if (response.ok) {
-          const savedMusica = await response.json()
-          const musicaData = availableMusicas.find(m => m.id === musica.id) || musica
-          onChange([...musicas, { ...savedMusica, musicas: musicaData }])
-        } else {
-          console.error('Erro ao adicionar música:', await response.text())
-          alert('Erro ao adicionar música')
-        }
-      } catch (err) {
-        console.error('Erro ao adicionar música:', err)
-        alert('Erro ao adicionar música')
+        handleError('Erro ao adicionar música')
       }
     } else {
-      // Fallback: estado local
-      const newMusica = ({
+      const newMusica = {
         id: `temp-${Date.now()}`,
         template_id: templateId || '',
         musica_id: musica.id,
@@ -253,10 +184,10 @@ export function SetlistBuilder({
         observacoes: null,
         created_at: new Date().toISOString(),
         musicas: musica,
-      } as any)
+      } as any
       onChange([...musicas, newMusica])
     }
-    
+
     setShowAddModal(false)
     setSearchTerm('')
   }
@@ -269,7 +200,7 @@ export function SetlistBuilder({
     (m) =>
       m.titulo.toLowerCase().includes(searchTerm.toLowerCase()) ||
       m.artista.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (m.tags && m.tags.some((t: string) => t.toLowerCase().includes(searchTerm.toLowerCase())))
+      (m.tags && m.tags.some((t) => t.toLowerCase().includes(searchTerm.toLowerCase())))
   )
 
   return (

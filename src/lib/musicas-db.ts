@@ -1,4 +1,5 @@
 import { getDb } from './db'
+import { parseTags, stringifyTags } from '@/utils/tag-utils'
 
 export interface Musica {
   id: number
@@ -46,7 +47,7 @@ export const musicasDb = {
     const rows = stmt.all() as any[]
     return rows.map(row => ({
       ...row,
-      tags: JSON.parse(row.tags || '[]'),
+      tags: parseTags(row.tags),
       observacao: row.observacao || null,
       audio_url: row.audio_url || null,
       groove: row.groove || null,
@@ -63,7 +64,7 @@ export const musicasDb = {
     if (!row) return null
     return {
       ...row,
-      tags: JSON.parse(row.tags || '[]'),
+      tags: parseTags(row.tags),
       observacao: row.observacao || null,
       audio_url: row.audio_url || null,
       groove: row.groove || null,
@@ -115,7 +116,7 @@ export const musicasDb = {
     }
     if (input.tags !== undefined) {
       sets.push('tags = ?')
-      values.push(JSON.stringify(input.tags))
+      values.push(stringifyTags(input.tags))
     }
     if (input.observacao !== undefined) {
       sets.push('observacao = ?')
@@ -186,7 +187,7 @@ export const musicasDb = {
     const rows = stmt.all(...params) as any[]
     return rows.map(row => ({
       ...row,
-      tags: JSON.parse(row.tags || '[]'),
+      tags: parseTags(row.tags),
       observacao: row.observacao || null,
       audio_url: row.audio_url || null,
       groove: row.groove || null,
@@ -203,7 +204,7 @@ export const musicasDb = {
     const tagsSet = new Set<string>()
     
     rows.forEach(row => {
-      const tags = JSON.parse(row.tags || '[]') as string[]
+      const tags = parseTags(row.tags)
       tags.forEach(tag => tagsSet.add(tag))
     })
     

@@ -6,12 +6,15 @@ import { ArrowLeft, Save, Trash2, Loader2 } from 'lucide-react'
 import Link from 'next/link'
 import { TagInput } from '@/components/setlist/TagInput'
 import { SetlistBuilder } from '@/components/setlist/SetlistBuilder'
+import { useToast } from '@/components/ui/Toast'
+import { parseTags } from '@/utils/tag-utils'
 
 const TAG_SUGGESTIONS = ['culto', 'domingo', 'quarta', 'sabado', 'evento', 'especial', 'louvor', 'adoracao', 'jovens', 'criancas']
 
 export default function EditTemplatePage() {
   const router = useRouter()
   const params = useParams()
+  const { showToast } = useToast()
   const templateId = parseInt(params.id as string)
 
   const [nome, setNome] = useState('')
@@ -35,7 +38,7 @@ export default function EditTemplatePage() {
         const templateData = await templateRes.json()
         setNome(templateData.nome || '')
         setDescricao(templateData.descricao || '')
-        setTags(typeof templateData.tags === 'string' ? JSON.parse(templateData.tags) : templateData.tags || [])
+        setTags(parseTags(templateData.tags))
         
         if (musicasRes.ok) {
           const musicasData = await musicasRes.json()
@@ -190,6 +193,7 @@ export default function EditTemplatePage() {
             onChange={setMusicas}
             isEvento={false}
             templateId={templateId}
+            onError={(msg) => showToast(msg, 'error')}
           />
         </div>
 
