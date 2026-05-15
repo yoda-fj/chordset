@@ -7,6 +7,7 @@ import Link from 'next/link'
 import { TagInput } from '@/components/setlist/TagInput'
 import { ImportPhotoModal } from '@/components/ocr/ImportPhotoModal'
 import { VersionSelector } from '@/components/cifraclub/VersionSelector'
+import { CifraPreview } from '@/components/cifra/CifraPreview'
 
 const TOM_OPCOES = ['C', 'Cm', 'D', 'Dm', 'E', 'Em', 'F', 'Fm', 'G', 'Gm', 'A', 'Am', 'B', 'Bm']
 
@@ -46,6 +47,7 @@ export default function NewMusicaPage() {
   const [tags, setTags] = useState<string[]>([])
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [cifraTab, setCifraTab] = useState<'edit' | 'preview'>('edit')
   
   // Import states
   const [showImport, setShowImport] = useState(false)
@@ -288,16 +290,62 @@ export default function NewMusicaPage() {
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Cifra
             </label>
-            <textarea
-              value={cifra}
-              onChange={(e) => setCifra(e.target.value)}
-              rows={10}
-              className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 font-mono text-sm"
-              placeholder="Cole aqui a cifra da música...&#10;&#10;Exemplo:&#10;Tom: G&#10;&#10;[Intro] G  D  Em  C&#10;&#10;[Verso 1]&#10;G              D&#10;Amazing grace..."
-            />
-            <p className="mt-1 text-xs text-gray-500">
-              Use fonte monoespaçada para manter o alinhamento dos acordes
-            </p>
+            
+            {/* Abas Editar/Preview */}
+            <div className="flex border-b border-gray-200 mb-2">
+              <button
+                type="button"
+                onClick={() => setCifraTab('edit')}
+                className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
+                  cifraTab === 'edit'
+                    ? 'border-indigo-600 text-indigo-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700'
+                }`}
+              >
+                Editar
+              </button>
+              <button
+                type="button"
+                onClick={() => setCifraTab('preview')}
+                className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
+                  cifraTab === 'preview'
+                    ? 'border-indigo-600 text-indigo-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700'
+                }`}
+              >
+                Preview
+              </button>
+            </div>
+            
+            {/* Conteúdo da aba */}
+            <div className="relative">
+              {cifraTab === 'edit' ? (
+                <>
+                  <textarea
+                    value={cifra}
+                    onChange={(e) => setCifra(e.target.value)}
+                    rows={10}
+                    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 font-mono text-sm"
+                    placeholder="Cole aqui a cifra da música...&#10;&#10;Exemplo:&#10;Tom: G&#10;&#10;[Intro] G  D  Em  C&#10;&#10;[Verso 1]&#10;G              D&#10;Amazing grace..."
+                  />
+                  <p className="mt-1 text-xs text-gray-500">
+                    Use fonte monoespaçada para manter o alinhamento dos acordes
+                  </p>
+                </>
+              ) : (
+                <div className="border rounded-lg overflow-hidden">
+                  <div className="max-h-64 overflow-y-auto">
+                    {cifra.trim() ? (
+                      <CifraPreview cifra={cifra} />
+                    ) : (
+                      <div className="p-8 text-center text-gray-400 text-sm">
+                        Nenhuma cifra para preview
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         </div>
 

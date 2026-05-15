@@ -109,19 +109,33 @@ export class CifraClubScraper {
       return clone.innerHTML;
     });
     
-    // Converte HTML para texto preservando espaços/acordes
+    // Processa o HTML mantendo a estrutura de acordes acima da letra
     const $ = cheerio.load(cifraHtml);
     
-    // Remove tags HTML mas preserva o texto
-    let text = $.text();
+    // O Cifra Club usa <b> para acordes e texto normal para a letra
+    // Os acordes aparecem em uma linha e a letra na linha abaixo
+    // Precisamos extrair linha por linha, preservando os acordes
+    
+    const lines: string[] = [];
+    
+    // Processa cada nó filho do pre
+    const preContent = $.root().find('body').html() || cifraHtml;
+    
+    // Divide por quebras de linha HTML
+    const rawLines = preContent.split(/\n/);
+    
+    for (const rawLine of rawLines) {
+      // Remove tags HTML mas preserva o conteúdo
+      const lineText = cheerio.load(rawLine).text();
+      
+      // Preserva a linha se tiver conteúdo (acordes ou letra)
+      if (lineText.trim()) {
+        lines.push(lineText);
+      }
+    }
     
     // Normaliza espaços em branco
-    text = text
-      .replace(/\r\n/g, '\n')
-      .replace(/\n{3,}/g, '\n\n')
-      .trim();
-    
-    result.cifra = text.split('\n');
+    result.cifra = lines;
   }
 
   async close(): Promise<void> {
