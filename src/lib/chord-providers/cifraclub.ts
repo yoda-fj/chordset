@@ -67,28 +67,34 @@ export const cifraClubProvider: ChordProvider = {
   async getChords(songUrl: string): Promise<SongWithChords> {
     try {
       // URL exemplo: https://www.cifraclub.com.br/frank-sinatra/my-way
-      // Precisamos extrair artist e song da URL
+      // Ou: https://www.cifraclub.com.br/frank-sinatra/my-way/simplificada
+      // Precisamos extrair artist, song e versão da URL
       
       const urlParts = songUrl
         .replace('https://www.cifraclub.com.br/', '')
         .replace('http://localhost:3000/', '')
-        .split('/');
+        .split('/')
+        .filter(Boolean);
       
       if (urlParts.length < 2) {
         throw new Error('URL inválida do Cifra Club');
       }
 
       const artist = urlParts[0];
-      const song = urlParts[1].replace(/\/$/, '');
+      const song = urlParts[1];
+      const version = urlParts[2] || undefined;
 
-      // Timeout de 60 segundos para a API do Cifra Club (Selenium é lento)
+      // Monta a URL da API interna com versão se houver
+      let apiUrl = `${CIFRACLUB_API_URL}/api/cifraclub/${artist}/${song}`;
+      if (version) {
+        apiUrl += `?version=${version}`;
+      }
+
+      // Timeout de 60 segundos para a API do Cifra Club (Playwright é lento)
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 60000);
 
-      const response = await fetch(
-        `${CIFRACLUB_API_URL}/api/cifraclub/${artist}/${song}`,
-        { signal: controller.signal }
-      );
+      const response = await fetch(apiUrl, { signal: controller.signal });
       clearTimeout(timeoutId);
 
       if (!response.ok) {

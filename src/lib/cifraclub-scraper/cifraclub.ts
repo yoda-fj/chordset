@@ -19,8 +19,12 @@ export class CifraClubScraper {
     return this.browser;
   }
 
-  async scrape(artist: string, song: string): Promise<CifraResponse> {
-    const url = `${BASE_URL}${artist}/${song}`;
+  async scrape(artist: string, song: string, version?: string): Promise<CifraResponse> {
+    let url = `${BASE_URL}${artist}/${song}`;
+    if (version && version !== 'principal') {
+      url += `/${version}`;
+    }
+    
     let browser: Browser | null = null;
 
     try {
@@ -84,11 +88,40 @@ export class CifraClubScraper {
   }
 
   private async getCifra(page: Page, result: Partial<CifraResult>): Promise<void> {
-    const outerHTML = await page.evaluate(
-      () => document.querySelector('.cifra_cnt')?.outerHTML ?? ''
-    );
-    const $ = cheerio.load(outerHTML);
-    result.cifra = $('pre').text().split('\n');
+    // Pega o HTML interno do pre para preservar a formatação dos acordes
+    const cifraHtml = await page.evaluate(() => {
+      const pre = document.querySelector('.cifra_cnt pre');
+      if (!pre) return '';
+      
+      // Clona para não modificar o DOM
+      const clone = pre.cloneNode(true) as HTMLElement;
+      
+      // Substitui <span class="tablatura"> por [Tab]...[/Tab]
+      const tabs = clone.querySelectorAll('.tablatura');
+      tabs.forEach(tab => {
+        const tabText = '[Tab]' + tab.textContent + '[/Tab]';
+        const span = document.createElement('span');
+        span.textContent = tabText;
+        tab.replaceWith(span);
+      });
+      
+      // Pega o texto preservando a estrutura de linhas
+      return clone.innerHTML;
+    });
+    
+    // Converte HTML para texto preservando espaços/acordes
+    const $ = cheerio.load(cifraHtml);
+    
+    // Remove tags HTML mas preserva o texto
+    let text = $.text();
+    
+    // Normaliza espaços em branco
+    text = text
+      .replace(/\r\n/g, '\n')
+      .replace(/\n{3,}/g, '\n\n')
+      .trim();
+    
+    result.cifra = text.split('\n');
   }
 
   async close(): Promise<void> {
