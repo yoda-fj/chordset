@@ -6,6 +6,7 @@ import { ArrowLeft, Save, Loader2, Download, X, Search, Camera, Music } from 'lu
 import Link from 'next/link'
 import { TagInput } from '@/components/setlist/TagInput'
 import { ImportPhotoModal } from '@/components/ocr/ImportPhotoModal'
+import { VersionSelector } from '@/components/cifraclub/VersionSelector'
 
 const TOM_OPCOES = ['C', 'Cm', 'D', 'Dm', 'E', 'Em', 'F', 'Fm', 'G', 'Gm', 'A', 'Am', 'B', 'Bm']
 
@@ -132,7 +133,27 @@ export default function NewMusicaPage() {
     setTags(data.observacoes ? [data.observacoes] : [])
   }
 
+  const [selectedResult, setSelectedResult] = useState<SearchResult | null>(null)
+  const [showVersionSelector, setShowVersionSelector] = useState(false)
+
   const handleSelectResult = async (result: SearchResult) => {
+    // Extrai artist e song da URL para buscar versões
+    const urlParts = result.url.replace('https://www.cifraclub.com.br/', '').split('/')
+    if (urlParts.length >= 2) {
+      setSelectedResult(result)
+      setShowVersionSelector(true)
+    } else {
+      // Fallback: importa direto se não conseguir extrair
+      await importFromUrl(result.url)
+    }
+  }
+
+  const handleSelectVersion = async (version: { type: string; label: string; url: string }) => {
+    setShowVersionSelector(false)
+    await importFromUrl(version.url)
+  }
+
+  const importFromUrl = async (url: string) => {
     setImportingSong(true)
     setImportError(null)
 
@@ -140,7 +161,7 @@ export default function NewMusicaPage() {
       const response = await fetch('/api/import-song', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ url: result.url, provider: 'cifraclub', save: false }),
+        body: JSON.stringify({ url, provider: 'cifraclub', save: false }),
       })
 
       const data = await response.json()
@@ -424,6 +445,20 @@ export default function NewMusicaPage() {
             )}
           </div>
         </div>
+      )}
+
+      {/* Version Selector Modal */}
+      {selectedResult && (
+        <VersionSelector
+          isOpen={showVersionSelector}
+          onClose={() => {
+            setShowVersionSelector(false)
+            setSelectedResult(null)
+          }}
+          artist={selectedResult.url.replace('https://www.cifraclub.com.br/', '').split('/')[0]}
+          song={selectedResult.url.replace('https://www.cifraclub.com.br/', '').split('/')[1]}
+          onSelectVersion={handleSelectVersion}
+        />
       )}
 
       {/* Photo Import Modal */}
