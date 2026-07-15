@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { musicasDb } from '@/lib/musicas-db'
+import { jsonError } from '@/lib/api-helpers'
 
 // GET /api/musicas - Listar todas as músicas
 export async function GET(request: NextRequest) {
@@ -18,10 +19,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(musicas)
   } catch (error) {
     console.error('Erro ao buscar músicas:', error)
-    return NextResponse.json(
-      { error: 'Erro ao buscar músicas' },
-      { status: 500 }
-    )
+    return jsonError('Erro ao buscar músicas', 500)
   }
 }
 
@@ -32,10 +30,7 @@ export async function POST(request: NextRequest) {
     
     // Validação
     if (!body.titulo || !body.artista) {
-      return NextResponse.json(
-        { error: 'Título e artista são obrigatórios' },
-        { status: 400 }
-      )
+      return jsonError('Título e artista são obrigatórios', 400)
     }
     
     const musica = musicasDb.create({
@@ -49,9 +44,6 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(musica, { status: 201 })
   } catch (error) {
     console.error('Erro ao criar música:', error)
-    return NextResponse.json(
-      { error: 'Erro ao criar música' },
-      { status: 500 }
-    )
+    return jsonError('Erro ao criar música', 500)
   }
 }

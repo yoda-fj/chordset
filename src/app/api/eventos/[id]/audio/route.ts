@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { eventosDb } from '@/lib/eventos-db'
-import { writeFile, mkdir, unlink } from 'fs/promises'
-import { join, extname } from 'path'
-import { existsSync } from 'fs'
+import { jsonError, parseId, saveAudioUpload, deleteAudioFile } from '@/lib/api-helpers'
 
 interface RouteParams {
   params: Promise<{ id: string }>
@@ -12,74 +10,33 @@ interface RouteParams {
 export async function POST(request: NextRequest, { params }: RouteParams) {
   try {
     const { id } = await params
-    const eventoId = parseInt(id)
+    const eventoId = parseId(id)
+    if (eventoId === null) {
+      return jsonError('ID inválido', 400)
+    }
 
     // Verify evento exists
     const evento = eventosDb.getById(eventoId)
     if (!evento) {
-      return NextResponse.json(
-        { error: 'Evento não encontrado' },
-        { status: 404 }
-      )
+      return jsonError('Evento não encontrado', 404)
     }
 
-    // Delete old audio file if exists
-    if (evento.audio_url) {
-      const oldPath = join(process.cwd(), 'public', evento.audio_url)
-      try {
-        if (existsSync(oldPath)) {
-          await unlink(oldPath)
-        }
-      } catch (e) {
-        // Ignore errors deleting old file
-      }
+    const result = await saveAudioUpload(request, 'eventos-audio', 'evento', eventoId)
+    if (!result.ok) {
+      return result.error
     }
 
-    const formData = await request.formData()
-    const file = formData.get('audio') as File | null
-
-    if (!file) {
-      return NextResponse.json(
-        { error: 'Nenhum arquivo de áudio fornecido' },
-        { status: 400 }
-      )
-    }
-
-    // Validate file type
-    const allowedTypes = ['audio/mpeg', 'audio/wav', 'audio/ogg', 'audio/webm', 'audio/mp3', 'audio/x-m4a']
-    if (!allowedTypes.includes(file.type) && !file.name.match(/\.(mp3|wav|ogg|webm|m4a)$/i)) {
-      return NextResponse.json(
-        { error: 'Tipo de arquivo não permitido. Use MP3, WAV, OGG, WebM ou M4A' },
-        { status: 400 }
-      )
-    }
-
-    // Create uploads directory if needed
-    const uploadDir = join(process.cwd(), 'public', 'eventos-audio')
-    await mkdir(uploadDir, { recursive: true })
-
-    // Generate unique filename
-    const timestamp = Date.now()
-    const ext = extname(file.name) || '.webm'
-    const filename = `evento-${eventoId}-${timestamp}${ext}`
-    const filepath = join(uploadDir, filename)
-
-    // Save file
-    const buffer = Buffer.from(await file.arrayBuffer())
-    await writeFile(filepath, buffer)
+    // Delete old audio file only after the new one was saved
+    await deleteAudioFile(evento.audio_url)
 
     // Update database with audio_url
-    const audioUrl = `/eventos-audio/${filename}`
-    eventosDb.update(eventoId, { audio_url: audioUrl })
+    eventosDb.update(eventoId, { audio_url: result.audioUrl })
 
     const updatedEvento = eventosDb.getById(eventoId)
     return NextResponse.json(updatedEvento)
   } catch (error) {
     console.error('Erro ao fazer upload de áudio:', error)
-    return NextResponse.json(
-      { error: 'Erro ao fazer upload de áudio' },
-      { status: 500 }
-    )
+    return jsonError('Erro ao fazer upload de áudio', 500)
   }
 }
 
@@ -87,26 +44,18 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
 export async function DELETE(request: NextRequest, { params }: RouteParams) {
   try {
     const { id } = await params
-    const eventoId = parseInt(id)
+    const eventoId = parseId(id)
+    if (eventoId === null) {
+      return jsonError('ID inválido', 400)
+    }
 
     const evento = eventosDb.getById(eventoId)
     if (!evento) {
-      return NextResponse.json(
-        { error: 'Evento não encontrado' },
-        { status: 404 }
-      )
+      return jsonError('Evento não encontrado', 404)
     }
 
-    // Delete file if exists
     if (evento.audio_url) {
-      const filepath = join(process.cwd(), 'public', evento.audio_url)
-      try {
-        if (existsSync(filepath)) {
-          await unlink(filepath)
-        }
-      } catch (e) {
-        // Ignore errors
-      }
+      await deleteAudioFile(evento.audio_url)
 
       // Clear from database
       eventosDb.update(eventoId, { audio_url: null })
@@ -116,9 +65,6 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
     return NextResponse.json(updatedEvento)
   } catch (error) {
     console.error('Erro ao deletar áudio:', error)
-    return NextResponse.json(
-      { error: 'Erro ao deletar áudio' },
-      { status: 500 }
-    )
+    return jsonError('Erro ao deletar áudio', 500)
   }
 }

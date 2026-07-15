@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
+import Link from 'next/link'
 import './globals.css'
 import ClientLayout from '@/components/ui/ClientLayout'
 
@@ -23,41 +24,41 @@ export default function RootLayout({
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
               <div className="flex justify-between h-16">
                 <div className="flex items-center">
-                  <a href="/" className="text-xl font-bold text-indigo-600">
+                  <Link href="/" className="text-xl font-bold text-indigo-600">
                     Setlist Tools
-                  </a>
+                  </Link>
                 </div>
                 <div className="flex items-center space-x-4">
-                  <a
+                  <Link
                     href="/ritmos"
                     className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
                   >
                     Ritmos
-                  </a>
-                  <a
+                  </Link>
+                  <Link
                     href="/eventos"
                     className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
                   >
                     Eventos
-                  </a>
-                  <a
+                  </Link>
+                  <Link
                     href="/templates"
                     className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
                   >
                     Templates
-                  </a>
-                  <a
+                  </Link>
+                  <Link
                     href="/musicas"
                     className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
                   >
                     Músicas
-                  </a>
-                  <a
+                  </Link>
+                  <Link
                     href="/ensaios"
                     className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
                   >
                     Ensaios
-                  </a>
+                  </Link>
                 </div>
               </div>
             </div>

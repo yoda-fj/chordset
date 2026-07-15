@@ -1,6 +1,15 @@
 import { getDb } from './db'
 import type { PracticeSession, PracticeSessionInsert, PracticeSessionUpdate, PracticeSessionWithMusica } from '@/types/practice'
 
+// Linha do JOIN practice_sessions + musicas (ps.*, m.id as m_id, ...)
+type PracticeSessionRow = PracticeSession & {
+  m_id: number
+  titulo: string
+  artista: string
+  tom_original: string | null
+  cifra: string | null
+}
+
 export const practiceSessionsDb = {
   // Buscar todas as sessões com dados da música
   getAll(): PracticeSessionWithMusica[] {
@@ -24,7 +33,7 @@ export const practiceSessionsDb = {
         ps.last_practiced_at DESC NULLS LAST
     `)
     
-    const rows = stmt.all() as any[]
+    const rows = stmt.all() as PracticeSessionRow[]
     return rows.map(row => ({
       id: row.id,
       musica_id: row.musica_id,
@@ -61,7 +70,7 @@ export const practiceSessionsDb = {
       WHERE ps.id = ?
     `)
     
-    const row = stmt.get(id) as any
+    const row = stmt.get(id) as PracticeSessionRow | undefined
     if (!row) return null
     
     return {
@@ -108,14 +117,15 @@ export const practiceSessionsDb = {
       input.notes
     )
     
-    return this.getById(result.lastInsertRowid as number)!
+    const insertId = Number(result.lastInsertRowid)
+    return this.getById(insertId)!
   },
 
   // Atualizar sessão
   update(id: number, input: PracticeSessionUpdate): PracticeSession | null {
     const db = getDb()
     const sets: string[] = []
-    const values: any[] = []
+    const values: (string | number | null)[] = []
 
     if (input.status !== undefined) {
       sets.push('status = ?')

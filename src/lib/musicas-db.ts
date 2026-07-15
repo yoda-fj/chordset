@@ -1,77 +1,37 @@
 import { getDb } from './db'
 import { parseTags, stringifyTags } from '@/utils/tag-utils'
+import type { Musica, CreateMusicaInput, UpdateMusicaInput } from '@/types/database'
 
-export interface Musica {
-  id: number
-  titulo: string
-  artista: string
-  tom_original: string | null
-  cifra: string | null
-  tags: string[]
-  observacao: string | null
-  audio_url: string | null
-  groove: string | null
-  drum_pattern_id: number | null
-  bpm: number
-  volume: number
-  created_at: string
-  updated_at: string
-}
+// Shape cru da linha no SQLite (tags serializada como JSON string)
+type MusicaRow = Omit<Musica, 'tags'> & { tags: string | null }
 
-export interface CreateMusicaInput {
-  titulo: string
-  artista: string
-  tom_original?: string
-  cifra?: string
-  tags?: string[]
-}
-
-export interface UpdateMusicaInput {
-  titulo?: string
-  artista?: string
-  tom_original?: string
-  cifra?: string
-  tags?: string[]
-  observacao?: string | null
-  audio_url?: string | null
-  groove?: string | null
-  drum_pattern_id?: number | null
-  bpm?: number
-  volume?: number
+function rowToMusica(row: MusicaRow): Musica {
+  return {
+    ...row,
+    tags: parseTags(row.tags),
+    observacao: row.observacao || null,
+    audio_url: row.audio_url || null,
+    groove: row.groove || null,
+    drum_pattern_id: row.drum_pattern_id || null,
+    bpm: row.bpm || 120,
+    volume: row.volume ?? 0.7
+  }
 }
 
 export const musicasDb = {
   getAll(): Musica[] {
     const db = getDb()
     const stmt = db.prepare('SELECT * FROM musicas ORDER BY titulo ASC')
-    const rows = stmt.all() as any[]
-    return rows.map(row => ({
-      ...row,
-      tags: parseTags(row.tags),
-      observacao: row.observacao || null,
-      audio_url: row.audio_url || null,
-      groove: row.groove || null,
-      drum_pattern_id: row.drum_pattern_id || null,
-      bpm: row.bpm || 120,
-      volume: row.volume ?? 0.7
-    }))
+    const rows = stmt.all() as MusicaRow[]
+    return rows.map(rowToMusica)
   },
 
   getById(id: number): Musica | null {
     const db = getDb()
     const stmt = db.prepare('SELECT * FROM musicas WHERE id = ?')
-    const row = stmt.get(id) as any
+    const row = stmt.get(id) as MusicaRow | undefined
     if (!row) return null
-    return {
-      ...row,
-      tags: parseTags(row.tags),
-      observacao: row.observacao || null,
-      audio_url: row.audio_url || null,
-      groove: row.groove || null,
-      drum_pattern_id: row.drum_pattern_id || null,
-      bpm: row.bpm || 120,
-      volume: row.volume ?? 0.7
-    }
+    return rowToMusica(row)
   },
 
   create(input: CreateMusicaInput): Musica {
@@ -85,10 +45,11 @@ export const musicasDb = {
       input.artista,
       input.tom_original || null,
       input.cifra || null,
-      JSON.stringify(input.tags || [])
+      stringifyTags(input.tags)
     )
-    
-    const musica = this.getById(result.lastInsertRowid as number)
+
+    const insertId = Number(result.lastInsertRowid)
+    const musica = this.getById(insertId)
     if (!musica) throw new Error('Erro ao criar música')
     return musica
   },
@@ -96,7 +57,7 @@ export const musicasDb = {
   update(id: number, input: UpdateMusicaInput): Musica {
     const db = getDb()
     const sets: string[] = []
-    const values: any[] = []
+    const values: (string | number | null)[] = []
 
     if (input.titulo !== undefined) {
       sets.push('titulo = ?')
@@ -173,41 +134,36 @@ export const musicasDb = {
 
   search(query: string, tag?: string): Musica[] {
     const db = getDb()
+
+    // Sanitize tag input - only allow alphanumeric and spaces
+    const sanitizedTag = tag ? tag.replace(/[^a-zA-Z0-9\s]/g, '').trim() : undefined
+
     let sql = 'SELECT * FROM musicas WHERE (titulo LIKE ? OR artista LIKE ?)'
-    const params: any[] = [`%${query}%`, `%${query}%`]
-    
-    if (tag) {
+    const params: string[] = [`%${query}%`, `%${query}%`]
+
+    if (sanitizedTag) {
       sql += ' AND tags LIKE ?'
-      params.push(`%"${tag}"%`)
+      params.push(`%"${sanitizedTag}"%`)
     }
-    
+
     sql += ' ORDER BY titulo ASC'
-    
+
     const stmt = db.prepare(sql)
-    const rows = stmt.all(...params) as any[]
-    return rows.map(row => ({
-      ...row,
-      tags: parseTags(row.tags),
-      observacao: row.observacao || null,
-      audio_url: row.audio_url || null,
-      groove: row.groove || null,
-      drum_pattern_id: row.drum_pattern_id || null,
-      bpm: row.bpm || 120,
-      volume: row.volume ?? 0.7
-    }))
+    const rows = stmt.all(...params) as MusicaRow[]
+    return rows.map(rowToMusica)
   },
 
   getAllTags(): string[] {
     const db = getDb()
     const stmt = db.prepare('SELECT tags FROM musicas')
-    const rows = stmt.all() as any[]
+    const rows = stmt.all() as { tags: string | null }[]
     const tagsSet = new Set<string>()
-    
+
     rows.forEach(row => {
       const tags = parseTags(row.tags)
       tags.forEach(tag => tagsSet.add(tag))
     })
-    
+
     return Array.from(tagsSet).sort()
   }
 }

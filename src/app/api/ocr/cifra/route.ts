@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getProviderConfig, getApiKey } from '@/lib/llm-providers';
+import { jsonError } from '@/lib/api-helpers';
 
 interface ExtractedCifra {
   titulo: string;
@@ -38,33 +39,21 @@ export async function POST(request: NextRequest) {
     const { imageBase64, imageUrl, provider: providerId } = body;
 
     if (!imageBase64 && !imageUrl) {
-      return NextResponse.json(
-        { error: 'Imagem é obrigatória (envie base64 ou URL)' },
-        { status: 400 }
-      );
+      return jsonError('Imagem é obrigatória (envie base64 ou URL)', 400);
     }
 
     if (!providerId) {
-      return NextResponse.json(
-        { error: 'Provider é obrigatório' },
-        { status: 400 }
-      );
+      return jsonError('Provider é obrigatório', 400);
     }
 
     const provider = getProviderConfig(providerId);
     if (!provider) {
-      return NextResponse.json(
-        { error: `Provider '${providerId}' não suportado` },
-        { status: 400 }
-      );
+      return jsonError(`Provider '${providerId}' não suportado`, 400);
     }
 
     const apiKey = getApiKey(provider);
     if (!apiKey) {
-      return NextResponse.json(
-        { error: `API key não configurada para ${provider.name}` },
-        { status: 500 }
-      );
+      return jsonError(`API key não configurada para ${provider.name}`, 500);
     }
 
     // Build the request based on provider
@@ -172,20 +161,14 @@ export async function POST(request: NextRequest) {
       } else {
         throw new Error('No JSON found in response');
       }
-    } catch (parseError) {
+    } catch {
       console.error('Failed to parse LLM response:', extractedText);
-      return NextResponse.json(
-        { error: 'Falha ao interpretar a imagem. Tente novamente com uma foto mais clara.' },
-        { status: 500 }
-      );
+      return jsonError('Falha ao interpretar a imagem. Tente novamente com uma foto mais clara.', 500);
     }
 
     // Validate required fields
     if (!parsed.titulo || !parsed.cifra) {
-      return NextResponse.json(
-        { error: 'Não consegui identificar a cifra na imagem. Tente uma foto mais clara.' },
-        { status: 500 }
-      );
+      return jsonError('Não consegui identificar a cifra na imagem. Tente uma foto mais clara.', 500);
     }
 
     return NextResponse.json({
@@ -200,9 +183,6 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     console.error('Error processing image:', error);
-    return NextResponse.json(
-      { error: 'Erro ao processar imagem' },
-      { status: 500 }
-    );
+    return jsonError('Erro ao processar imagem', 500);
   }
 }

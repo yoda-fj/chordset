@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 import {
   DndContext,
   closestCenter,
@@ -18,7 +18,7 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable'
 import { Plus, Search } from 'lucide-react'
-import { MusicaCard } from './MusicaCard'
+import { MusicaCard, type SetlistMusica } from './MusicaCard'
 import { Musica } from '@/types/database'
 import { parseTags } from '@/utils/tag-utils'
 import {
@@ -30,8 +30,8 @@ import {
 } from '@/utils/setlist-api'
 
 interface SetlistBuilderProps {
-  musicas: any[]
-  onChange: (musicas: any[]) => void
+  musicas: SetlistMusica[]
+  onChange: (musicas: SetlistMusica[]) => void
   isEvento?: boolean
   eventoId?: number
   templateId?: number
@@ -67,7 +67,7 @@ export function SetlistBuilder({
         const response = await fetch('/api/musicas')
         if (response.ok) {
           const data = await response.json()
-          const parsed = data.map((m: any) => ({
+          const parsed = data.map((m: Omit<Musica, 'tags'> & { tags: unknown }) => ({
             ...m,
             tags: parseTags(m.tags),
           }))
@@ -94,7 +94,7 @@ export function SetlistBuilder({
     })
   )
 
-  const handleDragEnd = (event: DragEndEvent) => {
+  const handleDragEnd = useCallback((event: DragEndEvent) => {
     const { active, over } = event
 
     if (over && active.id !== over.id) {
@@ -112,9 +112,9 @@ export function SetlistBuilder({
         )
       }
     }
-  }
+  }, [musicas, onChange, setlistId, setlistType])
 
-  const handleRemove = async (id: string) => {
+  const handleRemove = useCallback(async (id: number | string) => {
     if (setlistId && !id.toString().startsWith('temp-')) {
       try {
         await removeMusicaFromSetlist(setlistType, setlistId, id)
@@ -127,10 +127,10 @@ export function SetlistBuilder({
     const filtered = musicas.filter((m) => m.id !== id)
     const reordered = filtered.map((m, idx) => ({ ...m, ordem: idx + 1 }))
     onChange(reordered)
-  }
+  }, [musicas, onChange, setlistId, setlistType])
 
-  const handleUpdate = (
-    id: string,
+  const handleUpdate = useCallback((
+    id: number | string,
     updates: { tom?: string; observacoes?: string; confirmada?: boolean; responsavel?: string }
   ) => {
     const updated = musicas.map((m) => {
@@ -162,9 +162,9 @@ export function SetlistBuilder({
         responsavel: updates.responsavel,
       }).catch((err) => console.error('Erro ao salvar música:', err))
     }
-  }
+  }, [musicas, onChange, isEvento, setlistId, setlistType])
 
-  const handleAddMusica = async (musica: Musica) => {
+  const handleAddMusica = useCallback(async (musica: Musica) => {
     if (setlistId) {
       try {
         const savedMusica = await addMusicaToSetlist(setlistType, setlistId, musica.id, musicas.length + 1)
@@ -175,7 +175,7 @@ export function SetlistBuilder({
         handleError('Erro ao adicionar música')
       }
     } else {
-      const newMusica = {
+      const newMusica: SetlistMusica = {
         id: `temp-${Date.now()}`,
         template_id: templateId || '',
         musica_id: musica.id,
@@ -184,23 +184,27 @@ export function SetlistBuilder({
         observacoes: null,
         created_at: new Date().toISOString(),
         musicas: musica,
-      } as any
+      }
       onChange([...musicas, newMusica])
     }
 
     setShowAddModal(false)
     setSearchTerm('')
-  }
+  }, [setlistId, setlistType, musicas, availableMusicas, onChange, handleError, templateId])
 
-  const filteredAvailableMusicas = availableMusicas.filter(
-    (m) => !musicas.some((um) => um.musica_id === m.id)
+  const filteredAvailableMusicas = useMemo(() =>
+    availableMusicas.filter((m) => !musicas.some((um) => um.musica_id === m.id)),
+    [availableMusicas, musicas]
   )
 
-  const filteredMusicas = filteredAvailableMusicas.filter(
-    (m) =>
-      m.titulo.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      m.artista.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (m.tags && m.tags.some((t) => t.toLowerCase().includes(searchTerm.toLowerCase())))
+  const filteredMusicas = useMemo(() =>
+    filteredAvailableMusicas.filter(
+      (m) =>
+        m.titulo.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        m.artista.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (m.tags && m.tags.some((t) => t.toLowerCase().includes(searchTerm.toLowerCase())))
+    ),
+    [filteredAvailableMusicas, searchTerm]
   )
 
   return (

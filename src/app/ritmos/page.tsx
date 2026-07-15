@@ -4,15 +4,7 @@ import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { Trash2, Plus, Play, Square } from 'lucide-react'
 import * as Tone from 'tone'
-
-interface DrumPattern {
-  id: number
-  nome: string
-  bpm: number
-  kit: string
-  steps: string
-  created_at: string
-}
+import type { DrumPattern } from '@/types/database'
 
 const NOTE_MAP: Record<string, string> = {
   kick: 'C1', snare: 'D1', hihatClosed: 'F#1', hihatOpen: 'A#1',
@@ -26,7 +18,7 @@ export default function DrumPatternsPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [playingId, setPlayingId] = useState<number | null>(null)
-  const seqRef = useRef<any>(null)
+  const seqRef = useRef<Tone.Sequence<number> | null>(null)
 
   useEffect(() => {
     fetchPatterns()
@@ -44,7 +36,7 @@ export default function DrumPatternsPage() {
       if (!res.ok) throw new Error('Erro ao buscar ritmos')
       const data = await res.json()
       setPatterns(data)
-    } catch (err) {
+    } catch {
       setError('Erro ao carregar ritmos')
     } finally {
       setLoading(false)
@@ -96,12 +88,12 @@ export default function DrumPatternsPage() {
 
     Tone.Transport.bpm.value = pattern.bpm
 
-    const steps = JSON.parse(pattern.steps)
+    const steps: number[][] | Record<string, (number | boolean)[]> = JSON.parse(pattern.steps)
     const instruments = ['kick', 'snare', 'hihatClosed', 'hihatOpen', 'crash', 'ride', 'tomLow', 'tomMid', 'tomHigh']
 
     const stepArray = new Array(16).fill(0).map((_, i) => i)
     const seq = new Tone.Sequence(
-      (time: any, stepIdx: number) => {
+      (time: number, stepIdx: number) => {
         instruments.forEach((inst, instIdx) => {
           // steps can be either {kick: [16], snare: [16], ...} or [[16], [16], ...]
           const stepData = Array.isArray(steps) ? steps[instIdx]?.[stepIdx] : steps[inst]?.[stepIdx]

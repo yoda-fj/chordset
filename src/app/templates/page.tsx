@@ -3,14 +3,8 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { Plus, Search, Tag, Loader2 } from 'lucide-react'
-
-interface Template {
-  id: number
-  nome: string
-  descricao: string | null
-  tags: string[]
-  created_at: string
-}
+import { parseTags } from '@/utils/tag-utils'
+import type { Template } from '@/types/database'
 
 export default function TemplatesPage() {
   const [templates, setTemplates] = useState<Template[]>([])
@@ -25,9 +19,9 @@ export default function TemplatesPage() {
         if (!response.ok) throw new Error('Erro ao carregar templates')
         const data = await response.json()
         // Parse tags se vier como string
-        setTemplates(data.map((t: any) => ({
+        setTemplates(data.map((t: Template) => ({
           ...t,
-          tags: typeof t.tags === 'string' ? JSON.parse(t.tags) : t.tags || []
+          tags: parseTags(t.tags)
         })))
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Erro desconhecido')

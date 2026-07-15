@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { templateMusicasDb } from '@/lib/template-musicas-db'
+import { jsonError, parseId } from '@/lib/api-helpers'
 
 // POST /api/templates/[id]/musicas/reorder - Reordenar músicas do template
 export async function POST(
@@ -8,19 +9,16 @@ export async function POST(
 ) {
   try {
     const { id } = await params
-    const templateId = parseInt(id)
+    const templateId = parseId(id)
     
-    if (isNaN(templateId)) {
-      return NextResponse.json({ error: 'ID inválido' }, { status: 400 })
+    if (templateId === null) {
+      return jsonError('ID inválido', 400)
     }
     
     const body = await request.json()
     
     if (!body.orderedIds || !Array.isArray(body.orderedIds)) {
-      return NextResponse.json(
-        { error: 'orderedIds é obrigatório e deve ser um array' },
-        { status: 400 }
-      )
+      return jsonError('orderedIds é obrigatório e deve ser um array', 400)
     }
     
     templateMusicasDb.reorder(templateId, body.orderedIds)
@@ -29,9 +27,6 @@ export async function POST(
     return NextResponse.json(musicas)
   } catch (error) {
     console.error('Erro ao reordenar músicas:', error)
-    return NextResponse.json(
-      { error: 'Erro ao reordenar músicas' },
-      { status: 500 }
-    )
+    return jsonError('Erro ao reordenar músicas', 500)
   }
 }

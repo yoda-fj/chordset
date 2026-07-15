@@ -2,7 +2,7 @@
 
 import { useState, useRef } from 'react';
 import { Camera, X, Loader2, ChevronRight } from 'lucide-react';
-import { LLM_PROVIDERS, LLMProvider } from '@/lib/llm-providers';
+import { LLM_PROVIDERS } from '@/lib/llm-providers';
 
 interface ExtractedData {
   titulo: string;
@@ -159,6 +159,7 @@ export function ImportPhotoModal({ isOpen, onClose, onImport }: ImportPhotoModal
 
                 {imagePreview ? (
                   <div className="relative">
+                    {/* eslint-disable-next-line @next/next/no-img-element -- preview local em data URL, next/image não se aplica */}
                     <img
                       src={imagePreview}
                       alt="Preview"
@@ -201,11 +202,14 @@ export function ImportPhotoModal({ isOpen, onClose, onImport }: ImportPhotoModal
               {/* Preview */}
               <div>
                 {imagePreview && (
+                  <>
+                  {/* eslint-disable-next-line @next/next/no-img-element -- preview local em data URL, next/image não se aplica */}
                   <img
                     src={imagePreview}
                     alt="Original"
                     className="w-full max-h-32 object-contain rounded-lg bg-slate-100 mb-4"
                   />
+                  </>
                 )}
               </div>
 

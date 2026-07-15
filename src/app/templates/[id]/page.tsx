@@ -8,8 +8,8 @@ import { TagInput } from '@/components/setlist/TagInput'
 import { SetlistBuilder } from '@/components/setlist/SetlistBuilder'
 import { useToast } from '@/components/ui/Toast'
 import { parseTags } from '@/utils/tag-utils'
-
-const TAG_SUGGESTIONS = ['culto', 'domingo', 'quarta', 'sabado', 'evento', 'especial', 'louvor', 'adoracao', 'jovens', 'criancas']
+import type { SetlistMusica } from '@/components/setlist/MusicaCard'
+import { TAG_SUGGESTIONS_TEMPLATE } from '@/lib/constants'
 
 export default function EditTemplatePage() {
   const router = useRouter()
@@ -20,7 +20,7 @@ export default function EditTemplatePage() {
   const [nome, setNome] = useState('')
   const [descricao, setDescricao] = useState('')
   const [tags, setTags] = useState<string[]>([])
-  const [musicas, setMusicas] = useState<any[]>([])
+  const [musicas, setMusicas] = useState<SetlistMusica[]>([])
   const [saving, setSaving] = useState(false)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -182,7 +182,7 @@ export default function EditTemplatePage() {
             <TagInput
               tags={tags}
               onChange={setTags}
-              suggestions={TAG_SUGGESTIONS}
+              suggestions={TAG_SUGGESTIONS_TEMPLATE}
             />
           </div>
         </div>

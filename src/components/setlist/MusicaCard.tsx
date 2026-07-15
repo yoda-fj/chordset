@@ -3,10 +3,28 @@
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { GripVertical, Music, X } from 'lucide-react'
-import { TemplateMusicaWithMusica, EventoMusicaWithMusica } from '@/types/database'
+import { TemplateMusicaWithMusica, EventoMusicaWithMusica, MusicaJoin } from '@/types/database'
+
+// Item de setlist exibido no builder/card: EventoMusica ou TemplateMusica
+// com join de música, podendo ter id temporário (string) antes de salvar
+export interface SetlistMusica {
+  id: number | string
+  musica_id: number
+  ordem: number
+  evento_id?: number
+  template_id?: number | string
+  tom_evento?: string | null
+  tom_sugerido?: string | null
+  observacoes?: string | null
+  confirmada?: boolean
+  responsavel?: string | null
+  created_at?: string
+  updated_at?: string
+  musicas: MusicaJoin | TemplateMusicaWithMusica['musicas']
+}
 
 interface MusicaCardProps {
-  musica: TemplateMusicaWithMusica | EventoMusicaWithMusica
+  musica: SetlistMusica
   onRemove?: () => void
   onUpdate?: (updates: { tom?: string; observacoes?: string; confirmada?: boolean; responsavel?: string }) => void
   isEvento?: boolean

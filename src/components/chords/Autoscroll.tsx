@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { Play, Pause, Gauge } from 'lucide-react';
+import { Play, Gauge } from 'lucide-react';
 
 interface AutoscrollProps {
   targetRef: React.RefObject<HTMLElement | null>;
@@ -24,7 +24,7 @@ export const Autoscroll = ({ targetRef }: AutoscrollProps) => {
   const animationRef = useRef<number | null>(null);
   const lastTimeRef = useRef<number>(0);
 
-  const scroll = useCallback((timestamp: number) => {
+  const scroll = useCallback(function tick(timestamp: number) {
     if (speed === 0) return;
     
     const element = targetRef.current;
@@ -43,7 +43,7 @@ export const Autoscroll = ({ targetRef }: AutoscrollProps) => {
       setProgress((newScrollTop / maxScroll) * 100);
       
       if (newScrollTop < maxScroll && speed > 0) {
-        animationRef.current = requestAnimationFrame(scroll);
+        animationRef.current = requestAnimationFrame(tick);
       } else {
         setSpeed(0);
         lastTimeRef.current = 0;
@@ -67,7 +67,7 @@ export const Autoscroll = ({ targetRef }: AutoscrollProps) => {
       setProgress((newScrollTop / windowMaxScroll) * 100);
       
       if (newScrollTop < windowMaxScroll && speed > 0) {
-        animationRef.current = requestAnimationFrame(scroll);
+        animationRef.current = requestAnimationFrame(tick);
       } else {
         setSpeed(0);
         lastTimeRef.current = 0;
@@ -89,7 +89,7 @@ export const Autoscroll = ({ targetRef }: AutoscrollProps) => {
     setProgress((newScrollTop / maxScroll) * 100);
     
     if (newScrollTop < maxScroll && speed > 0) {
-      animationRef.current = requestAnimationFrame(scroll);
+      animationRef.current = requestAnimationFrame(tick);
     } else {
       // Chegou no fim ou velocidade foi mudada pra 0
       setSpeed(0);

@@ -5,11 +5,8 @@ import { useRouter } from 'next/navigation'
 import { ArrowLeft, Save, Loader2, Trash2 } from 'lucide-react'
 import Link from 'next/link'
 import { TagInput } from '@/components/setlist/TagInput'
-import type { Musica } from '@/lib/musicas-db'
-
-const TOM_OPCOES = ['C', 'Cm', 'D', 'Dm', 'E', 'Em', 'F', 'Fm', 'G', 'Gm', 'A', 'Am', 'B', 'Bm']
-
-const TAG_SUGGESTIONS = ['louvor', 'adoracao', 'hino', 'clássico', 'contemporâneo', 'rock', 'gospel', 'natal', 'páscoa']
+import type { Musica } from '@/types/database'
+import { TOM_OPCOES, TAG_SUGGESTIONS_MUSICA } from '@/lib/constants'
 
 interface EditMusicaPageProps {
   params: Promise<{ id: string }>
@@ -223,7 +220,7 @@ export default function EditMusicaPage({ params }: EditMusicaPageProps) {
             <TagInput
               tags={tags}
               onChange={setTags}
-              suggestions={TAG_SUGGESTIONS}
+              suggestions={TAG_SUGGESTIONS_MUSICA}
               placeholder="Adicionar tag..."
             />
           </div>

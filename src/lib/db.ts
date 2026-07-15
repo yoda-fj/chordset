@@ -1,6 +1,6 @@
 import Database from 'better-sqlite3'
 import { join } from 'path'
-import { readFileSync, existsSync } from 'fs'
+import { readFileSync } from 'fs'
 
 const DB_PATH = process.env.DATABASE_PATH || join(process.cwd(), 'data', 'chordset.db')
 
@@ -23,7 +23,7 @@ function initSchema() {
     db.exec(schema)
     
     try {
-      const musicasColumns = db.prepare("PRAGMA table_info(musicas)").all() as any[]
+      const musicasColumns = db.prepare("PRAGMA table_info(musicas)").all() as { name: string }[]
       const hasObservacao = musicasColumns.some(col => col.name === 'observacao')
       const hasAudioUrl = musicasColumns.some(col => col.name === 'audio_url')
       const hasGroove = musicasColumns.some(col => col.name === 'groove')
@@ -61,16 +61,16 @@ function initSchema() {
 
       // Migrate eventos table
       try {
-        const eventosColumns = db.prepare("PRAGMA table_info(eventos)").all() as any[]
+        const eventosColumns = db.prepare("PRAGMA table_info(eventos)").all() as { name: string }[]
         const hasEventoAudioUrl = eventosColumns.some(col => col.name === 'audio_url')
         if (!hasEventoAudioUrl) {
           console.log('[Migration] Adding audio_url column to eventos...')
           db.exec('ALTER TABLE eventos ADD COLUMN audio_url TEXT')
         }
-      } catch (e) {
+      } catch {
         // ignore
       }
-    } catch (e) {
+    } catch {
       // Columns may already exist in some installations
     }
   } catch (error) {

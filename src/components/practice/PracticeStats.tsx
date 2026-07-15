@@ -3,7 +3,7 @@
 import { PracticeSessionWithMusica } from '@/types/practice';
 import { getPracticeStats, formatDuration } from '@/lib/practice-utils';
 import { Clock, Target, Trophy, Music } from 'lucide-react';
-import { PRACTICE_STATUS_LABELS, DIFFICULTY_LABELS, PRACTICE_STATUS_BADGE_CLASSES, DIFFICULTY_BADGE_CLASSES } from '@/types/practice';
+import { PRACTICE_STATUS_LABELS, PRACTICE_STATUS_BADGE_CLASSES } from '@/types/practice';
 
 interface PracticeStatsProps {
   sessions: PracticeSessionWithMusica[];

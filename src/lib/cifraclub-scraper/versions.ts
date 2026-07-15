@@ -45,10 +45,6 @@ export async function discoverVersions(artist: string, song: string): Promise<Ci
     const versions: CifraVersion[] = [];
 
     // Versão principal (sempre existe)
-    const mainKey = $('.g-ico.key span').text().trim() || 
-                   $('.cifra-key').text().trim() ||
-                   $('meta[property="og:title"]').attr('content')?.match(/([A-G][#b]?m?)/)?.[1];
-    
     versions.push({
       type: 'principal',
       label: 'Violão (Principal)',

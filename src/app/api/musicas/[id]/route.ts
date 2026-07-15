@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { musicasDb } from '@/lib/musicas-db'
+import { jsonError, parseId } from '@/lib/api-helpers'
+import type { UpdateMusicaInput } from '@/types/database'
 
 interface RouteParams {
   params: Promise<{ id: string }>
@@ -9,22 +11,20 @@ interface RouteParams {
 export async function GET(request: NextRequest, { params }: RouteParams) {
   try {
     const { id } = await params
-    const musica = musicasDb.getById(parseInt(id))
+    const musicaId = parseId(id)
+    if (musicaId === null) {
+      return jsonError('ID inválido', 400)
+    }
+    const musica = musicasDb.getById(musicaId)
     
     if (!musica) {
-      return NextResponse.json(
-        { error: 'Música não encontrada' },
-        { status: 404 }
-      )
+      return jsonError('Música não encontrada', 404)
     }
     
     return NextResponse.json(musica)
   } catch (error) {
     console.error('Erro ao buscar música:', error)
-    return NextResponse.json(
-      { error: 'Erro ao buscar música' },
-      { status: 500 }
-    )
+    return jsonError('Erro ao buscar música', 500)
   }
 }
 
@@ -32,9 +32,13 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 export async function PUT(request: NextRequest, { params }: RouteParams) {
   try {
     const { id } = await params
+    const musicaId = parseId(id)
+    if (musicaId === null) {
+      return jsonError('ID inválido', 400)
+    }
     const body = await request.json()
 
-    const updateData: Record<string, any> = {}
+    const updateData: UpdateMusicaInput = {}
     if (body.titulo !== undefined) updateData.titulo = body.titulo
     if (body.artista !== undefined) updateData.artista = body.artista
     if (body.tom_original !== undefined) updateData.tom_original = body.tom_original
@@ -46,15 +50,12 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
     if (body.bpm !== undefined) updateData.bpm = body.bpm
     if (body.volume !== undefined) updateData.volume = body.volume
 
-    const musica = musicasDb.update(parseInt(id), updateData)
+    const musica = musicasDb.update(musicaId, updateData)
 
     return NextResponse.json(musica)
   } catch (error) {
     console.error('Erro ao atualizar música:', error)
-    return NextResponse.json(
-      { error: 'Erro ao atualizar música', details: String(error) },
-      { status: 500 }
-    )
+    return jsonError('Erro ao atualizar música', 500, String(error))
   }
 }
 
@@ -62,14 +63,15 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
 export async function DELETE(request: NextRequest, { params }: RouteParams) {
   try {
     const { id } = await params
-    musicasDb.delete(parseInt(id))
+    const musicaId = parseId(id)
+    if (musicaId === null) {
+      return jsonError('ID inválido', 400)
+    }
+    musicasDb.delete(musicaId)
     
     return NextResponse.json({ success: true })
   } catch (error) {
     console.error('Erro ao deletar música:', error)
-    return NextResponse.json(
-      { error: 'Erro ao deletar música' },
-      { status: 500 }
-    )
+    return jsonError('Erro ao deletar música', 500)
   }
 }

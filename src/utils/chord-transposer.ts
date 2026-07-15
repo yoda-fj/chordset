@@ -6,11 +6,6 @@
 const NOTAS = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
 const NOTAS_BEMOL = ['C', 'Db', 'D', 'Eb', 'E', 'F', 'Gb', 'G', 'Ab', 'A', 'Bb', 'B'];
 
-// Mapa de equivalência sustenido → bemol
-const SHARP_TO_FLAT: Record<string, string> = {
-  'C#': 'Db', 'D#': 'Eb', 'F#': 'Gb', 'G#': 'Ab', 'A#': 'Bb',
-};
-
 // Mapa de equivalência bemol → sustenido
 const FLAT_TO_SHARP: Record<string, string> = {
   'Db': 'C#', 'Eb': 'D#', 'Gb': 'F#', 'Ab': 'G#', 'Bb': 'A#',
@@ -23,7 +18,6 @@ function normalizeNote(nota: string): string {
   // Se tem bemol, converte pra sustenido
   if (nota.includes('b') && !nota.includes('#')) {
     // É um bemol simples (ex: Db, Eb)
-    const bemol = nota.replace('b', '').toUpperCase();
     const idx = NOTAS_BEMOL.indexOf(nota);
     if (idx !== -1) {
       return NOTAS[idx];
@@ -78,36 +72,20 @@ function transposeChord(chord: string, semitons: number): string {
 }
 
 /**
- * Transpõe uma linha de cifra inteira
- * Lida com padrões como:
- * - Acordes isolados: Am  G  F
- * - Acordes com cifra: Am                    G
- * - Linhas sem acordes
- * - NÃO transpõe linhas de tablatura
+ * Detecta linha de tablatura (e.g., e|--2-2---|)
+ * Linhas de tab começam com letra de corda seguida de |
  */
-export function transposeLine(line: string, semitons: number): string {
-  if (semitons === 0) return line;
-  
-  // Pula linhas de tablatura (e.g., e|--2-2---|)
-  // Linhas de tab começam com letra de corda seguida de |
-  if (/^[a-gA-G]\|[-|0-9\-~h\//\\\s]+\(?[0-9]*x?\)?.*$/i.test(line.trim())) {
-    return line;
-  }
-  
-  // Padrão pra encontrar acordes na linha
-  // Um acorde pode estar no início da linha ou depois de espaços
-  // Exemplos: "Am G F", "        Am", "Am                   G"
-  const chordPattern = /([A-G][#b]?(?:m|maj|min|dim|aug|sus|add|7|9|11|13|Maj|min|m)*\d*)/g;
-  
-  return line.replace(chordPattern, (match) => {
-    return transposeChord(match, semitons);
-  });
-}
-
-// Pula linha se for tablatura
-const isTabLine = (line: string): boolean => {
+export const isTabLine = (line: string): boolean => {
   const trimmed = line.trim();
   return /^[a-gA-G]\|[-|0-9\-~h\//\\\s]+\(?[0-9]*x?\)?.*$/i.test(trimmed);
+};
+
+/**
+ * Detecta linha de palhetadas (e.g., ↓ ↓ ↑ ↓ ↑ ↓ ↓ ↓ ↑ ↓ ↑)
+ */
+export const isStrummingLine = (line: string): boolean => {
+  const trimmed = line.trim();
+  return /^[↓↑→←\s]+$/.test(trimmed) && /[↓↑→←]/.test(trimmed);
 };
 
 // Pula linha se for só acorde(s) na mesma linha (sem letra)
@@ -118,6 +96,31 @@ const isChordOnlyLine = (line: string): boolean => {
   const chordOnlyPattern = /^(?:[A-G][#b]?(?:m|maj|min|dim|aug|sus|add|7|9|11|13|Maj|min|m)*\d*(?:\/[A-G][#b]?)?\s+)*[A-G][#b]?(?:m|maj|min|dim|aug|sus|add|7|9|11|13|Maj|min|m)*\d*(?:\/[A-G][#b]?)?$/;
   return chordOnlyPattern.test(trimmed);
 };
+
+/**
+ * Transpõe uma linha de cifra inteira
+ * Lida com padrões como:
+ * - Acordes isolados: Am  G  F
+ * - Acordes com cifra: Am                    G
+ * - Linhas sem acordes
+ * - NÃO transpõe linhas de tablatura
+ */
+export function transposeLine(line: string, semitons: number): string {
+  if (semitons === 0) return line;
+
+  if (isTabLine(line)) {
+    return line;
+  }
+
+  // Padrão pra encontrar acordes na linha
+  // Um acorde pode estar no início da linha ou depois de espaços
+  // Exemplos: "Am G F", "        Am", "Am                   G"
+  const chordPattern = /([A-G][#b]?(?:m|maj|min|dim|aug|sus|add|7|9|11|13|Maj|min|m)*\d*)/g;
+
+  return line.replace(chordPattern, (match) => {
+    return transposeChord(match, semitons);
+  });
+}
 
 /**
  * Transpõe toda a cifra
@@ -166,6 +169,28 @@ export function getSemitoneDifference(fromKey: string, toKey: string): number {
  */
 export function getAllKeys(): string[] {
   return [...NOTAS];
+}
+
+/**
+ * Limpa e formata texto de cifra (normaliza quebras de linha)
+ */
+export function cleanChordText(text: string | null): string {
+  if (!text) return '';
+
+  return text
+    .replace(/\r\n/g, '\n')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
+}
+
+/**
+ * Extrai o tom de um texto de cifra (ex: "Tom: G")
+ */
+export function extractKeyFromChord(text: string | null): string | null {
+  if (!text) return null;
+
+  const match = text.match(/(?:Tom|Key|key):\s*([A-G][#b]?m?)/i);
+  return match ? match[1] : null;
 }
 
 /**

@@ -1,36 +1,16 @@
 import { getDb } from './db'
+import type {
+  TemplateMusica,
+  TemplateMusicaWithMusica,
+  CreateTemplateMusicaInput,
+  UpdateTemplateMusicaInput,
+} from '@/types/database'
 
-export interface TemplateMusica {
-  id: number
-  template_id: number
-  musica_id: number
-  ordem: number
-  tom_sugerido: string | null
-  observacoes: string | null
-  created_at: string
-}
-
-export interface TemplateMusicaWithMusica extends TemplateMusica {
-  musicas: {
-    id: number
-    titulo: string
-    artista: string
-    tom_original: string | null
-  }
-}
-
-export interface CreateTemplateMusicaInput {
-  template_id: number
-  musica_id: number
-  ordem: number
-  tom_sugerido?: string
-  observacoes?: string
-}
-
-export interface UpdateTemplateMusicaInput {
-  ordem?: number
-  tom_sugerido?: string
-  observacoes?: string
+// Shape cru da linha do JOIN template_musicas+musicas
+type TemplateMusicaJoinRow = TemplateMusica & {
+  titulo: string
+  artista: string
+  tom_original: string | null
 }
 
 export const templateMusicasDb = {
@@ -38,7 +18,7 @@ export const templateMusicasDb = {
   getByTemplateId(templateId: number): TemplateMusicaWithMusica[] {
     const db = getDb()
     const stmt = db.prepare(`
-      SELECT 
+      SELECT
         tm.*,
         m.titulo,
         m.artista,
@@ -48,7 +28,7 @@ export const templateMusicasDb = {
       WHERE tm.template_id = ?
       ORDER BY tm.ordem ASC
     `)
-    const rows = stmt.all(templateId) as any[]
+    const rows = stmt.all(templateId) as TemplateMusicaJoinRow[]
     return rows.map(row => ({
       id: row.id,
       template_id: row.template_id,
@@ -80,8 +60,9 @@ export const templateMusicasDb = {
       input.tom_sugerido || null,
       input.observacoes || null
     )
-    
-    const created = this.getById(result.lastInsertRowid as number)
+
+    const insertId = Number(result.lastInsertRowid)
+    const created = this.getById(insertId)
     if (!created) throw new Error('Erro ao criar template_musica')
     return created
   },
@@ -90,16 +71,15 @@ export const templateMusicasDb = {
   getById(id: number): TemplateMusica | null {
     const db = getDb()
     const stmt = db.prepare('SELECT * FROM template_musicas WHERE id = ?')
-    const row = stmt.get(id) as any
-    if (!row) return null
-    return row
+    const row = stmt.get(id) as TemplateMusica | undefined
+    return row ?? null
   },
 
   // Update a template_musica
   update(id: number, input: UpdateTemplateMusicaInput): TemplateMusica {
     const db = getDb()
     const sets: string[] = []
-    const values: any[] = []
+    const values: (string | number | null)[] = []
 
     if (input.ordem !== undefined) {
       sets.push('ordem = ?')
@@ -152,13 +132,13 @@ export const templateMusicasDb = {
     const updateStmt = db.prepare(`
       UPDATE template_musicas SET ordem = ? WHERE id = ? AND template_id = ?
     `)
-    
+
     const transaction = db.transaction(() => {
       orderedIds.forEach((id, index) => {
         updateStmt.run(index + 1, id, templateId)
       })
     })
-    
+
     transaction()
   }
 }

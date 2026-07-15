@@ -1,124 +1,73 @@
 import { getDb } from './db'
 import { parseTags, stringifyTags } from '@/utils/tag-utils'
+import type {
+  Evento,
+  EventoWithTemplate,
+  Template,
+  CreateEventoInput,
+  UpdateEventoInput,
+  UpdateTemplateInput,
+} from '@/types/database'
 
-export type EventoStatus = 'rascunho' | 'confirmado' | 'realizado' | 'cancelado'
-
-export interface Evento {
-  id: number
-  nome: string
-  data: string
-  hora: string | null
-  local: string | null
-  status: EventoStatus
-  template_id: number | null
-  tags: string[]
-  observacoes: string | null
-  audio_url: string | null
-  created_at: string
-  updated_at: string
+// Shape cru da linha do JOIN eventos+templates (tags serializadas)
+type EventoRow = Omit<Evento, 'tags'> & { tags: string | null } & {
+  template_nome: string | null
+  template_descricao: string | null
+  template_tags: string | null
+  template_created_at: string | null
 }
 
-export interface Template {
-  id: number
-  nome: string
-  descricao: string | null
-  tags: string[]
-  created_at: string
+function rowToEvento(row: EventoRow): EventoWithTemplate {
+  return {
+    id: row.id,
+    nome: row.nome,
+    data: row.data,
+    hora: row.hora,
+    local: row.local,
+    status: row.status,
+    template_id: row.template_id,
+    tags: parseTags(row.tags),
+    observacoes: row.observacoes,
+    audio_url: row.audio_url,
+    created_at: row.created_at,
+    updated_at: row.updated_at,
+    templates: row.template_nome ? {
+      id: row.template_id as number,
+      nome: row.template_nome,
+      descricao: row.template_descricao,
+      tags: parseTags(row.template_tags),
+      created_at: row.template_created_at as string
+    } : null
+  }
 }
 
-export interface EventoWithTemplate extends Evento {
-  templates?: Template | null
-}
+const EVENTO_SELECT = `
+  SELECT e.*, t.nome as template_nome, t.descricao as template_descricao, t.tags as template_tags, t.created_at as template_created_at
+  FROM eventos e
+  LEFT JOIN templates t ON e.template_id = t.id
+`
 
-export interface CreateEventoInput {
-  nome: string
-  data?: string | null
-  hora?: string
-  local?: string
-  status?: EventoStatus
-  template_id?: number
-  tags?: string[]
-  observacoes?: string
-  audio_url?: string | null
-}
+// Shape cru da linha de templates (tags serializadas)
+type TemplateRow = Omit<Template, 'tags'> & { tags: string | null }
 
-export interface UpdateEventoInput {
-  nome?: string
-  data?: string
-  hora?: string
-  local?: string
-  status?: EventoStatus
-  template_id?: number
-  tags?: string[]
-  observacoes?: string
-  audio_url?: string | null
+function rowToTemplate(row: TemplateRow): Template {
+  return { ...row, tags: parseTags(row.tags) }
 }
 
 export const eventosDb = {
   getAll(): EventoWithTemplate[] {
     const db = getDb()
-    const stmt = db.prepare(`
-      SELECT e.*, t.nome as template_nome, t.descricao as template_descricao, t.tags as template_tags, t.created_at as template_created_at
-      FROM eventos e
-      LEFT JOIN templates t ON e.template_id = t.id
-      ORDER BY e.data DESC, e.hora ASC
-    `)
-    const rows = stmt.all() as any[]
-    return rows.map(row => ({
-      id: row.id,
-      nome: row.nome,
-      data: row.data,
-      hora: row.hora,
-      local: row.local,
-      status: row.status,
-      template_id: row.template_id,
-      tags: parseTags(row.tags),
-      observacoes: row.observacoes,
-      audio_url: row.audio_url,
-      created_at: row.created_at,
-      updated_at: row.updated_at,
-      templates: row.template_nome ? {
-        id: row.template_id,
-        nome: row.template_nome,
-        descricao: row.template_descricao,
-        tags: parseTags(row.template_tags),
-        created_at: row.template_created_at
-      } : null
-    }))
+    const stmt = db.prepare(`${EVENTO_SELECT} ORDER BY e.data DESC, e.hora ASC`)
+    const rows = stmt.all() as EventoRow[]
+    return rows.map(rowToEvento)
   },
 
   getById(id: number): EventoWithTemplate | null {
     const db = getDb()
-    const stmt = db.prepare(`
-      SELECT e.*, t.nome as template_nome, t.descricao as template_descricao, t.tags as template_tags, t.created_at as template_created_at
-      FROM eventos e
-      LEFT JOIN templates t ON e.template_id = t.id
-      WHERE e.id = ?
-    `)
-    const row = stmt.get(id) as any
+    const stmt = db.prepare(`${EVENTO_SELECT} WHERE e.id = ?`)
+    const row = stmt.get(id) as EventoRow | undefined
     if (!row) return null
-    
-    return {
-      id: row.id,
-      nome: row.nome,
-      data: row.data,
-      hora: row.hora,
-      local: row.local,
-      status: row.status,
-      template_id: row.template_id,
-      tags: parseTags(row.tags),
-      observacoes: row.observacoes,
-      audio_url: row.audio_url,
-      created_at: row.created_at,
-      updated_at: row.updated_at,
-      templates: row.template_nome ? {
-        id: row.template_id,
-        nome: row.template_nome,
-        descricao: row.template_descricao,
-        tags: parseTags(row.template_tags),
-        created_at: row.template_created_at
-      } : null
-    }
+    return rowToEvento(row)
   },
 
   create(input: CreateEventoInput): Evento {
@@ -137,8 +86,9 @@ export const eventosDb = {
       stringifyTags(input.tags),
       input.observacoes || null
     )
-    
-    const evento = this.getById(result.lastInsertRowid as number)
+
+    const insertId = Number(result.lastInsertRowid)
+    const evento = this.getById(insertId)
     if (!evento) throw new Error('Erro ao criar evento')
     return evento
   },
@@ -146,7 +96,7 @@ export const eventosDb = {
   update(id: number, input: UpdateEventoInput): Evento {
     const db = getDb()
     const sets: string[] = []
-    const values: any[] = []
+    const values: (string | number | null)[] = []
 
     if (input.nome !== undefined) {
       sets.push('nome = ?')
@@ -216,22 +166,16 @@ export const templatesDb = {
   getAll(): Template[] {
     const db = getDb()
     const stmt = db.prepare('SELECT * FROM templates ORDER BY nome ASC')
-    const rows = stmt.all() as any[]
-    return rows.map(row => ({
-      ...row,
-      tags: parseTags(row.tags)
-    }))
+    const rows = stmt.all() as TemplateRow[]
+    return rows.map(rowToTemplate)
   },
 
   getById(id: number): Template | null {
     const db = getDb()
     const stmt = db.prepare('SELECT * FROM templates WHERE id = ?')
-    const row = stmt.get(id) as any
+    const row = stmt.get(id) as TemplateRow | undefined
     if (!row) return null
-    return {
-      ...row,
-      tags: parseTags(row.tags)
-    }
+    return rowToTemplate(row)
   },
 
   create(nome: string, descricao?: string, tags?: string[]): Template {
@@ -241,9 +185,52 @@ export const templatesDb = {
       VALUES (?, ?, ?)
     `)
     const result = stmt.run(nome, descricao || null, stringifyTags(tags))
-    
-    const template = this.getById(result.lastInsertRowid as number)
+
+    const insertId = Number(result.lastInsertRowid)
+    const template = this.getById(insertId)
     if (!template) throw new Error('Erro ao criar template')
     return template
+  },
+
+  update(id: number, input: UpdateTemplateInput): Template {
+    const db = getDb()
+    const sets: string[] = []
+    const values: (string | number | null)[] = []
+
+    if (input.nome !== undefined) {
+      sets.push('nome = ?')
+      values.push(input.nome)
+    }
+    if (input.descricao !== undefined) {
+      sets.push('descricao = ?')
+      values.push(input.descricao)
+    }
+    if (input.tags !== undefined) {
+      sets.push('tags = ?')
+      values.push(stringifyTags(input.tags))
+    }
+
+    if (sets.length === 0) {
+      const template = this.getById(id)
+      if (!template) throw new Error('Template não encontrado')
+      return template
+    }
+
+    values.push(id)
+
+    const stmt = db.prepare(`
+      UPDATE templates SET ${sets.join(', ')} WHERE id = ?
+    `)
+    stmt.run(...values)
+
+    const template = this.getById(id)
+    if (!template) throw new Error('Template não encontrado')
+    return template
+  },
+
+  delete(id: number): void {
+    const db = getDb()
+    const stmt = db.prepare('DELETE FROM templates WHERE id = ?')
+    stmt.run(id)
   }
 }

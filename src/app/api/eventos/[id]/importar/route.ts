@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { eventosDb } from '@/lib/eventos-db'
 import { templateMusicasDb } from '@/lib/template-musicas-db'
 import { setlistsDb } from '@/lib/setlists-db'
+import { jsonError, parseId } from '@/lib/api-helpers'
 
 // POST /api/eventos/[id]/importar - Importar músicas de um template para o evento
 export async function POST(
@@ -10,49 +10,35 @@ export async function POST(
 ) {
   try {
     const { id } = await params
-    const eventoId = parseInt(id)
-    
-    if (isNaN(eventoId)) {
-      return NextResponse.json({ error: 'ID inválido' }, { status: 400 })
+    const eventoId = parseId(id)
+
+    if (eventoId === null) {
+      return jsonError('ID inválido', 400)
     }
-    
+
     const body = await request.json()
     const { template_id } = body
-    
+
     if (!template_id) {
-      return NextResponse.json({ error: 'template_id é obrigatório' }, { status: 400 })
+      return jsonError('template_id é obrigatório', 400)
     }
-    
+
     // Buscar músicas do template
     const templateMusicas = templateMusicasDb.getByTemplateId(template_id)
-    
+
     if (templateMusicas.length === 0) {
-      return NextResponse.json({ error: 'Template não tem músicas' }, { status: 400 })
+      return jsonError('Template não tem músicas', 400)
     }
-    
-    // Copiar cada música para o evento
-    const musicasImportadas = []
-    for (const tm of templateMusicas) {
-      const created = setlistsDb.create({
-        evento_id: eventoId,
-        musica_id: tm.musica_id,
-        ordem: tm.ordem,
-        tom_evento: tm.tom_sugerido || undefined,
-        observacoes: tm.observacoes || undefined,
-      })
-      musicasImportadas.push(created)
-    }
-    
+
+    // Copiar músicas para o evento (transacional)
+    const quantidade = setlistsDb.copyFromTemplate(template_id, eventoId)
+
     return NextResponse.json({
       sucesso: true,
-      quantidade: musicasImportadas.length,
-      musicas: musicasImportadas
+      quantidade,
     })
   } catch (error) {
     console.error('Erro ao importar do template:', error)
-    return NextResponse.json(
-      { error: 'Erro ao importar músicas do template' },
-      { status: 500 }
-    )
+    return jsonError('Erro ao importar músicas do template', 500)
   }
 }

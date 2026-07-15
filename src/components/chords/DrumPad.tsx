@@ -143,7 +143,7 @@ const DRUM_PADS = [
   { note: 'G2', label: 'Tom H', key: 'G', color: 'bg-rose-500' },
 ];
 
-export function DrumPad({ readOnly = false, initialGroove, initialBpm, initialVolume, onGrooveChange, onBpmChange, onVolumeChange }: DrumPadProps) {
+export function DrumPad({ initialGroove, initialBpm, initialVolume, onGrooveChange, onBpmChange, onVolumeChange }: DrumPadProps) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [selectedGroove, setSelectedGroove] = useState<string>(initialGroove || 'rock-8');
   const [bpm, setBpm] = useState(initialBpm || 120);
@@ -212,6 +212,7 @@ export function DrumPad({ readOnly = false, initialGroove, initialBpm, initialVo
     if (PRESET_GROOVES[selectedGroove]) {
       setBpm(PRESET_GROOVES[selectedGroove].bpm);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- roda só na montagem, de propósito
   }, []);
 
   const playPad = useCallback((note: string) => {
@@ -342,6 +343,16 @@ export function DrumPad({ readOnly = false, initialGroove, initialBpm, initialVo
     setIsPlaying(true);
   }, [sampler, isLoaded, selectedGroove, bpm, customPatterns]);
 
+  const stopPlayback = useCallback(() => {
+    if (sequenceRef.current) {
+      clearInterval(sequenceRef.current);
+      sequenceRef.current = null;
+    }
+    Tone.Transport.stop();
+    setIsPlaying(false);
+    setActivePads(new Set());
+  }, []);
+
   // Auto-restart playback when groove selection or kit changes
   useEffect(() => {
     if (isPlaying && isLoaded) {
@@ -349,6 +360,7 @@ export function DrumPad({ readOnly = false, initialGroove, initialBpm, initialVo
       // Small delay to ensure cleanup before starting new playback
       setTimeout(() => startPlayback(), 50);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- reinicia só ao trocar groove/kit, de propósito
   }, [selectedGroove, selectedKit]);
 
   // Restart playback when BPM changes during playback
@@ -358,7 +370,7 @@ export function DrumPad({ readOnly = false, initialGroove, initialBpm, initialVo
       clearInterval(sequenceRef.current);
       sequenceRef.current = null;
 
-      const { pattern: patternToPlay, bpm: currentBpm } = currentPatternRef.current;
+      const { pattern: patternToPlay } = currentPatternRef.current;
       const intervalMs = (60 / bpm) * 1000 / 4; // 16th notes
 
       let step = 0;
@@ -384,16 +396,6 @@ export function DrumPad({ readOnly = false, initialGroove, initialBpm, initialVo
       currentPatternRef.current = { pattern: patternToPlay, bpm };
     }
   }, [bpm, isPlaying, sampler]);
-
-  const stopPlayback = useCallback(() => {
-    if (sequenceRef.current) {
-      clearInterval(sequenceRef.current);
-      sequenceRef.current = null;
-    }
-    Tone.Transport.stop();
-    setIsPlaying(false);
-    setActivePads(new Set());
-  }, []);
 
   const togglePlayback = useCallback(() => {
     if (isPlaying) {

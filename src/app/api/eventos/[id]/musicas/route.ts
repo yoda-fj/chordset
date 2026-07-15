@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { setlistsDb } from '@/lib/setlists-db'
+import { jsonError, parseId } from '@/lib/api-helpers'
 
 // GET /api/eventos/[id]/musicas - Listar musicas do evento
 export async function GET(
@@ -8,23 +9,17 @@ export async function GET(
 ) {
   try {
     const { id } = await params
-    const eventoId = parseInt(id)
+    const eventoId = parseId(id)
     
-    if (isNaN(eventoId)) {
-      return NextResponse.json(
-        { error: 'ID do evento inválido' },
-        { status: 400 }
-      )
+    if (eventoId === null) {
+      return jsonError('ID do evento inválido', 400)
     }
     
     const musicas = setlistsDb.getByEventoId(eventoId)
     return NextResponse.json(musicas)
   } catch (error) {
     console.error('Erro ao buscar musicas do evento:', error)
-    return NextResponse.json(
-      { error: 'Erro ao buscar musicas do evento' },
-      { status: 500 }
-    )
+    return jsonError('Erro ao buscar musicas do evento', 500)
   }
 }
 
@@ -35,23 +30,17 @@ export async function POST(
 ) {
   try {
     const { id } = await params
-    const eventoId = parseInt(id)
+    const eventoId = parseId(id)
     
-    if (isNaN(eventoId)) {
-      return NextResponse.json(
-        { error: 'ID do evento inválido' },
-        { status: 400 }
-      )
+    if (eventoId === null) {
+      return jsonError('ID do evento inválido', 400)
     }
     
     const body = await request.json()
     
     // Validação
     if (!body.musica_id) {
-      return NextResponse.json(
-        { error: 'musica_id é obrigatório' },
-        { status: 400 }
-      )
+      return jsonError('musica_id é obrigatório', 400)
     }
     
     // Se não informar ordem, coloca no final
@@ -74,9 +63,6 @@ export async function POST(
     return NextResponse.json(eventoMusica, { status: 201 })
   } catch (error) {
     console.error('Erro ao criar evento_musica:', error)
-    return NextResponse.json(
-      { error: 'Erro ao criar evento_musica' },
-      { status: 500 }
-    )
+    return jsonError('Erro ao criar evento_musica', 500)
   }
 }

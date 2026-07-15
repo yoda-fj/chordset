@@ -5,6 +5,7 @@ import { useParams } from 'next/navigation'
 import { ArrowLeft, Loader2, Edit, Calendar, Clock, MapPin, Music, Play, Copy } from 'lucide-react'
 import Link from 'next/link'
 import { useToast } from '@/components/ui/Toast'
+import type { EventoWithTemplate, EventoMusicaWithMusica } from '@/types/database'
 
 const STATUS_LABELS: Record<string, string> = {
   rascunho: 'Rascunho',
@@ -25,8 +26,8 @@ export default function EventoPage() {
   const { showToast } = useToast()
   const eventoId = parseInt(params.id as string)
 
-  const [evento, setEvento] = useState<any>(null)
-  const [musicas, setMusicas] = useState<any[]>([])
+  const [evento, setEvento] = useState<EventoWithTemplate | null>(null)
+  const [musicas, setMusicas] = useState<EventoMusicaWithMusica[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [showCloneModal, setShowCloneModal] = useState(false)
@@ -49,7 +50,7 @@ export default function EventoPage() {
       } else {
         showToast(data.error || 'Erro ao clonar', 'error')
       }
-    } catch (err) {
+    } catch {
       showToast('Erro ao clonar evento', 'error')
     } finally {
       setCloneLoading(false)

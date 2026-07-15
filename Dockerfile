@@ -7,6 +7,8 @@ RUN apk add --no-cache libc6-compat curl
 WORKDIR /app
 
 COPY package.json package-lock.json* ./
+# Skip Playwright browser download (~300MB) - runner stage uses Alpine Chromium
+ENV PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1
 RUN npm ci --legacy-peer-deps
 
 # Rebuild the source code only when needed
@@ -14,9 +16,6 @@ FROM base AS builder
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
-
-# SQLite needs native bindings
-RUN npm rebuild sqlite3
 
 RUN npm run build
 

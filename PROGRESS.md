@@ -86,6 +86,9 @@ OPENROUTER_API_KEY=sk-or-...   # Opcional
 - Tailwind CSS
 - @dnd-kit/core + @dnd-kit/sortable (drag-and-drop)
 - Lucide React (ícones)
+- Playwright + Cheerio (scraping Cifra Club, server-side)
+- Tone.js (metrônomo/drum pad)
+- Vitest (testes dos módulos puros: transposer, tag-utils, api-helpers)
 
 ## 📝 Notas
 
@@ -93,3 +96,7 @@ OPENROUTER_API_KEY=sk-or-...   # Opcional
 - Basic Auth protege todas as rotas via src/middleware.ts
 - Study list: evento com `data = null` no banco
 - Para acesso via rede local: next.config.js com `allowedDevOrigins: ['192.168.15.3', '192.168.15.4']`
+- Qualidade: `npm run lint` (ESLint 9 flat config), `npm test` (Vitest), `npx tsc --noEmit`
+- Tipos de domínio: fonte única em `src/types/database.ts` (módulos `src/lib/*-db.ts` importam de lá)
+- Helpers de API: `jsonError`/`parseId`/áudio em `src/lib/api-helpers.ts`
+- Transposição de cifra: engine única em `src/utils/chord-transposer.ts` (regex; CifraViewer transpõe o texto antes de renderizar)

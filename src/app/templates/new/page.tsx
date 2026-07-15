@@ -7,9 +7,8 @@ import Link from 'next/link'
 import { TagInput } from '@/components/setlist/TagInput'
 import { SetlistBuilder } from '@/components/setlist/SetlistBuilder'
 import { useToast } from '@/components/ui/Toast'
-import { Template, TemplateMusicaWithMusica } from '@/types/database'
-
-const TAG_SUGGESTIONS = ['culto', 'domingo', 'quarta', 'sabado', 'evento', 'especial', 'louvor', 'adoracao', 'jovens', 'criancas']
+import type { SetlistMusica } from '@/components/setlist/MusicaCard'
+import { TAG_SUGGESTIONS_TEMPLATE } from '@/lib/constants'
 
 export default function NewTemplatePage() {
   const router = useRouter()
@@ -17,7 +16,7 @@ export default function NewTemplatePage() {
   const [nome, setNome] = useState('')
   const [descricao, setDescricao] = useState('')
   const [tags, setTags] = useState<string[]>([])
-  const [musicas, setMusicas] = useState<TemplateMusicaWithMusica[]>([])
+  const [musicas, setMusicas] = useState<SetlistMusica[]>([])
   const [saving, setSaving] = useState(false)
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -99,7 +98,7 @@ export default function NewTemplatePage() {
             <TagInput
               tags={tags}
               onChange={setTags}
-              suggestions={TAG_SUGGESTIONS}
+              suggestions={TAG_SUGGESTIONS_TEMPLATE}
               placeholder="Adicionar tag..."
             />
           </div>

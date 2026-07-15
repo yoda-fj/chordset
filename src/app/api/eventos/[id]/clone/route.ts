@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { eventosDb } from '@/lib/eventos-db'
 import { setlistsDb } from '@/lib/setlists-db'
+import { jsonError, parseId } from '@/lib/api-helpers'
 
 // POST /api/eventos/[id]/clone - Clonar evento
 export async function POST(
@@ -9,28 +10,25 @@ export async function POST(
 ) {
   try {
     const { id } = await params
-    const eventoId = parseInt(id)
-    
-    if (isNaN(eventoId)) {
-      return NextResponse.json({ error: 'ID inválido' }, { status: 400 })
+    const eventoId = parseId(id)
+
+    if (eventoId === null) {
+      return jsonError('ID inválido', 400)
     }
-    
+
     const body = await request.json()
     const novoNome = body.nome
-    
+
     if (!novoNome) {
-      return NextResponse.json({ error: 'Nome do novo evento é obrigatório' }, { status: 400 })
+      return jsonError('Nome do novo evento é obrigatório', 400)
     }
-    
+
     // Buscar evento original
     const eventoOriginal = eventosDb.getById(eventoId)
     if (!eventoOriginal) {
-      return NextResponse.json({ error: 'Evento não encontrado' }, { status: 404 })
+      return jsonError('Evento não encontrado', 404)
     }
-    
-    // Buscar músicas do evento original
-    const musicasOriginais = setlistsDb.getByEventoId(eventoId)
-    
+
     // Criar novo evento
     const novoEvento = eventosDb.create({
       nome: novoNome,
@@ -38,28 +36,17 @@ export async function POST(
       local: body.local || eventoOriginal.local || undefined,
       observacoes: body.observacoes || eventoOriginal.observacoes || undefined,
     })
-    
-    // Copiar músicas
-    let musicasCopiadas = []
-    for (const musica of musicasOriginais) {
-      const created = setlistsDb.create({
-        evento_id: novoEvento.id,
-        musica_id: musica.musica_id,
-        ordem: musica.ordem,
-        tom_evento: musica.tom_evento || undefined,
-        observacoes: musica.observacoes || undefined,
-      })
-      musicasCopiadas.push(created)
-    }
-    
+
+    // Copiar músicas (transacional)
+    const quantidade = setlistsDb.copyFromEvento(eventoId, novoEvento.id)
+
     return NextResponse.json({
       sucesso: true,
       evento: novoEvento,
-      musicas: musicasCopiadas,
-      quantidade: musicasCopiadas.length
+      quantidade,
     })
   } catch (error) {
     console.error('Erro ao clonar evento:', error)
-    return NextResponse.json({ error: 'Erro ao clonar evento' }, { status: 500 })
+    return jsonError('Erro ao clonar evento', 500)
   }
 }

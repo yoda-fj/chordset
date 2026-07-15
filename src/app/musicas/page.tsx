@@ -3,7 +3,7 @@
 import { useState, useEffect, useMemo } from 'react'
 import Link from 'next/link'
 import { Plus, Search, Tag, Music, FileText, Loader2 } from 'lucide-react'
-import type { Musica } from '@/lib/musicas-db'
+import type { Musica } from '@/types/database'
 
 export default function MusicasPage() {
   const [musicas, setMusicas] = useState<Musica[]>([])

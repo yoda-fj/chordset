@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { setlistsDb } from '@/lib/setlists-db'
+import { jsonError, parseId } from '@/lib/api-helpers'
 
 // PUT /api/eventos/[id]/musicas/[musicaId] - Atualizar musica do evento
 export async function PUT(
@@ -7,14 +8,11 @@ export async function PUT(
   { params }: { params: Promise<{ id: string; musicaId: string }> }
 ) {
   try {
-    const { id, musicaId } = await params
-    const eventoMusicaId = parseInt(musicaId)
+    const { musicaId } = await params
+    const eventoMusicaId = parseId(musicaId)
     
-    if (isNaN(eventoMusicaId)) {
-      return NextResponse.json(
-        { error: 'ID inválido' },
-        { status: 400 }
-      )
+    if (eventoMusicaId === null) {
+      return jsonError('ID inválido', 400)
     }
     
     const body = await request.json()
@@ -30,10 +28,7 @@ export async function PUT(
     return NextResponse.json(updated)
   } catch (error) {
     console.error('Erro ao atualizar evento_musica:', error)
-    return NextResponse.json(
-      { error: 'Erro ao atualizar evento_musica' },
-      { status: 500 }
-    )
+    return jsonError('Erro ao atualizar evento_musica', 500)
   }
 }
 
@@ -44,13 +39,10 @@ export async function DELETE(
 ) {
   try {
     const { musicaId } = await params
-    const eventoMusicaId = parseInt(musicaId)
+    const eventoMusicaId = parseId(musicaId)
     
-    if (isNaN(eventoMusicaId)) {
-      return NextResponse.json(
-        { error: 'ID inválido' },
-        { status: 400 }
-      )
+    if (eventoMusicaId === null) {
+      return jsonError('ID inválido', 400)
     }
     
     setlistsDb.delete(eventoMusicaId)
@@ -58,9 +50,6 @@ export async function DELETE(
     return NextResponse.json({ success: true })
   } catch (error) {
     console.error('Erro ao deletar evento_musica:', error)
-    return NextResponse.json(
-      { error: 'Erro ao deletar evento_musica' },
-      { status: 500 }
-    )
+    return jsonError('Erro ao deletar evento_musica', 500)
   }
 }

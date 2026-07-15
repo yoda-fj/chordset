@@ -5,11 +5,11 @@ import { ChordViewer } from './ChordViewer';
 import { Autoscroll } from './Autoscroll';
 import { Metronome } from './Metronome';
 import { getAllKeys, transposeCifra } from '@/utils/chord-transposer';
-import { 
-  Music2, 
-  ZoomIn, 
-  ZoomOut, 
-  Maximize, 
+import {
+  Music2,
+  ZoomIn,
+  ZoomOut,
+  Maximize,
   Minimize,
   Menu,
   X,
@@ -39,23 +39,30 @@ export function CifraViewer({
   tomOriginal,
   showMetronome = false,
   showControls = true,
-  compact = false,
   className = '',
   isFullscreen = false,
-  onFullscreenChange,
   onToggleSidebar,
   sidebarOpen = false,
 }: CifraViewerProps) {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
-  
-  // Transpose state
+
+  // Transpose state - derived from props with useEffect sync
   const [currentTom, setCurrentTom] = useState(tomOriginal || 'C');
   const [originalTom] = useState(tomOriginal || null);
   const [currentCifra, setCurrentCifra] = useState(cifra);
-  
+
+  // Sync state when props change
+  useEffect(() => {
+    setCurrentTom(tomOriginal || 'C');
+  }, [tomOriginal]);
+
+  useEffect(() => {
+    setCurrentCifra(cifra);
+  }, [cifra]);
+
   // Display settings
   const [fontSize, setFontSize] = useState(16);
-  const [showSidebar, setShowSidebar] = useState(false);
+  const [showSidebar] = useState(false);
   const [showTablatura, setShowTablatura] = useState(true);
 
   const handleTranspose = (newTom: string) => {
@@ -193,7 +200,6 @@ export function CifraViewer({
       >
       <ChordViewer
         chordProContent={currentCifra || cifra}
-        semitones={0}
         title={titulo}
         artist={artista}
         fontSize={fontSize}

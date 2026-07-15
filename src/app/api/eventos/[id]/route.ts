@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { eventosDb } from '@/lib/eventos-db'
+import { jsonError, parseId } from '@/lib/api-helpers'
 
 interface RouteParams {
   params: Promise<{ id: string }>
@@ -9,22 +10,20 @@ interface RouteParams {
 export async function GET(request: NextRequest, { params }: RouteParams) {
   try {
     const { id } = await params
-    const evento = eventosDb.getById(parseInt(id))
+    const eventoId = parseId(id)
+    if (eventoId === null) {
+      return jsonError('ID inválido', 400)
+    }
+    const evento = eventosDb.getById(eventoId)
     
     if (!evento) {
-      return NextResponse.json(
-        { error: 'Evento não encontrado' },
-        { status: 404 }
-      )
+      return jsonError('Evento não encontrado', 404)
     }
     
     return NextResponse.json(evento)
   } catch (error) {
     console.error('Erro ao buscar evento:', error)
-    return NextResponse.json(
-      { error: 'Erro ao buscar evento' },
-      { status: 500 }
-    )
+    return jsonError('Erro ao buscar evento', 500)
   }
 }
 
@@ -32,6 +31,10 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 export async function PUT(request: NextRequest, { params }: RouteParams) {
   try {
     const { id } = await params
+    const eventoId = parseId(id)
+    if (eventoId === null) {
+      return jsonError('ID inválido', 400)
+    }
     const body = await request.json()
     
     // Se isStudyList for true, zera campos que não se aplicam
@@ -46,15 +49,12 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
       observacoes: body.observacoes
     }
     
-    const evento = eventosDb.update(parseInt(id), updateData)
+    const evento = eventosDb.update(eventoId, updateData)
     
     return NextResponse.json(evento)
   } catch (error) {
     console.error('Erro ao atualizar evento:', error)
-    return NextResponse.json(
-      { error: 'Erro ao atualizar evento' },
-      { status: 500 }
-    )
+    return jsonError('Erro ao atualizar evento', 500)
   }
 }
 
@@ -62,14 +62,15 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
 export async function DELETE(request: NextRequest, { params }: RouteParams) {
   try {
     const { id } = await params
-    eventosDb.delete(parseInt(id))
+    const eventoId = parseId(id)
+    if (eventoId === null) {
+      return jsonError('ID inválido', 400)
+    }
+    eventosDb.delete(eventoId)
     
     return NextResponse.json({ success: true })
   } catch (error) {
     console.error('Erro ao deletar evento:', error)
-    return NextResponse.json(
-      { error: 'Erro ao deletar evento' },
-      { status: 500 }
-    )
+    return jsonError('Erro ao deletar evento', 500)
   }
 }

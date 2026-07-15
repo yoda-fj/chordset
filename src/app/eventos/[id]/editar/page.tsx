@@ -7,17 +7,9 @@ import Link from 'next/link'
 import { TagInput } from '@/components/setlist/TagInput'
 import { SetlistBuilder } from '@/components/setlist/SetlistBuilder'
 import { useToast } from '@/components/ui/Toast'
-import { parseTags } from '@/utils/tag-utils'
-import type { EventoWithTemplate } from '@/lib/eventos-db'
-
-const STATUS_OPCOES = [
-  { value: 'rascunho', label: 'Rascunho' },
-  { value: 'confirmado', label: 'Confirmado' },
-  { value: 'realizado', label: 'Realizado' },
-  { value: 'cancelado', label: 'Cancelado' },
-]
-
-const TAG_SUGGESTIONS = ['culto', 'evento', 'casamento', 'formatura', 'natal', 'páscoa', 'especial']
+import type { SetlistMusica } from '@/components/setlist/MusicaCard'
+import type { EventoWithTemplate, Template } from '@/types/database'
+import { STATUS_OPCOES, TAG_SUGGESTIONS_EVENTO } from '@/lib/constants'
 
 export default function EditEventoPage() {
   const router = useRouter()
@@ -36,9 +28,9 @@ export default function EditEventoPage() {
   const [status, setStatus] = useState('rascunho')
   const [tags, setTags] = useState<string[]>([])
   const [observacoes, setObservacoes] = useState('')
-  const [eventoMusicas, setEventoMusicas] = useState<any[]>([])
+  const [eventoMusicas, setEventoMusicas] = useState<SetlistMusica[]>([])
   const [showImportModal, setShowImportModal] = useState(false)
-  const [templates, setTemplates] = useState<any[]>([])
+  const [templates, setTemplates] = useState<Template[]>([])
   const [loadingTemplates, setLoadingTemplates] = useState(false)
   const [importing, setImporting] = useState(false)
   const [isStudyList, setIsStudyList] = useState(false)
@@ -337,7 +329,7 @@ export default function EditEventoPage() {
               <TagInput
                 tags={tags}
                 onChange={setTags}
-                suggestions={TAG_SUGGESTIONS}
+                suggestions={TAG_SUGGESTIONS_EVENTO}
                 placeholder="Adicionar tag..."
               />
             </div>

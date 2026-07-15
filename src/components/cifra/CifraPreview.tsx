@@ -39,7 +39,6 @@ function chordProToVisualLines(cifraText: string): string[] {
     // Extrai acordes e suas posições
     const chords: { chord: string; position: number }[] = []
     let match
-    let lineWithoutChords = line
     
     // Precisamos calcular posições considerando o texto sem os colchetes
     let offset = 0
@@ -58,7 +57,6 @@ function chordProToVisualLines(cifraText: string): string[] {
     
     // Cria linha de acordes posicionados
     let chordLine = ''
-    let lastPos = 0
     
     for (const { chord, position } of chords) {
       // Adiciona espaços até a posição do acorde

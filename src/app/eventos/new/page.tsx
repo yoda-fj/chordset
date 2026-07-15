@@ -5,15 +5,7 @@ import { useRouter } from 'next/navigation'
 import { ArrowLeft, Save, Loader2 } from 'lucide-react'
 import Link from 'next/link'
 import { TagInput } from '@/components/setlist/TagInput'
-
-const STATUS_OPCOES = [
-  { value: 'rascunho', label: 'Rascunho' },
-  { value: 'confirmado', label: 'Confirmado' },
-  { value: 'realizado', label: 'Realizado' },
-  { value: 'cancelado', label: 'Cancelado' },
-]
-
-const TAG_SUGGESTIONS = ['culto', 'evento', 'casamento', 'formatura', 'natal', 'páscoa', 'especial', 'estudo']
+import { STATUS_OPCOES, TAG_SUGGESTIONS_EVENTO } from '@/lib/constants'
 
 export default function NewEventoPage() {
   const router = useRouter()
@@ -193,7 +185,7 @@ export default function NewEventoPage() {
               <TagInput
                 tags={tags}
                 onChange={setTags}
-                suggestions={TAG_SUGGESTIONS}
+                suggestions={TAG_SUGGESTIONS_EVENTO}
                 placeholder="Adicionar tag..."
               />
             </div>

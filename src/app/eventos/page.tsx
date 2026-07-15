@@ -3,7 +3,7 @@
 import { useState, useEffect, useMemo } from 'react'
 import Link from 'next/link'
 import { Plus, Search, Calendar, MapPin, Loader2 } from 'lucide-react'
-import type { EventoWithTemplate } from '@/lib/eventos-db'
+import type { EventoWithTemplate } from '@/types/database'
 import { EVENTO_STATUS_LABELS, EVENTO_STATUS_BADGE_CLASSES } from '@/types/database'
 
 export default function EventosPage() {
@@ -148,7 +148,9 @@ export default function EventosPage() {
                 <div className="flex flex-wrap gap-4 text-sm text-gray-500">
                   <span className="flex items-center gap-1">
                     <Calendar size={16} />
-                    {new Date(evento.data).toLocaleDateString('pt-BR')}
+                    {evento.data
+                      ? new Date(evento.data).toLocaleDateString('pt-BR')
+                      : 'Lista de estudo'}
                     {evento.hora && ` às ${evento.hora.slice(0, 5)}`}
                   </span>
                   {evento.local && (

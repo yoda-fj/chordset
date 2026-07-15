@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { discoverVersions } from '@/lib/cifraclub-scraper/versions'
+import { jsonError } from '@/lib/api-helpers'
 
 // GET /api/cifraclub/versions?artist=artista&song=musica
 export async function GET(request: NextRequest) {
@@ -9,10 +10,7 @@ export async function GET(request: NextRequest) {
     const song = searchParams.get('song')
 
     if (!artist || !song) {
-      return NextResponse.json(
-        { error: 'Parâmetros "artist" e "song" são obrigatórios' },
-        { status: 400 }
-      )
+      return jsonError('Parâmetros "artist" e "song" são obrigatórios', 400)
     }
 
     const versions = await discoverVersions(artist, song)
@@ -26,9 +24,6 @@ export async function GET(request: NextRequest) {
     })
   } catch (error) {
     console.error('[CifraClub Versions API] Error:', error)
-    return NextResponse.json(
-      { error: 'Erro ao buscar versões' },
-      { status: 502 }
-    )
+    return jsonError('Erro ao buscar versões', 502)
   }
 }

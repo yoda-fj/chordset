@@ -8,10 +8,7 @@ import { TagInput } from '@/components/setlist/TagInput'
 import { ImportPhotoModal } from '@/components/ocr/ImportPhotoModal'
 import { VersionSelector } from '@/components/cifraclub/VersionSelector'
 import { CifraPreview } from '@/components/cifra/CifraPreview'
-
-const TOM_OPCOES = ['C', 'Cm', 'D', 'Dm', 'E', 'Em', 'F', 'Fm', 'G', 'Gm', 'A', 'Am', 'B', 'Bm']
-
-const TAG_SUGGESTIONS = ['louvor', 'adoracao', 'hino', 'clássico', 'contemporâneo', 'rock', 'gospel', 'natal', 'páscoa']
+import { TOM_OPCOES, TAG_SUGGESTIONS_MUSICA } from '@/lib/constants'
 
 interface SearchResult {
   id: string;
@@ -20,14 +17,6 @@ interface SearchResult {
   tom?: string | null;
   url: string;
   image?: string;
-}
-
-interface ImportData {
-  titulo: string;
-  artista: string;
-  tom_original?: string;
-  cifra?: string;
-  provider: string;
 }
 
 interface ExtractedData {
@@ -56,7 +45,6 @@ export default function NewMusicaPage() {
   const [importLoading, setImportLoading] = useState(false)
   const [importResults, setImportResults] = useState<SearchResult[]>([])
   const [importError, setImportError] = useState<string | null>(null)
-  const [selectedSong, setSelectedSong] = useState<ImportData | null>(null)
   const [importingSong, setImportingSong] = useState(false)
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -179,14 +167,6 @@ export default function NewMusicaPage() {
       setCifra(data.song.cifra || '')
       setTags([data.song.provider])
       
-      setSelectedSong({
-        titulo: data.song.titulo,
-        artista: data.song.artista,
-        tom_original: data.song.tom_original,
-        cifra: data.song.cifra,
-        provider: data.song.provider,
-      })
-
       // Close import modal
       setShowImport(false)
       setImportResults([])
@@ -278,7 +258,7 @@ export default function NewMusicaPage() {
             <TagInput
               tags={tags}
               onChange={setTags}
-              suggestions={TAG_SUGGESTIONS}
+              suggestions={TAG_SUGGESTIONS_MUSICA}
               placeholder="Adicionar tag..."
             />
             <p className="mt-1 text-xs text-gray-500">

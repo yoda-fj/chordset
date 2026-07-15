@@ -1,18 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { eventosDb } from '@/lib/eventos-db'
 import { setlistsDb } from '@/lib/setlists-db'
+import { jsonError } from '@/lib/api-helpers'
 
 // GET /api/eventos - Listar todos os eventos
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     const eventos = eventosDb.getAll()
     return NextResponse.json(eventos)
   } catch (error) {
     console.error('Erro ao buscar eventos:', error)
-    return NextResponse.json(
-      { error: 'Erro ao buscar eventos' },
-      { status: 500 }
-    )
+    return jsonError('Erro ao buscar eventos', 500)
   }
 }
 
@@ -23,18 +21,12 @@ export async function POST(request: NextRequest) {
     
     // Validação
     if (!body.nome) {
-      return NextResponse.json(
-        { error: 'Nome é obrigatório' },
-        { status: 400 }
-      )
+      return jsonError('Nome é obrigatório', 400)
     }
     
     // Data é obrigatória apenas se não for lista de estudo
     if (!body.data && !body.isStudyList) {
-      return NextResponse.json(
-        { error: 'Nome e data são obrigatórios' },
-        { status: 400 }
-      )
+      return jsonError('Nome e data são obrigatórios', 400)
     }
     
     const evento = eventosDb.create({
@@ -57,9 +49,6 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(evento, { status: 201 })
   } catch (error) {
     console.error('Erro ao criar evento:', error)
-    return NextResponse.json(
-      { error: 'Erro ao criar evento' },
-      { status: 500 }
-    )
+    return jsonError('Erro ao criar evento', 500)
   }
 }

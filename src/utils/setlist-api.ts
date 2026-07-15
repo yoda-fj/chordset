@@ -1,30 +1,6 @@
-import { parseTags } from './tag-utils'
-
-export interface Musica {
-  id: number
-  titulo: string
-  artista: string
-  tom_original: string | null
-  cifra: string | null
-  tags: string[]
-  created_at: string
-  updated_at: string
-}
+import type { MusicaJoin } from '@/types/database'
 
 export type SetlistType = 'evento' | 'template'
-
-export interface SetlistItem {
-  id: number | string
-  musica_id: number
-  ordem: number
-  tom_evento?: string | null
-  tom_sugerido?: string | null
-  observacoes?: string | null
-  confirmada?: boolean
-  responsavel?: string | null
-  musicas?: Musica
-  created_at?: string
-}
 
 export interface SetlistApiResponse {
   id: number
@@ -35,7 +11,7 @@ export interface SetlistApiResponse {
   observacoes?: string | null
   confirmada?: boolean
   responsavel?: string | null
-  musicas?: Musica
+  musicas?: MusicaJoin
   created_at: string
 }
 
@@ -145,24 +121,4 @@ export async function updateSetlistMusica(
   if (!response.ok) {
     throw new Error(`Erro ao atualizar música: ${response.statusText}`)
   }
-}
-
-/**
- * Normalize musica data from API, parsing tags
- */
-export function normalizeMusicaData(m: any): any {
-  return {
-    ...m,
-    tags: parseTags(m.tags),
-  }
-}
-
-/**
- * Normalize setlist items from API
- */
-export function normalizeSetlistItems(items: any[]): any[] {
-  return items.map(item => ({
-    ...item,
-    musicas: item.musicas ? normalizeMusicaData(item.musicas) : undefined,
-  }))
 }

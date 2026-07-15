@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { practiceSessionsDb } from '@/lib/practice-sessions-db'
+import { jsonError } from '@/lib/api-helpers'
 
 // GET /api/practice-sessions - Listar todas as sessões
 export async function GET() {
@@ -8,10 +9,7 @@ export async function GET() {
     return NextResponse.json(sessions)
   } catch (error) {
     console.error('Erro ao buscar sessões de prática:', error)
-    return NextResponse.json(
-      { error: 'Erro ao buscar sessões de prática' },
-      { status: 500 }
-    )
+    return jsonError('Erro ao buscar sessões de prática', 500)
   }
 }
 
@@ -21,10 +19,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     
     if (!body.musica_id) {
-      return NextResponse.json(
-        { error: 'musica_id é obrigatório' },
-        { status: 400 }
-      )
+      return jsonError('musica_id é obrigatório', 400)
     }
     
     const session = practiceSessionsDb.create({
@@ -39,9 +34,6 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(session, { status: 201 })
   } catch (error) {
     console.error('Erro ao criar sessão de prática:', error)
-    return NextResponse.json(
-      { error: 'Erro ao criar sessão de prática' },
-      { status: 500 }
-    )
+    return jsonError('Erro ao criar sessão de prática', 500)
   }
 }

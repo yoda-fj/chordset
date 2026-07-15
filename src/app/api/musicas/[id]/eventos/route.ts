@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getDb } from '@/lib/db'
+import { jsonError, parseId } from '@/lib/api-helpers'
 
 // GET /api/musicas/[id]/eventos - Listar eventos que usam esta música
 export async function GET(
@@ -8,10 +9,10 @@ export async function GET(
 ) {
   try {
     const { id } = await params
-    const musicaId = parseInt(id)
+    const musicaId = parseId(id)
     
-    if (isNaN(musicaId)) {
-      return NextResponse.json({ error: 'ID inválido' }, { status: 400 })
+    if (musicaId === null) {
+      return jsonError('ID inválido', 400)
     }
     
     const db = getDb()
@@ -35,9 +36,6 @@ export async function GET(
     return NextResponse.json(eventos)
   } catch (error) {
     console.error('Erro ao buscar eventos:', error)
-    return NextResponse.json(
-      { error: 'Erro ao buscar eventos' },
-      { status: 500 }
-    )
+    return jsonError('Erro ao buscar eventos', 500)
   }
 }

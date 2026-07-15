@@ -1,12 +1,11 @@
 'use client';
 
 import { useMemo } from 'react';
-import { transposeChord } from '@/utils/chords';
+import { isTabLine, isStrummingLine } from '@/utils/chord-transposer';
 import { isTextChordFormat } from '@/utils/chordpro-converter';
 
 interface ChordViewerProps {
   chordProContent: string;
-  semitones: number;
   title?: string;
   artist?: string;
   fontSize?: number;
@@ -27,7 +26,6 @@ const isChordProFormat = (content: string): boolean => {
 
 export const ChordViewer = ({
   chordProContent,
-  semitones,
   title,
   artist,
   fontSize = 16,
@@ -41,20 +39,6 @@ export const ChordViewer = ({
     if (isTextChordFormat(chordProContent)) return 'text';
     return 'chordpro'; // fallback
   }, [chordProContent]);
-
-  // Detecta se uma linha é tablatura (e.g., e|--2-2---|)
-  const isTabLine = (line: string): boolean => {
-    const trimmed = line.trim();
-    const tabPattern = /^[a-gA-G]\|[-|0-9\-~h\//\\\s]+\(?[0-9]*x?\)?.*$/i;
-    return tabPattern.test(trimmed);
-  };
-
-  // Detecta se uma linha é de palhetadas (e.g., ↓ ↓ ↑ ↓ ↑ ↓ ↓ ↓ ↑ ↓ ↑)
-  const isStrummingLine = (line: string): boolean => {
-    const trimmed = line.trim();
-    const strumPattern = /^[↓↑→←↓↑→←\s]+$/;
-    return strumPattern.test(trimmed) && /[↓↑→←↓↑→←]/.test(trimmed);
-  };
 
   // ======== PARSER FORMATO TEXTO (Cifra Club nativo) ========
   const parsedTextLines = useMemo(() => {
@@ -95,14 +79,7 @@ export const ChordViewer = ({
       const chordLineRegex = /^[\s]*[A-G][#b]?(?:m|maj|min|dim|aug|sus|add|[0-9]|M|°|ø|\+)*(?:\/[A-G][#b]?)?(?:\s+[A-G][#b]?(?:m|maj|min|dim|aug|sus|add|[0-9]|M|°|ø|\+)*(?:\/[A-G][#b]?)?)*\s*$/;
       const isChordLine = chordLineRegex.test(line);
 
-      if (isChordLine && semitones !== 0) {
-        // Transpose chords in the line
-        const transposedLine = line.replace(/[A-G][#b]?(?:m|maj|min|dim|aug|sus|add|[0-9]|M|°|ø|\+)*(?:\/[A-G][#b]?)?/g, (match) => {
-          if (!match.trim()) return match;
-          return transposeChord(match.trim(), semitones);
-        });
-        lines.push({ type: 'chords', content: transposedLine });
-      } else if (isChordLine) {
+      if (isChordLine) {
         lines.push({ type: 'chords', content: line });
       } else {
         lines.push({ type: 'lyrics', content: line });
@@ -110,7 +87,7 @@ export const ChordViewer = ({
     }
 
     return lines;
-  }, [chordProContent, format, semitones, showTablatura]);
+  }, [chordProContent, format, showTablatura]);
 
   // ======== PARSER FORMATO CHORDPRO (colchetes) ========
   const parsedChordProLines = useMemo(() => {
@@ -207,12 +184,9 @@ export const ChordViewer = ({
           const endBracket = line.indexOf(']', idx);
           if (endBracket !== -1) {
             const chord = line.slice(idx + 1, endBracket);
-            const transposedChord = semitones !== 0
-              ? transposeChord(chord, semitones)
-              : chord;
 
             chords.push({
-              chord: transposedChord,
+              chord,
               position: plainText.length,
               displayPosition: plainText.length
             });
@@ -252,7 +226,7 @@ export const ChordViewer = ({
     }
 
     return lines;
-  }, [chordProContent, semitones, showTablatura, format]);
+  }, [chordProContent, showTablatura, format]);
 
   return (
     <div className={`chord-viewer bg-slate-50 dark:bg-slate-900 rounded-lg p-6 font-sans leading-relaxed ${isFullscreen ? 'min-h-full pt-16' : 'min-h-0'}`}>

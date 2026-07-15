@@ -52,14 +52,14 @@ export default function DrumPatternEditorPage() {
   const stepsRef = useRef(steps)
   const [isPlaying, setIsPlaying] = useState(false)
   const [currentStep, setCurrentStep] = useState(-1)
-  const [sampler, setSampler] = useState<any>(null)
+  const [sampler, setSampler] = useState<Tone.Sampler | null>(null)
   const [isLoaded, setIsLoaded] = useState(false)
-  const [seq, setSeq] = useState<any>(null)
+  const [seq, setSeq] = useState<Tone.Sequence<number> | null>(null)
   const [saving, setSaving] = useState(false)
 
   // Load sampler
   useEffect(() => {
-    let s: any = null
+    let s: Tone.Sampler | null = null
     const loadSampler = () => {
       const urls = getSamplerUrls(kit)
       s = new Tone.Sampler({
@@ -67,7 +67,7 @@ export default function DrumPatternEditorPage() {
         onload: () => {
           setIsLoaded(true)
         },
-        onerror: (err: any) => {
+        onerror: (err: Error) => {
           console.error('Sampler load error:', err)
         }
       }).toDestination()
@@ -95,7 +95,7 @@ export default function DrumPatternEditorPage() {
         setBpm(data.bpm)
         setKit(data.kit)
         if (data.steps) {
-          let parsed = typeof data.steps === 'string' ? JSON.parse(data.steps) : data.steps
+          const parsed: number[][] | Record<string, (number | boolean)[]> = typeof data.steps === 'string' ? JSON.parse(data.steps) : data.steps
           // Handle both formats:
           // 1. Seed/API format: [[1,0,...], [0,1,...], ...] (array of arrays of numbers)
           // 2. Editor save format: {kick: [true,...], snare: [true,...], ...} (object)
@@ -104,7 +104,7 @@ export default function DrumPatternEditorPage() {
             // Array-of-arrays format (seed data from API)
             INSTRUMENTS.forEach((inst, idx) => {
               if (parsed[idx]) {
-                converted[inst.key] = parsed[idx].map((v: any) => Boolean(v))
+                converted[inst.key] = parsed[idx].map((v: number) => Boolean(v))
               } else {
                 converted[inst.key] = new Array(16).fill(false)
               }
@@ -113,7 +113,7 @@ export default function DrumPatternEditorPage() {
             // Object format (saved from editor)
             INSTRUMENTS.forEach((inst) => {
               if (parsed[inst.key]) {
-                converted[inst.key] = parsed[inst.key].map((v: any) => Boolean(v))
+                converted[inst.key] = parsed[inst.key].map((v: number | boolean) => Boolean(v))
               } else {
                 converted[inst.key] = new Array(16).fill(false)
               }
@@ -143,7 +143,7 @@ export default function DrumPatternEditorPage() {
 
     const stepArray = new Array(TOTAL_STEPS).fill(0).map((_, i) => i)
     const sequence = new Tone.Sequence(
-      (time: any, stepIdx: number) => {
+      (time: number, stepIdx: number) => {
         setCurrentStep(stepIdx)
         INSTRUMENTS.forEach(inst => {
           if (stepsRef.current[inst.key][stepIdx]) {

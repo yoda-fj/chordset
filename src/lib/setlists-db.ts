@@ -1,52 +1,27 @@
 import { getDb } from './db'
+import type {
+  EventoMusica,
+  EventoMusicaWithMusica,
+  CreateEventoMusicaInput,
+  UpdateEventoMusicaInput,
+} from '@/types/database'
 
-export interface EventoMusica {
-  id: number
-  evento_id: number
-  musica_id: number
-  ordem: number
-  tom_evento: string | null
-  observacoes: string | null
-  confirmada: boolean
-  responsavel: string | null
-  created_at: string
-  updated_at: string
+// Shape cru da linha do JOIN evento_musicas+musicas (confirmada como 0/1)
+type EventoMusicaJoinRow = Omit<EventoMusica, 'confirmada'> & { confirmada: number } & {
+  titulo: string
+  artista: string
+  tom_original: string | null
+  cifra: string | null
 }
 
-export interface EventoMusicaWithMusica extends EventoMusica {
-  musicas: {
-    id: number
-    titulo: string
-    artista: string
-    tom_original: string | null
-    cifra: string | null
-  }
-}
-
-export interface CreateEventoMusicaInput {
-  evento_id: number
-  musica_id: number
-  ordem: number
-  tom_evento?: string
-  observacoes?: string
-  confirmada?: boolean
-  responsavel?: string
-}
-
-export interface UpdateEventoMusicaInput {
-  ordem?: number
-  tom_evento?: string
-  observacoes?: string
-  confirmada?: boolean
-  responsavel?: string
-}
+type EventoMusicaRow = Omit<EventoMusica, 'confirmada'> & { confirmada: number }
 
 export const setlistsDb = {
   // Get all musicas for an evento (with musica details)
   getByEventoId(eventoId: number): EventoMusicaWithMusica[] {
     const db = getDb()
     const stmt = db.prepare(`
-      SELECT 
+      SELECT
         em.*,
         m.titulo,
         m.artista,
@@ -57,7 +32,7 @@ export const setlistsDb = {
       WHERE em.evento_id = ?
       ORDER BY em.ordem ASC
     `)
-    const rows = stmt.all(eventoId) as any[]
+    const rows = stmt.all(eventoId) as EventoMusicaJoinRow[]
     return rows.map(row => ({
       id: row.id,
       evento_id: row.evento_id,
@@ -95,8 +70,9 @@ export const setlistsDb = {
       input.confirmada ? 1 : 0,
       input.responsavel || null
     )
-    
-    const created = this.getById(result.lastInsertRowid as number)
+
+    const insertId = Number(result.lastInsertRowid)
+    const created = this.getById(insertId)
     if (!created) throw new Error('Erro ao criar evento_musica')
     return created
   },
@@ -105,7 +81,7 @@ export const setlistsDb = {
   getById(id: number): EventoMusica | null {
     const db = getDb()
     const stmt = db.prepare('SELECT * FROM evento_musicas WHERE id = ?')
-    const row = stmt.get(id) as any
+    const row = stmt.get(id) as EventoMusicaRow | undefined
     if (!row) return null
     return {
       ...row,
@@ -117,7 +93,7 @@ export const setlistsDb = {
   update(id: number, input: UpdateEventoMusicaInput): EventoMusica {
     const db = getDb()
     const sets: string[] = []
-    const values: any[] = []
+    const values: (string | number | null)[] = []
 
     if (input.ordem !== undefined) {
       sets.push('ordem = ?')
@@ -179,24 +155,24 @@ export const setlistsDb = {
     const updateStmt = db.prepare(`
       UPDATE evento_musicas SET ordem = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?
     `)
-    
+
     const transaction = db.transaction(() => {
       orderedIds.forEach((id, index) => {
         updateStmt.run(index + 1, id)
       })
     })
-    
+
     transaction()
   },
 
   // Copy musicas from template to evento (when creating evento from template)
   copyFromTemplate(templateId: number, eventoId: number): number {
     const db = getDb()
-    
+
     // Get template musicas
     const templateMusicas = db.prepare(`
       SELECT * FROM template_musicas WHERE template_id = ? ORDER BY ordem
-    `).all(templateId) as any[]
+    `).all(templateId) as { musica_id: number; ordem: number; tom_sugerido: string | null; observacoes: string | null }[]
 
     if (templateMusicas.length === 0) return 0
 
@@ -220,5 +196,36 @@ export const setlistsDb = {
 
     transaction()
     return templateMusicas.length
+  },
+
+  // Copy musicas from another evento (when cloning)
+  copyFromEvento(origemEventoId: number, novoEventoId: number): number {
+    const db = getDb()
+
+    const musicas = db.prepare(`
+      SELECT * FROM evento_musicas WHERE evento_id = ? ORDER BY ordem
+    `).all(origemEventoId) as { musica_id: number; ordem: number; tom_evento: string | null; observacoes: string | null }[]
+
+    if (musicas.length === 0) return 0
+
+    const insertStmt = db.prepare(`
+      INSERT INTO evento_musicas (evento_id, musica_id, ordem, tom_evento, observacoes)
+      VALUES (?, ?, ?, ?, ?)
+    `)
+
+    const transaction = db.transaction(() => {
+      musicas.forEach((m) => {
+        insertStmt.run(
+          novoEventoId,
+          m.musica_id,
+          m.ordem,
+          m.tom_evento,
+          m.observacoes
+        )
+      })
+    })
+
+    transaction()
+    return musicas.length
   }
 }

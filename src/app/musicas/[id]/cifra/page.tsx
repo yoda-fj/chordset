@@ -2,16 +2,19 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { useParams, useRouter } from 'next/navigation'
-import { ArrowLeft, Printer, Edit3, Music, Mic, Upload, Trash2, Play, Pause, X, Loader2, ChevronLeft, ChevronRight } from 'lucide-react'
+import { ArrowLeft, Printer, Edit3, Music, ChevronLeft, ChevronRight } from 'lucide-react'
 import Link from 'next/link'
 import { CifraViewer, DrumPad } from '@/components/chords'
+import { useAudioRecorder } from '@/hooks/useAudioRecorder'
+import { AudioRecorderPanel } from '@/components/audio/AudioRecorderPanel'
+import type { Musica } from '@/types/database'
 
 export default function CifraPage() {
   const router = useRouter()
   const params = useParams()
   const musicaId = parseInt(params.id as string)
 
-  const [musica, setMusica] = useState<any>(null)
+  const [musica, setMusica] = useState<Musica | null>(null)
   const [loading, setLoading] = useState(true)
 
   // Observacao
@@ -19,19 +22,16 @@ export default function CifraPage() {
   const [savingObs, setSavingObs] = useState(false)
   const obsTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
-  // Audio recording
-  const [isRecording, setIsRecording] = useState(false)
-  const [recordingTime, setRecordingTime] = useState(0)
-  const [audioBlob, setAudioBlob] = useState<Blob | null>(null)
-  const [audioUrl, setAudioUrl] = useState<string | null>(null)
-  const [isUploading, setIsUploading] = useState(false)
-  const [isPlaying, setIsPlaying] = useState(false)
-  const mediaRecorderRef = useRef<MediaRecorder | null>(null)
-  const audioRef = useRef<HTMLAudioElement | null>(null)
-  const timerRef = useRef<NodeJS.Timeout | null>(null)
-
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [isFullscreen, setIsFullscreen] = useState(false)
+
+  // Audio recording
+  const audioRecorder = useAudioRecorder({
+    apiBase: `/api/musicas/${musicaId}/audio`,
+    publicPrefix: '/musicas-audio/',
+    entityAudioUrl: musica?.audio_url,
+    onUpdated: (updated) => setMusica(updated as Musica),
+  })
 
   // Drum pad settings
   const [drumPadGroove, setDrumPadGroove] = useState('rock-8')
@@ -67,14 +67,6 @@ export default function CifraPage() {
         }
         if (data.bpm) setDrumPadBpm(data.bpm)
         if (data.volume != null) setDrumPadVolume(data.volume)
-
-        if (data.audio_url) {
-          // Convert path for Docker standalone mode
-          const audioPath = data.audio_url.startsWith('/musicas-audio/')
-            ? data.audio_url.replace('/musicas-audio/', '/api/musicas-audio/')
-            : data.audio_url
-          setAudioUrl(audioPath)
-        }
       } catch (error) {
         console.error('Erro ao carregar música:', error)
       } finally {
@@ -183,156 +175,6 @@ export default function CifraPage() {
     setDrumPadVolume(volume)
     if (drumPadVolumeTimeoutRef.current) clearTimeout(drumPadVolumeTimeoutRef.current)
     drumPadVolumeTimeoutRef.current = setTimeout(() => saveDrumPadVolume(volume), 1000)
-  }
-
-  // Recording functions
-  const startRecording = async () => {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
-      const mediaRecorder = new MediaRecorder(stream)
-      mediaRecorderRef.current = mediaRecorder
-
-      const chunks: BlobPart[] = []
-      mediaRecorder.ondataavailable = (e) => chunks.push(e.data)
-      mediaRecorder.onstop = () => {
-        const blob = new Blob(chunks, { type: 'audio/webm' })
-        setAudioBlob(blob)
-        setAudioUrl(URL.createObjectURL(blob))
-        stream.getTracks().forEach(track => track.stop())
-      }
-
-      mediaRecorder.start()
-      setIsRecording(true)
-      setRecordingTime(0)
-
-      timerRef.current = setInterval(() => {
-        setRecordingTime(t => t + 1)
-      }, 1000)
-    } catch (err) {
-      console.error('Error starting recording:', err)
-      alert('Não foi possível acessar o microfone')
-    }
-  }
-
-  const stopRecording = () => {
-    if (mediaRecorderRef.current && isRecording) {
-      mediaRecorderRef.current.stop()
-      setIsRecording(false)
-      if (timerRef.current) clearInterval(timerRef.current)
-    }
-  }
-
-  const uploadAudio = async () => {
-    if (!audioBlob) return
-    setIsUploading(true)
-    try {
-      const formData = new FormData()
-      formData.append('audio', audioBlob, 'recording.webm')
-      const res = await fetch(`/api/musicas/${musicaId}/audio`, {
-        method: 'POST',
-        body: formData
-      })
-      if (res.ok) {
-        const updated = await res.json()
-        setMusica(updated)
-        // Convert path for Docker standalone mode
-        const audioPath = updated.audio_url?.startsWith('/musicas-audio/')
-          ? updated.audio_url.replace('/musicas-audio/', '/api/musicas-audio/')
-          : updated.audio_url
-        setAudioUrl(audioPath)
-        setAudioBlob(null)
-      } else {
-        const err = await res.json()
-        alert(err.error || 'Erro ao fazer upload')
-      }
-    } catch (e) {
-      console.error('Error uploading:', e)
-      alert('Erro ao fazer upload')
-    }
-    setIsUploading(false)
-  }
-
-  const uploadFileInput = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file) return
-    setIsUploading(true)
-    try {
-      const formData = new FormData()
-      formData.append('audio', file)
-      const res = await fetch(`/api/musicas/${musicaId}/audio`, {
-        method: 'POST',
-        body: formData
-      })
-      if (res.ok) {
-        const updated = await res.json()
-        setMusica(updated)
-        // Convert path for Docker standalone mode
-        const audioPath = updated.audio_url?.startsWith('/musicas-audio/')
-          ? updated.audio_url.replace('/musicas-audio/', '/api/musicas-audio/')
-          : updated.audio_url
-        setAudioUrl(audioPath)
-        if (audioUrl?.startsWith('blob:')) {
-          URL.revokeObjectURL(audioUrl)
-        }
-        setAudioBlob(null)
-      } else {
-        const err = await res.json()
-        alert(err.error || 'Erro ao fazer upload')
-      }
-    } catch (e) {
-      console.error('Error uploading:', e)
-      alert('Erro ao fazer upload')
-    }
-    setIsUploading(false)
-    e.target.value = ''
-  }
-
-  const deleteAudio = async () => {
-    if (!confirm('Deseja realmente excluir a gravação?')) return
-    try {
-      const res = await fetch(`/api/musicas/${musicaId}/audio`, {
-        method: 'DELETE'
-      })
-      if (res.ok) {
-        const updated = await res.json()
-        setMusica(updated)
-        setAudioUrl(null)
-        setAudioBlob(null)
-        if (audioUrl?.startsWith('blob:')) {
-          URL.revokeObjectURL(audioUrl)
-        }
-      }
-    } catch (e) {
-      console.error('Error deleting:', e)
-    }
-  }
-
-  const clearRecording = () => {
-    if (audioUrl?.startsWith('blob:')) {
-      URL.revokeObjectURL(audioUrl)
-    }
-    // Convert path for Docker standalone mode
-    const audioPath = musica?.audio_url?.startsWith('/musicas-audio/')
-      ? musica.audio_url.replace('/musicas-audio/', '/api/musicas-audio/')
-      : musica?.audio_url || null
-    setAudioUrl(audioPath)
-    setAudioBlob(null)
-  }
-
-  const togglePlayback = () => {
-    if (!audioRef.current) return
-    if (isPlaying) {
-      audioRef.current.pause()
-    } else {
-      audioRef.current.play()
-    }
-    setIsPlaying(!isPlaying)
-  }
-
-  const formatTime = (seconds: number) => {
-    const mins = Math.floor(seconds / 60)
-    const secs = seconds % 60
-    return `${mins}:${secs.toString().padStart(2, '0')}`
   }
 
   if (loading) {
@@ -468,97 +310,7 @@ export default function CifraPage() {
 
             {/* Audio Recording/Upload */}
             <div className="bg-white p-4 rounded-lg border">
-              <h2 className="text-base font-semibold text-gray-900 mb-3">Gravação de Referência</h2>
-
-              {audioUrl && !audioBlob && (
-                <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg mb-3">
-                  <button
-                    onClick={togglePlayback}
-                    className="p-2 bg-indigo-600 text-white rounded-full hover:bg-indigo-700"
-                  >
-                    {isPlaying ? <Pause size={16} /> : <Play size={16} />}
-                  </button>
-                  <audio
-                    ref={audioRef}
-                    src={audioUrl}
-                    onEnded={() => setIsPlaying(false)}
-                  />
-                  <span className="flex-1 text-sm text-gray-600">Sua gravação</span>
-                  <button
-                    onClick={deleteAudio}
-                    className="p-1 text-red-600 hover:bg-red-50 rounded-lg"
-                    title="Excluir gravação"
-                  >
-                    <Trash2 size={14} />
-                  </button>
-                </div>
-              )}
-
-              {audioBlob && (
-                <div className="flex items-center gap-3 p-3 bg-green-50 rounded-lg mb-3">
-                  <div className="flex-1">
-                    <p className="text-sm font-medium text-green-800">Nova gravação</p>
-                    <p className="text-xs text-green-600">{formatTime(recordingTime)}</p>
-                  </div>
-                  <button
-                    onClick={uploadAudio}
-                    disabled={isUploading}
-                    className="px-3 py-1.5 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 flex items-center gap-1 text-sm"
-                  >
-                    {isUploading ? <Loader2 size={14} className="animate-spin" /> : <Upload size={14} />}
-                    Salvar
-                  </button>
-                  <button
-                    onClick={clearRecording}
-                    className="p-1 text-gray-600 hover:bg-gray-100 rounded-lg"
-                  >
-                    <X size={14} />
-                  </button>
-                </div>
-              )}
-
-              {!audioUrl && !audioBlob && (
-                <p className="text-xs text-gray-500 mb-3">Gravar ou enviar áudio</p>
-              )}
-
-              <div className="flex items-center gap-2">
-                <input
-                  type="file"
-                  id="audio-upload"
-                  accept="audio/*"
-                  onChange={uploadFileInput}
-                  className="hidden"
-                />
-                <label
-                  htmlFor="audio-upload"
-                  className="flex items-center gap-1 px-3 py-1.5 border border-gray-300 rounded-lg hover:bg-gray-50 cursor-pointer text-sm"
-                >
-                  <Upload size={14} />
-                  Enviar
-                </label>
-
-                {!audioBlob && (
-                  <>
-                    {isRecording ? (
-                      <button
-                        onClick={stopRecording}
-                        className="flex items-center gap-1 px-3 py-1.5 bg-red-600 text-white rounded-lg hover:bg-red-700 text-sm"
-                      >
-                        <div className="w-2 h-2 bg-white rounded-full animate-pulse" />
-                        Parar ({formatTime(recordingTime)})
-                      </button>
-                    ) : (
-                      <button
-                        onClick={startRecording}
-                        className="flex items-center gap-1 px-3 py-1.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 text-sm"
-                      >
-                        <Mic size={14} />
-                        Gravar
-                      </button>
-                    )}
-                  </>
-                )}
-              </div>
+              <AudioRecorderPanel {...audioRecorder} />
             </div>
 
             {/* Drum Pad / Groove */}

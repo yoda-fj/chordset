@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { X, Loader2, Guitar, Piano, Music, Mic2, ChevronRight } from 'lucide-react'
+import { X, Loader2, Guitar, Piano, Music, ChevronRight } from 'lucide-react'
 
 interface CifraVersion {
   type: string

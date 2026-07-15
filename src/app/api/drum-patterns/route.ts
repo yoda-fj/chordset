@@ -1,35 +1,32 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getDb } from '@/lib/db'
+import { drumPatternsDb } from '@/lib/drum-patterns-db'
+import { jsonError } from '@/lib/api-helpers'
 
+// GET /api/drum-patterns - Listar ritmos
 export async function GET() {
   try {
-    const db = getDb()
-    const patterns = db.prepare('SELECT * FROM drum_patterns ORDER BY created_at DESC').all()
+    const patterns = drumPatternsDb.getAll()
     return NextResponse.json(patterns)
   } catch (error) {
     console.error('[drum-patterns GET]', error)
-    return NextResponse.json({ error: 'Erro ao buscar ritmos' }, { status: 500 })
+    return jsonError('Erro ao buscar ritmos', 500)
   }
 }
 
-export async function POST(req: NextRequest) {
+// POST /api/drum-patterns - Criar ritmo
+export async function POST(request: NextRequest) {
   try {
-    const body = await req.json()
+    const body = await request.json()
     const { nome, bpm, kit, steps } = body
 
     if (!nome || !steps) {
-      return NextResponse.json({ error: 'Nome e steps são obrigatórios' }, { status: 400 })
+      return jsonError('Nome e steps são obrigatórios', 400)
     }
 
-    const db = getDb()
-    const result = db.prepare(
-      'INSERT INTO drum_patterns (nome, bpm, kit, steps) VALUES (?, ?, ?, ?)'
-    ).run(nome, bpm || 120, kit || 'kit1', JSON.stringify(steps))
-
-    const pattern = db.prepare('SELECT * FROM drum_patterns WHERE id = ?').get(result.lastInsertRowid)
+    const pattern = drumPatternsDb.create({ nome, bpm, kit, steps })
     return NextResponse.json(pattern, { status: 201 })
   } catch (error) {
     console.error('[drum-patterns POST]', error)
-    return NextResponse.json({ error: 'Erro ao criar ritmo' }, { status: 500 })
+    return jsonError('Erro ao criar ritmo', 500)
   }
 }

@@ -1,70 +1,72 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { searchSong, importSong, chordProviders, availableProviders, cleanChordText, extractKeyFromChord } from '@/lib/chord-providers'
+import { search } from '@/lib/cifraclub-scraper/search'
+import { getScraper } from '@/lib/cifraclub-scraper/cifraclub'
+import { ensureChordProFormat } from '@/utils/chordpro-converter'
+import { cleanChordText, extractKeyFromChord } from '@/utils/chord-transposer'
 import { musicasDb } from '@/lib/musicas-db'
 
-// GET /api/import-song - Lista providers disponíveis
-export async function GET() {
-  const providers = availableProviders.map(name => {
-    const provider = chordProviders[name];
-    return {
-      name,
-      description: provider.description,
-      capabilities: provider.capabilities,
-    };
-  });
+// Força runtime Node.js (não Edge) pra Playwright funcionar
+export const runtime = 'nodejs'
 
-  return NextResponse.json({
-    providers,
-    message: 'Para buscar: POST com { query, provider? } ou { url, provider }',
-  });
+const CIFRACLUB_BASE = 'https://www.cifraclub.com.br/'
+
+// Extrai artist/song/version de uma URL do Cifra Club
+function parseCifraClubUrl(url: string): { artist: string; song: string; version?: string } | null {
+  const parts = url
+    .replace(CIFRACLUB_BASE, '')
+    .split('/')
+    .filter(Boolean)
+
+  if (parts.length < 2) return null
+  return { artist: parts[0], song: parts[1], version: parts[2] || undefined }
 }
 
-// POST /api/import-song - Busca e/ou importa música
+// POST /api/import-song - Busca e/ou importa música do Cifra Club
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
 
     // ---------
     // MODO 1: Buscar música (sem importar)
-    // POST { query: "Coldplay The Scientist", provider?: "cifraclub" }
+    // POST { query: "Coldplay The Scientist" }
     // ---------
     if (body.query && !body.url) {
-      const { query, provider } = body;
+      const query = String(body.query).trim()
 
-      if (!query || query.trim().length < 2) {
+      if (query.length < 2) {
         return NextResponse.json(
           { error: 'Query deve ter pelo menos 2 caracteres' },
           { status: 400 }
         );
       }
 
-      const providerName = provider || 'cifraclub';
-      
-      if (!availableProviders.includes(providerName)) {
-        return NextResponse.json(
-          { error: `Provider '${providerName}' não disponível. Opções: ${availableProviders.join(', ')}` },
-          { status: 400 }
-        );
-      }
-
-      const results = await searchSong(query, providerName);
-      const providerResults = results[providerName];
+      const searchResult = await search(query);
+      const results = searchResult.songs.map((s) => {
+        const url = `${CIFRACLUB_BASE}${s.artist_slug}/${s.song_slug}`
+        return {
+          id: url,
+          titulo: s.song,
+          artista: s.artist,
+          url,
+          image: s.image || null,
+        }
+      });
 
       return NextResponse.json({
         success: true,
-        provider: providerName,
+        provider: 'cifraclub',
         query,
-        results: providerResults.results,
-        total: providerResults.total,
+        results,
+        total: searchResult.total,
       });
     }
 
     // ---------
     // MODO 2: Importar música específica
-    // POST { url: "https://www.cifraclub.com.br/coldplay/the-scientist", provider: "cifraclub" }
+    // POST { url: "https://www.cifraclub.com.br/coldplay/the-scientist" }
     // ---------
     if (body.url && !body.query) {
-      const { url, provider } = body;
+      const { url } = body;
 
       if (!url) {
         return NextResponse.json(
@@ -73,35 +75,43 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      const providerName = provider || 'cifraclub';
-
-      if (!availableProviders.includes(providerName)) {
+      const parsed = parseCifraClubUrl(String(url))
+      if (!parsed) {
         return NextResponse.json(
-          { error: `Provider '${providerName}' não disponível. Opções: ${availableProviders.join(', ')}` },
+          { success: false, error: 'URL inválida do Cifra Club', provider: 'cifraclub' },
           { status: 400 }
         );
       }
 
-      const importResult = await importSong(url, providerName);
+      const scrapeResult = await getScraper().scrape(parsed.artist, parsed.song, parsed.version)
 
-      if (!importResult.success || !importResult.song) {
+      if ('error' in scrapeResult) {
         return NextResponse.json(
-          {
-            success: false,
-            error: importResult.error || 'Erro ao importar música',
-            provider: providerName,
-          },
+          { success: false, error: scrapeResult.error, provider: 'cifraclub' },
           { status: 400 }
         );
+      }
+
+      const rawCifra = scrapeResult.cifra.join('\n')
+      const tomOriginal = scrapeResult.key || extractKeyFromChord(rawCifra)
+      const cifraLimpa = cleanChordText(ensureChordProFormat(rawCifra))
+
+      const song = {
+        titulo: scrapeResult.name,
+        artista: scrapeResult.artist,
+        tom_original: tomOriginal,
+        cifra: cifraLimpa,
+        url: String(url),
+        provider: 'cifraclub',
       }
 
       // Se pediu para salvar no banco também
-      if (body.save !== false && importResult.song) {
+      if (body.save !== false) {
         try {
           // Verifica se já existe
           const existing = musicasDb.getAll().find(
-            m => m.titulo.toLowerCase() === importResult.song!.titulo.toLowerCase() &&
-                 m.artista.toLowerCase() === importResult.song!.artista.toLowerCase()
+            m => m.titulo.toLowerCase() === song.titulo.toLowerCase() &&
+                 m.artista.toLowerCase() === song.artista.toLowerCase()
           );
 
           if (existing) {
@@ -109,40 +119,27 @@ export async function POST(request: NextRequest) {
               success: true,
               alreadyExists: true,
               existingId: existing.id,
-              song: importResult.song,
-              provider: providerName,
+              song,
+              provider: 'cifraclub',
               message: 'Música já existe no banco',
             });
           }
 
-          // Extrai tom da cifra se não veio
-          let tomOriginal = importResult.song.tom_original;
-          if (!tomOriginal && importResult.song.cifra) {
-            tomOriginal = extractKeyFromChord(importResult.song.cifra);
-          }
-
-          // Limpa cifra
-          const cifraLimpa = cleanChordText(importResult.song.cifra);
-
           // Salva no banco
           const saved = musicasDb.create({
-            titulo: importResult.song.titulo,
-            artista: importResult.song.artista,
+            titulo: song.titulo,
+            artista: song.artista,
             tom_original: tomOriginal || undefined,
             cifra: cifraLimpa || undefined,
-            tags: [providerName], // Marca o provider de origem
+            tags: ['cifraclub'], // Marca o provider de origem
           });
 
           return NextResponse.json({
             success: true,
             saved: true,
             songId: saved.id,
-            song: {
-              ...importResult.song,
-              tom_original: tomOriginal,
-              cifra: cifraLimpa,
-            },
-            provider: providerName,
+            song,
+            provider: 'cifraclub',
           });
 
         } catch (dbError) {
@@ -152,8 +149,8 @@ export async function POST(request: NextRequest) {
             success: true,
             saved: false,
             error: 'Música encontrada mas não foi possível salvar no banco',
-            song: importResult.song,
-            provider: providerName,
+            song,
+            provider: 'cifraclub',
           });
         }
       }
@@ -161,8 +158,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({
         success: true,
         saved: false,
-        song: importResult.song,
-        provider: providerName,
+        song,
+        provider: 'cifraclub',
       });
     }
 
@@ -171,7 +168,7 @@ export async function POST(request: NextRequest) {
     // ---------
     return NextResponse.json(
       {
-        error: 'Parâmetros inválidos. Use { query } para buscar, ou { url, provider } para importar.',
+        error: 'Parâmetros inválidos. Use { query } para buscar, ou { url } para importar.',
       },
       { status: 400 }
     );

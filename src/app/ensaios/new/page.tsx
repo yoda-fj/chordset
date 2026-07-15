@@ -6,6 +6,7 @@ import { ArrowLeft, Loader2, Search, Music, Plus } from 'lucide-react';
 import Link from 'next/link';
 import type { Musica } from '@/types/database';
 import { DifficultyLevel } from '@/types/practice';
+import { parseTags } from '@/utils/tag-utils';
 
 export default function NewEnsaioPage() {
   const router = useRouter();
@@ -23,9 +24,9 @@ export default function NewEnsaioPage() {
         const response = await fetch('/api/musicas');
         if (response.ok) {
           const data = await response.json();
-          const parsed = data.map((m: any) => ({
+          const parsed = data.map((m: Musica) => ({
             ...m,
-            tags: typeof m.tags === 'string' ? JSON.parse(m.tags) : m.tags || []
+            tags: parseTags(m.tags)
           }));
           setMusicas(parsed);
         }

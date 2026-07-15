@@ -1,67 +1,77 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getDb } from '@/lib/db'
+import { drumPatternsDb } from '@/lib/drum-patterns-db'
+import { jsonError, parseId } from '@/lib/api-helpers'
 
-export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+interface RouteParams {
+  params: Promise<{ id: string }>
+}
+
+// GET /api/drum-patterns/[id] - Obter ritmo por ID
+export async function GET(request: NextRequest, { params }: RouteParams) {
   try {
     const { id } = await params
-    const db = getDb()
-    const pattern = db.prepare('SELECT * FROM drum_patterns WHERE id = ?').get(id)
+    const patternId = parseId(id)
+    if (patternId === null) {
+      return jsonError('ID inválido', 400)
+    }
+
+    const pattern = drumPatternsDb.getById(patternId)
     if (!pattern) {
-      return NextResponse.json({ error: 'Ritmo não encontrado' }, { status: 404 })
+      return jsonError('Ritmo não encontrado', 404)
     }
     return NextResponse.json(pattern)
   } catch (error) {
     console.error('[drum-patterns id GET]', error)
-    return NextResponse.json({ error: 'Erro ao buscar ritmo' }, { status: 500 })
+    return jsonError('Erro ao buscar ritmo', 500)
   }
 }
 
-export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+// PUT /api/drum-patterns/[id] - Atualizar ritmo
+export async function PUT(request: NextRequest, { params }: RouteParams) {
   try {
     const { id } = await params
-    const body = await req.json()
-    const { nome, bpm, kit, steps } = body
-
-    const db = getDb()
-    const exists = db.prepare('SELECT id FROM drum_patterns WHERE id = ?').get(id)
-    if (!exists) {
-      return NextResponse.json({ error: 'Ritmo não encontrado' }, { status: 404 })
+    const patternId = parseId(id)
+    if (patternId === null) {
+      return jsonError('ID inválido', 400)
     }
 
-    db.prepare(
-      'UPDATE drum_patterns SET nome = ?, bpm = ?, kit = ?, steps = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?'
-    ).run(nome, bpm, kit, JSON.stringify(steps), id)
+    const body = await request.json()
+    const { nome, bpm, kit, steps } = body
 
-    const pattern = db.prepare('SELECT * FROM drum_patterns WHERE id = ?').get(id)
+    const pattern = drumPatternsDb.update(patternId, { nome, bpm, kit, steps })
     return NextResponse.json(pattern)
   } catch (error) {
+    if (error instanceof Error && error.message === 'Ritmo não encontrado') {
+      return jsonError('Ritmo não encontrado', 404)
+    }
     console.error('[drum-patterns id PUT]', error)
-    return NextResponse.json({ error: 'Erro ao atualizar ritmo' }, { status: 500 })
+    return jsonError('Erro ao atualizar ritmo', 500)
   }
 }
 
-export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+// DELETE /api/drum-patterns/[id] - Excluir ritmo
+export async function DELETE(request: NextRequest, { params }: RouteParams) {
   try {
     const { id } = await params
-    const db = getDb()
-    const exists = db.prepare('SELECT id FROM drum_patterns WHERE id = ?').get(id)
+    const patternId = parseId(id)
+    if (patternId === null) {
+      return jsonError('ID inválido', 400)
+    }
+
+    const exists = drumPatternsDb.getById(patternId)
     if (!exists) {
-      return NextResponse.json({ error: 'Ritmo não encontrado' }, { status: 404 })
+      return jsonError('Ritmo não encontrado', 404)
     }
 
     // Safe delete: check if any music is using this pattern
-    const inUse = db.prepare('SELECT COUNT(*) as count FROM musicas WHERE drum_pattern_id = ?').get(id) as any
-    if (inUse.count > 0) {
-      return NextResponse.json(
-        { error: 'Este ritmo está em uso por uma ou mais músicas. Desassocie-o primeiro.' },
-        { status: 409 }
-      )
+    if (drumPatternsDb.countUsage(patternId) > 0) {
+      return jsonError('Este ritmo está em uso por uma ou mais músicas. Desassocie-o primeiro.', 409)
     }
 
-    db.prepare('DELETE FROM drum_patterns WHERE id = ?').run(id)
+    drumPatternsDb.delete(patternId)
     return NextResponse.json({ success: true })
   } catch (error) {
     console.error('[drum-patterns id DELETE]', error)
-    return NextResponse.json({ error: 'Erro ao excluir ritmo' }, { status: 500 })
+    return jsonError('Erro ao excluir ritmo', 500)
   }
 }

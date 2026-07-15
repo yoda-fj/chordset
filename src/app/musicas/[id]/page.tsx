@@ -2,10 +2,14 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { useParams } from 'next/navigation'
-import { ArrowLeft, Loader2, Music, Edit, FileText, Calendar, Mic, Upload, Trash2, Play, Pause, X, ChevronLeft, ChevronRight, Drum } from 'lucide-react'
+import { ArrowLeft, Loader2, Music, Edit, FileText, Calendar, Play, ChevronLeft, ChevronRight, Drum } from 'lucide-react'
 import * as Tone from 'tone'
 import { getSamplerUrls } from '@/lib/drum-samples'
+import type { Musica, DrumPattern, EventoStatus } from '@/types/database'
 import Link from 'next/link'
+import { useAudioRecorder } from '@/hooks/useAudioRecorder'
+import { AudioRecorderPanel } from '@/components/audio/AudioRecorderPanel'
+import { apiFetch } from '@/utils/api'
 
 const STATUS_LABELS: Record<string, string> = {
   rascunho: 'Rascunho',
@@ -21,14 +25,27 @@ const STATUS_COLORS: Record<string, string> = {
   cancelado: 'bg-red-100 text-red-700',
 }
 
+// Projeção retornada por GET /api/musicas/[id]/eventos
+interface EventoDaMusica {
+  id: number
+  nome: string
+  data: string | null
+  hora: string | null
+  local: string | null
+  status: EventoStatus
+  ordem: number
+  tom_evento: string | null
+  confirmada: boolean
+}
+
 export default function MusicaPage() {
   const params = useParams()
   const musicaId = parseInt(params.id as string)
 
-  const [musica, setMusica] = useState<any>(null)
-  const [eventos, setEventos] = useState<any[]>([])
-  const [drumPatterns, setDrumPatterns] = useState<any[]>([])
-  const [selectedRitmo, setSelectedRitmo] = useState<any>(null)
+  const [musica, setMusica] = useState<Musica | null>(null)
+  const [eventos, setEventos] = useState<EventoDaMusica[]>([])
+  const [drumPatterns, setDrumPatterns] = useState<DrumPattern[]>([])
+  const [selectedRitmo, setSelectedRitmo] = useState<DrumPattern | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -37,18 +54,16 @@ export default function MusicaPage() {
   const [savingObs, setSavingObs] = useState(false)
   const obsTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
-  // Audio recording
-  const [isRecording, setIsRecording] = useState(false)
-  const [recordingTime, setRecordingTime] = useState(0)
-  const [audioBlob, setAudioBlob] = useState<Blob | null>(null)
-  const [audioUrl, setAudioUrl] = useState<string | null>(null)
-  const [isUploading, setIsUploading] = useState(false)
-  const [isPlaying, setIsPlaying] = useState(false)
   const [sidebarOpen, setSidebarOpen] = useState(false)
-  const mediaRecorderRef = useRef<MediaRecorder | null>(null)
-  const audioRef = useRef<HTMLAudioElement | null>(null)
-  const timerRef = useRef<NodeJS.Timeout | null>(null)
-  const ritmoSeqRef = useRef<any>(null)
+  const ritmoSeqRef = useRef<Tone.Sequence<number> | null>(null)
+
+  // Audio recording
+  const audioRecorder = useAudioRecorder({
+    apiBase: `/api/musicas/${musicaId}/audio`,
+    publicPrefix: '/musicas-audio/',
+    entityAudioUrl: musica?.audio_url,
+    onUpdated: (updated) => setMusica(updated as Musica),
+  })
 
   useEffect(() => {
     async function loadData() {
@@ -63,13 +78,6 @@ export default function MusicaPage() {
         const musicaData = await musicaRes.json()
         setMusica(musicaData)
         setObservacao(musicaData.observacao || '')
-        if (musicaData.audio_url) {
-          // Convert path for Docker standalone mode
-          const audioPath = musicaData.audio_url.startsWith('/musicas-audio/')
-            ? musicaData.audio_url.replace('/musicas-audio/', '/api/musicas-audio/')
-            : musicaData.audio_url
-          setAudioUrl(audioPath)
-        }
 
         if (eventosRes.ok) {
           const eventosData = await eventosRes.json()
@@ -83,7 +91,7 @@ export default function MusicaPage() {
           setDrumPatterns(ritmosData)
           // Set selected ritmo if music has one
           if (musicaData.drum_pattern_id) {
-            const found = ritmosData.find((r: any) => r.id === musicaData.drum_pattern_id)
+            const found = ritmosData.find((r: DrumPattern) => r.id === musicaData.drum_pattern_id)
             setSelectedRitmo(found || null)
           }
         }
@@ -94,12 +102,6 @@ export default function MusicaPage() {
       }
     }
     loadData()
-
-    return () => {
-      if (audioUrl && audioUrl.startsWith('blob:')) {
-        URL.revokeObjectURL(audioUrl)
-      }
-    }
   }, [musicaId])
 
   // Save observacao on blur or after typing stops
@@ -107,15 +109,12 @@ export default function MusicaPage() {
     if (!musica) return
     setSavingObs(true)
     try {
-      const res = await fetch(`/api/musicas/${musicaId}`, {
+      const updated = await apiFetch<Musica>(`/api/musicas/${musicaId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ observacao })
       })
-      if (res.ok) {
-        const updated = await res.json()
-        setMusica(updated)
-      }
+      setMusica(updated)
     } catch (e) {
       console.error('Error saving observacao:', e)
     }
@@ -126,156 +125,6 @@ export default function MusicaPage() {
     setObservacao(value)
     if (obsTimeoutRef.current) clearTimeout(obsTimeoutRef.current)
     obsTimeoutRef.current = setTimeout(saveObservacao, 1500)
-  }
-
-  // Recording functions
-  const startRecording = async () => {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
-      const mediaRecorder = new MediaRecorder(stream)
-      mediaRecorderRef.current = mediaRecorder
-
-      const chunks: BlobPart[] = []
-      mediaRecorder.ondataavailable = (e) => chunks.push(e.data)
-      mediaRecorder.onstop = () => {
-        const blob = new Blob(chunks, { type: 'audio/webm' })
-        setAudioBlob(blob)
-        setAudioUrl(URL.createObjectURL(blob))
-        stream.getTracks().forEach(track => track.stop())
-      }
-
-      mediaRecorder.start()
-      setIsRecording(true)
-      setRecordingTime(0)
-
-      timerRef.current = setInterval(() => {
-        setRecordingTime(t => t + 1)
-      }, 1000)
-    } catch (err) {
-      console.error('Error starting recording:', err)
-      alert('Não foi possível acessar o microfone')
-    }
-  }
-
-  const stopRecording = () => {
-    if (mediaRecorderRef.current && isRecording) {
-      mediaRecorderRef.current.stop()
-      setIsRecording(false)
-      if (timerRef.current) clearInterval(timerRef.current)
-    }
-  }
-
-  const uploadAudio = async () => {
-    if (!audioBlob) return
-    setIsUploading(true)
-    try {
-      const formData = new FormData()
-      formData.append('audio', audioBlob, 'recording.webm')
-      const res = await fetch(`/api/musicas/${musicaId}/audio`, {
-        method: 'POST',
-        body: formData
-      })
-      if (res.ok) {
-        const updated = await res.json()
-        setMusica(updated)
-        // Convert path for Docker standalone mode
-        const audioPath = updated.audio_url?.startsWith('/musicas-audio/')
-          ? updated.audio_url.replace('/musicas-audio/', '/api/musicas-audio/')
-          : updated.audio_url
-        setAudioUrl(audioPath)
-        setAudioBlob(null)
-      } else {
-        const err = await res.json()
-        alert(err.error || 'Erro ao fazer upload')
-      }
-    } catch (e) {
-      console.error('Error uploading:', e)
-      alert('Erro ao fazer upload')
-    }
-    setIsUploading(false)
-  }
-
-  const uploadFileInput = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file) return
-    setIsUploading(true)
-    try {
-      const formData = new FormData()
-      formData.append('audio', file)
-      const res = await fetch(`/api/musicas/${musicaId}/audio`, {
-        method: 'POST',
-        body: formData
-      })
-      if (res.ok) {
-        const updated = await res.json()
-        setMusica(updated)
-        // Convert path for Docker standalone mode
-        const audioPath = updated.audio_url?.startsWith('/musicas-audio/')
-          ? updated.audio_url.replace('/musicas-audio/', '/api/musicas-audio/')
-          : updated.audio_url
-        setAudioUrl(audioPath)
-        if (audioUrl?.startsWith('blob:')) {
-          URL.revokeObjectURL(audioUrl)
-        }
-        setAudioBlob(null)
-      } else {
-        const err = await res.json()
-        alert(err.error || 'Erro ao fazer upload')
-      }
-    } catch (e) {
-      console.error('Error uploading:', e)
-      alert('Erro ao fazer upload')
-    }
-    setIsUploading(false)
-    e.target.value = ''
-  }
-
-  const deleteAudio = async () => {
-    if (!confirm('Deseja realmente excluir a gravação?')) return
-    try {
-      const res = await fetch(`/api/musicas/${musicaId}/audio`, {
-        method: 'DELETE'
-      })
-      if (res.ok) {
-        const updated = await res.json()
-        setMusica(updated)
-        setAudioUrl(null)
-        setAudioBlob(null)
-        if (audioUrl?.startsWith('blob:')) {
-          URL.revokeObjectURL(audioUrl)
-        }
-      }
-    } catch (e) {
-      console.error('Error deleting:', e)
-    }
-  }
-
-  const clearRecording = () => {
-    if (audioUrl?.startsWith('blob:')) {
-      URL.revokeObjectURL(audioUrl)
-    }
-    // Convert path for Docker standalone mode
-    const audioPath = musica?.audio_url?.startsWith('/musicas-audio/')
-      ? musica.audio_url.replace('/musicas-audio/', '/api/musicas-audio/')
-      : musica?.audio_url || null
-    setAudioUrl(audioPath)
-    setAudioBlob(null)
-  }
-
-  const togglePlayback = () => {
-    if (!audioRef.current) return
-    if (isPlaying) {
-      audioRef.current.pause()
-    } else {
-      audioRef.current.play()
-    }
-    setIsPlaying(!isPlaying)
-  }
-
-  const formatTime = (seconds: number) => {
-    const mins = Math.floor(seconds / 60)
-    const secs = seconds % 60
-    return `${mins}:${secs.toString().padStart(2, '0')}`
   }
 
   const saveRitmo = async (ritmoId: number | null) => {
@@ -289,7 +138,7 @@ export default function MusicaPage() {
         const updated = await res.json()
         setMusica(updated)
         if (ritmoId) {
-          const found = drumPatterns.find((r: any) => r.id === ritmoId)
+          const found = drumPatterns.find((r: DrumPattern) => r.id === ritmoId)
           setSelectedRitmo(found || null)
         } else {
           setSelectedRitmo(null)
@@ -328,7 +177,7 @@ export default function MusicaPage() {
     const stepArray = new Array(16).fill(0).map((_, i) => i)
 
     ritmoSeqRef.current = new Tone.Sequence(
-      (time: any, stepIdx: number) => {
+      (time: number, stepIdx: number) => {
         const instruments = ['kick', 'snare', 'hihatClosed', 'hihatOpen', 'crash', 'ride', 'tomLow', 'tomMid', 'tomHigh']
         instruments.forEach((inst, instIdx) => {
           if (steps[instIdx]?.[stepIdx]) {
@@ -342,15 +191,6 @@ export default function MusicaPage() {
 
     ritmoSeqRef.current.start(0)
     Tone.Transport.start()
-  }
-
-  const stopRitmo = () => {
-    if (ritmoSeqRef.current) {
-      ritmoSeqRef.current.stop()
-      ritmoSeqRef.current.dispose()
-      ritmoSeqRef.current = null
-    }
-    Tone.Transport.stop()
   }
 
   if (loading) {
@@ -434,7 +274,7 @@ export default function MusicaPage() {
             className="flex-1 px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
           >
             <option value="">Nenhum ritmo selecionado</option>
-            {drumPatterns.map((p: any) => (
+            {drumPatterns.map((p: DrumPattern) => (
               <option key={p.id} value={p.id}>
                 {p.nome} ({p.bpm} BPM)
               </option>
@@ -492,97 +332,7 @@ export default function MusicaPage() {
 
             {/* Audio Recording/Upload */}
             <div>
-              <h2 className="text-base font-semibold text-gray-900 mb-3">Gravação de Referência</h2>
-
-              {audioUrl && !audioBlob && (
-                <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg mb-3">
-                  <button
-                    onClick={togglePlayback}
-                    className="p-2 bg-indigo-600 text-white rounded-full hover:bg-indigo-700"
-                  >
-                    {isPlaying ? <Pause size={16} /> : <Play size={16} />}
-                  </button>
-                  <audio
-                    ref={audioRef}
-                    src={audioUrl}
-                    onEnded={() => setIsPlaying(false)}
-                  />
-                  <span className="flex-1 text-sm text-gray-600">Sua gravação</span>
-                  <button
-                    onClick={deleteAudio}
-                    className="p-1 text-red-600 hover:bg-red-50 rounded-lg"
-                    title="Excluir gravação"
-                  >
-                    <Trash2 size={14} />
-                  </button>
-                </div>
-              )}
-
-              {audioBlob && (
-                <div className="flex items-center gap-3 p-3 bg-green-50 rounded-lg mb-3">
-                  <div className="flex-1">
-                    <p className="text-sm font-medium text-green-800">Nova gravação</p>
-                    <p className="text-xs text-green-600">{formatTime(recordingTime)}</p>
-                  </div>
-                  <button
-                    onClick={uploadAudio}
-                    disabled={isUploading}
-                    className="px-3 py-1.5 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 flex items-center gap-1 text-sm"
-                  >
-                    {isUploading ? <Loader2 size={14} className="animate-spin" /> : <Upload size={14} />}
-                    Salvar
-                  </button>
-                  <button
-                    onClick={clearRecording}
-                    className="p-1 text-gray-600 hover:bg-gray-100 rounded-lg"
-                  >
-                    <X size={14} />
-                  </button>
-                </div>
-              )}
-
-              {!audioUrl && !audioBlob && (
-                <p className="text-xs text-gray-500 mb-3">Gravar ou enviar áudio</p>
-              )}
-
-              <div className="flex items-center gap-2">
-                <input
-                  type="file"
-                  id="audio-upload"
-                  accept="audio/*"
-                  onChange={uploadFileInput}
-                  className="hidden"
-                />
-                <label
-                  htmlFor="audio-upload"
-                  className="flex items-center gap-1 px-3 py-1.5 border border-gray-300 rounded-lg hover:bg-gray-50 cursor-pointer text-sm"
-                >
-                  <Upload size={14} />
-                  Enviar
-                </label>
-
-                {!audioBlob && (
-                  <>
-                    {isRecording ? (
-                      <button
-                        onClick={stopRecording}
-                        className="flex items-center gap-1 px-3 py-1.5 bg-red-600 text-white rounded-lg hover:bg-red-700 text-sm"
-                      >
-                        <div className="w-2 h-2 bg-white rounded-full animate-pulse" />
-                        Parar ({formatTime(recordingTime)})
-                      </button>
-                    ) : (
-                      <button
-                        onClick={startRecording}
-                        className="flex items-center gap-1 px-3 py-1.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 text-sm"
-                      >
-                        <Mic size={14} />
-                        Gravar
-                      </button>
-                    )}
-                  </>
-                )}
-              </div>
+              <AudioRecorderPanel {...audioRecorder} />
             </div>
           </div>
         </div>
@@ -625,7 +375,7 @@ export default function MusicaPage() {
                 <div>
                   <div className="font-medium text-gray-900">{evento.nome}</div>
                   <div className="text-sm text-gray-500">
-                    {new Date(evento.data).toLocaleDateString('pt-BR')}
+                    {new Date(evento.data ?? 0).toLocaleDateString('pt-BR')}
                     {evento.hora && ` • ${evento.hora}`}
                   </div>
                 </div>

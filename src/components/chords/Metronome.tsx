@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import * as Tone from 'tone';
 import { Play, Pause, Minus, Plus } from 'lucide-react';
 
