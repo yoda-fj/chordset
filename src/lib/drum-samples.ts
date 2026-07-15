@@ -69,3 +69,10 @@ export function getSamplePaths(kitName: string = 'kit1'): Record<string, string>
     'G2': `/drum-samples/tom/${kit.tomHigh}`,
   };
 }
+
+// Converte volume linear 0-1 para dB com boost generoso — os samples são gravados
+// baixos. 0 → +5dB, 0.5 → +20dB, 1 → +35dB. Usar sempre com um Tone.Limiter na
+// cadeia para evitar clipping nos ganhos altos.
+export function volumeToDb(volume: number): number {
+  return (volume * 30) + 5;
+}

@@ -2,9 +2,9 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { useParams } from 'next/navigation'
-import { ArrowLeft, Loader2, Music, Edit, FileText, Calendar, Play, ChevronLeft, ChevronRight, Drum } from 'lucide-react'
+import { ArrowLeft, Loader2, Music, Edit, FileText, Calendar, Play, ChevronLeft, ChevronRight, Drum, Volume2 } from 'lucide-react'
 import * as Tone from 'tone'
-import { getSamplerUrls } from '@/lib/drum-samples'
+import { getSamplerUrls, volumeToDb } from '@/lib/drum-samples'
 import type { Musica, DrumPattern, EventoStatus } from '@/types/database'
 import Link from 'next/link'
 import { useAudioRecorder } from '@/hooks/useAudioRecorder'
@@ -46,6 +46,8 @@ export default function MusicaPage() {
   const [eventos, setEventos] = useState<EventoDaMusica[]>([])
   const [drumPatterns, setDrumPatterns] = useState<DrumPattern[]>([])
   const [selectedRitmo, setSelectedRitmo] = useState<DrumPattern | null>(null)
+  const [ritmoBpm, setRitmoBpm] = useState(120)
+  const [ritmoVolume, setRitmoVolume] = useState(0.7)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -56,6 +58,10 @@ export default function MusicaPage() {
 
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const ritmoSeqRef = useRef<Tone.Sequence<number> | null>(null)
+  const ritmoSamplerRef = useRef<Tone.Sampler | null>(null)
+  const ritmoLimiterRef = useRef<Tone.Limiter | null>(null)
+  const ritmoBpmTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+  const ritmoVolumeTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
   // Audio recording
   const audioRecorder = useAudioRecorder({
@@ -78,6 +84,8 @@ export default function MusicaPage() {
         const musicaData = await musicaRes.json()
         setMusica(musicaData)
         setObservacao(musicaData.observacao || '')
+        setRitmoBpm(musicaData.bpm || 120)
+        setRitmoVolume(musicaData.volume ?? 0.7)
 
         if (eventosRes.ok) {
           const eventosData = await eventosRes.json()
@@ -129,30 +137,74 @@ export default function MusicaPage() {
 
   const saveRitmo = async (ritmoId: number | null) => {
     try {
+      const found = ritmoId ? drumPatterns.find((r: DrumPattern) => r.id === ritmoId) : null
       const res = await fetch(`/api/musicas/${musicaId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ drum_pattern_id: ritmoId })
+        body: JSON.stringify(found
+          ? { drum_pattern_id: ritmoId, bpm: found.bpm }
+          : { drum_pattern_id: null })
       })
       if (res.ok) {
         const updated = await res.json()
         setMusica(updated)
-        if (ritmoId) {
-          const found = drumPatterns.find((r: DrumPattern) => r.id === ritmoId)
-          setSelectedRitmo(found || null)
-        } else {
-          setSelectedRitmo(null)
-        }
+        setSelectedRitmo(found || null)
+        // Ritmo novo começa no andamento padrão dele; o usuário ajusta depois
+        if (found) setRitmoBpm(found.bpm || 120)
       }
     } catch (e) {
       console.error('Error saving ritmo:', e)
     }
   }
 
+  // Andamento/volume do ritmo — salvos na música com debounce
+  const saveRitmoField = (body: Record<string, number>) => {
+    fetch(`/api/musicas/${musicaId}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    }).catch(e => console.error('Error saving ritmo settings:', e))
+  }
+
+  const handleRitmoBpmChange = (value: number) => {
+    if (!value) return
+    setRitmoBpm(value)
+    if (ritmoBpmTimeoutRef.current) clearTimeout(ritmoBpmTimeoutRef.current)
+    ritmoBpmTimeoutRef.current = setTimeout(() => saveRitmoField({ bpm: value }), 1000)
+  }
+
+  const handleRitmoVolumeChange = (value: number) => {
+    setRitmoVolume(value)
+    if (ritmoVolumeTimeoutRef.current) clearTimeout(ritmoVolumeTimeoutRef.current)
+    ritmoVolumeTimeoutRef.current = setTimeout(() => saveRitmoField({ volume: value }), 1000)
+  }
+
+  // Aplica andamento/volume ao vivo durante o playback
+  useEffect(() => {
+    Tone.Transport.bpm.value = ritmoBpm
+  }, [ritmoBpm])
+
+  useEffect(() => {
+    if (ritmoSamplerRef.current) {
+      ritmoSamplerRef.current.volume.value = volumeToDb(ritmoVolume)
+    }
+  }, [ritmoVolume])
+
+  // Para o ritmo ao sair da página
+  useEffect(() => {
+    return () => {
+      ritmoSeqRef.current?.stop()
+      ritmoSeqRef.current?.dispose()
+      ritmoSamplerRef.current?.dispose()
+      ritmoLimiterRef.current?.dispose()
+      Tone.Transport.stop()
+    }
+  }, [])
+
   const playRitmo = async () => {
     if (!selectedRitmo) return
     await Tone.start()
-    
+
     if (ritmoSeqRef.current) {
       ritmoSeqRef.current.stop()
       ritmoSeqRef.current.dispose()
@@ -165,13 +217,18 @@ export default function MusicaPage() {
 
     const urls = getSamplerUrls(selectedRitmo.kit || 'kit1')
 
-    const sampler = new Tone.Sampler({ urls }).toDestination()
-    sampler.volume.value = 15
+    if (ritmoSamplerRef.current) ritmoSamplerRef.current.dispose()
+    if (ritmoLimiterRef.current) ritmoLimiterRef.current.dispose()
+    const limiter = new Tone.Limiter(-3).toDestination()
+    const sampler = new Tone.Sampler({ urls }).connect(limiter)
+    sampler.volume.value = volumeToDb(ritmoVolume)
+    ritmoSamplerRef.current = sampler
+    ritmoLimiterRef.current = limiter
 
     // Wait for samples to load
     await new Promise<void>((resolve) => setTimeout(resolve, 1500))
 
-    Tone.Transport.bpm.value = selectedRitmo.bpm || 120
+    Tone.Transport.bpm.value = ritmoBpm || 120
 
     const steps = JSON.parse(selectedRitmo.steps)
     const stepArray = new Array(16).fill(0).map((_, i) => i)
@@ -293,9 +350,32 @@ export default function MusicaPage() {
           )}
         </div>
         {selectedRitmo && (
-          <p className="text-sm text-gray-500 mt-2">
-            Kit: {selectedRitmo.kit} • BPM: {selectedRitmo.bpm}
-          </p>
+          <div className="flex items-center gap-4 mt-4 flex-wrap">
+            <span className="text-sm text-gray-500">Kit: {selectedRitmo.kit}</span>
+            <div className="flex items-center gap-1">
+              <span className="text-xs text-gray-500">BPM</span>
+              <input
+                type="number"
+                value={ritmoBpm}
+                onChange={(e) => handleRitmoBpmChange(Number(e.target.value))}
+                min={40}
+                max={200}
+                className="w-16 px-2 py-1 border rounded-lg text-sm text-center focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              />
+            </div>
+            <div className="flex items-center gap-2">
+              <Volume2 size={16} className="text-gray-500" />
+              <input
+                type="range"
+                min={0}
+                max={1}
+                step={0.1}
+                value={ritmoVolume}
+                onChange={(e) => handleRitmoVolumeChange(Number(e.target.value))}
+                className="w-24"
+              />
+            </div>
+          </div>
         )}
       </div>
 

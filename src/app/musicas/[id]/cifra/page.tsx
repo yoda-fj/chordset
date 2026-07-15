@@ -6,6 +6,7 @@ import { ArrowLeft, Printer, Edit3, Music, ChevronLeft, ChevronRight } from 'luc
 import Link from 'next/link'
 import { CifraViewer, DrumPad } from '@/components/chords'
 import { useAudioRecorder } from '@/hooks/useAudioRecorder'
+import { useDrumPadSettings } from '@/hooks/useDrumPadSettings'
 import { AudioRecorderPanel } from '@/components/audio/AudioRecorderPanel'
 import type { Musica } from '@/types/database'
 
@@ -33,12 +34,8 @@ export default function CifraPage() {
     onUpdated: (updated) => setMusica(updated as Musica),
   })
 
-  // Drum pad settings
-  const [drumPadGroove, setDrumPadGroove] = useState('rock-8')
-  const [drumPadBpm, setDrumPadBpm] = useState(120)
-  const [drumPadVolume, setDrumPadVolume] = useState(0.7)
-  const drumPadBpmTimeoutRef = useRef<NodeJS.Timeout | null>(null)
-  const drumPadVolumeTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+  // Drum pad settings (estado + persistência no hook compartilhado)
+  const drumPad = useDrumPadSettings(musica)
 
   // Listen to fullscreen changes at page level
   useEffect(() => {
@@ -54,26 +51,17 @@ export default function CifraPage() {
       try {
         const response = await fetch(`/api/musicas/${musicaId}`)
         if (!response.ok) throw new Error('Música não encontrada')
-        
+
         const data = await response.json()
         setMusica(data)
         setObservacao(data.observacao || '')
-
-        // Load drum pad settings from musica
-        if (data.drum_pattern_id) {
-          setDrumPadGroove(`db-${data.drum_pattern_id}`)
-        } else if (data.groove) {
-          setDrumPadGroove(data.groove)
-        }
-        if (data.bpm) setDrumPadBpm(data.bpm)
-        if (data.volume != null) setDrumPadVolume(data.volume)
       } catch (error) {
         console.error('Erro ao carregar música:', error)
       } finally {
         setLoading(false)
       }
     }
-    
+
     if (musicaId) {
       loadMusica()
     }
@@ -107,74 +95,6 @@ export default function CifraPage() {
     setObservacao(value)
     if (obsTimeoutRef.current) clearTimeout(obsTimeoutRef.current)
     obsTimeoutRef.current = setTimeout(saveObservacao, 1500)
-  }
-
-  // Save drum pad groove/drum_pattern_id
-  const saveDrumPadGroove = async (grooveId: string, drumPatternId: number | null) => {
-    if (!musicaId) return
-    try {
-      await fetch(`/api/musicas/${musicaId}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          groove: grooveId.startsWith('db-') ? null : grooveId,
-          drum_pattern_id: drumPatternId
-        })
-      })
-    } catch (e) {
-      console.error('Error saving drum pad groove:', e)
-    }
-  }
-
-  // Save drum pad BPM
-  const saveDrumPadBpm = async (bpm: number) => {
-    if (!musicaId || bpm == null) return
-    try {
-      const res = await fetch(`/api/musicas/${musicaId}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ bpm })
-      })
-      if (!res.ok) {
-        const err = await res.json()
-        console.error('Error saving drum pad bpm:', err)
-      }
-    } catch (e) {
-      console.error('Error saving drum pad bpm:', e)
-    }
-  }
-
-  // Save drum pad volume
-  const saveDrumPadVolume = async (volume: number) => {
-    if (!musicaId) return
-    try {
-      await fetch(`/api/musicas/${musicaId}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ volume })
-      })
-    } catch (e) {
-      console.error('Error saving drum pad volume:', e)
-    }
-  }
-
-  // Handlers for drum pad changes
-  const handleDrumPadGrooveChange = (grooveId: string, drumPatternId: number | null) => {
-    setDrumPadGroove(grooveId)
-    if (drumPadBpmTimeoutRef.current) clearTimeout(drumPadBpmTimeoutRef.current)
-    drumPadBpmTimeoutRef.current = setTimeout(() => saveDrumPadGroove(grooveId, drumPatternId), 1000)
-  }
-
-  const handleDrumPadBpmChange = (bpm: number) => {
-    setDrumPadBpm(bpm)
-    if (drumPadBpmTimeoutRef.current) clearTimeout(drumPadBpmTimeoutRef.current)
-    drumPadBpmTimeoutRef.current = setTimeout(() => saveDrumPadBpm(bpm), 1000)
-  }
-
-  const handleDrumPadVolumeChange = (volume: number) => {
-    setDrumPadVolume(volume)
-    if (drumPadVolumeTimeoutRef.current) clearTimeout(drumPadVolumeTimeoutRef.current)
-    drumPadVolumeTimeoutRef.current = setTimeout(() => saveDrumPadVolume(volume), 1000)
   }
 
   if (loading) {
@@ -315,12 +235,12 @@ export default function CifraPage() {
 
             {/* Drum Pad / Groove */}
             <DrumPad
-              initialGroove={drumPadGroove}
-              initialBpm={drumPadBpm}
-              initialVolume={drumPadVolume}
-              onGrooveChange={handleDrumPadGrooveChange}
-              onBpmChange={handleDrumPadBpmChange}
-              onVolumeChange={handleDrumPadVolumeChange}
+              initialGroove={drumPad.groove}
+              initialBpm={drumPad.bpm}
+              initialVolume={drumPad.volume}
+              onGrooveChange={drumPad.onGrooveChange}
+              onBpmChange={drumPad.onBpmChange}
+              onVolumeChange={drumPad.onVolumeChange}
             />
           </div>
         </div>

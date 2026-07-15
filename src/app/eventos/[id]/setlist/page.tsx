@@ -4,8 +4,9 @@ import { useState, useEffect, useRef } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { Music, Check, ChevronLeft, ChevronRight, X, ChevronRight as ChevronRightIcon } from 'lucide-react'
 import Link from 'next/link'
-import { CifraViewer } from '@/components/chords'
+import { CifraViewer, DrumPad } from '@/components/chords'
 import { useAudioRecorder } from '@/hooks/useAudioRecorder'
+import { useDrumPadSettings } from '@/hooks/useDrumPadSettings'
 import { AudioRecorderPanel } from '@/components/audio/AudioRecorderPanel'
 import type { EventoWithTemplate, EventoMusicaWithMusica } from '@/types/database'
 
@@ -36,6 +37,9 @@ export default function SetlistPage() {
     entityAudioUrl: evento?.audio_url,
     onUpdated: (updated) => setEvento(updated as EventoWithTemplate),
   })
+
+  // Drum pad da música selecionada (estado + persistência no hook compartilhado)
+  const drumPad = useDrumPadSettings(musicas[selectedIndex]?.musicas ?? null)
 
   // Load data
   useEffect(() => {
@@ -373,6 +377,19 @@ export default function SetlistPage() {
             <div className="bg-white p-4 rounded-lg border">
               <AudioRecorderPanel {...audioRecorder} />
             </div>
+
+            {/* Drum Pad / Ritmo da música selecionada */}
+            {selectedMusica && (
+              <DrumPad
+                key={selectedMusica.musica_id}
+                initialGroove={drumPad.groove}
+                initialBpm={drumPad.bpm}
+                initialVolume={drumPad.volume}
+                onGrooveChange={drumPad.onGrooveChange}
+                onBpmChange={drumPad.onBpmChange}
+                onVolumeChange={drumPad.onVolumeChange}
+              />
+            )}
           </div>
         </div>
       </div>

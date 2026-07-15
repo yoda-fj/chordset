@@ -12,6 +12,10 @@ type EventoMusicaJoinRow = Omit<EventoMusica, 'confirmada'> & { confirmada: numb
   artista: string
   tom_original: string | null
   cifra: string | null
+  groove: string | null
+  drum_pattern_id: number | null
+  bpm: number
+  volume: number
 }
 
 type EventoMusicaRow = Omit<EventoMusica, 'confirmada'> & { confirmada: number }
@@ -26,7 +30,11 @@ export const setlistsDb = {
         m.titulo,
         m.artista,
         m.tom_original,
-        m.cifra
+        m.cifra,
+        m.groove,
+        m.drum_pattern_id,
+        m.bpm,
+        m.volume
       FROM evento_musicas em
       JOIN musicas m ON em.musica_id = m.id
       WHERE em.evento_id = ?
@@ -49,7 +57,11 @@ export const setlistsDb = {
         titulo: row.titulo,
         artista: row.artista,
         tom_original: row.tom_original,
-        cifra: row.cifra
+        cifra: row.cifra,
+        groove: row.groove,
+        drum_pattern_id: row.drum_pattern_id,
+        bpm: row.bpm,
+        volume: row.volume
       }
     }))
   },

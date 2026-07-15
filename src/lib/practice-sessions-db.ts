@@ -8,6 +8,10 @@ type PracticeSessionRow = PracticeSession & {
   artista: string
   tom_original: string | null
   cifra: string | null
+  groove: string | null
+  drum_pattern_id: number | null
+  bpm: number
+  volume: number
 }
 
 export const practiceSessionsDb = {
@@ -15,24 +19,28 @@ export const practiceSessionsDb = {
   getAll(): PracticeSessionWithMusica[] {
     const db = getDb()
     const stmt = db.prepare(`
-      SELECT 
+      SELECT
         ps.*,
         m.id as m_id,
         m.titulo,
         m.artista,
         m.tom_original,
-        m.cifra
+        m.cifra,
+        m.groove,
+        m.drum_pattern_id,
+        m.bpm,
+        m.volume
       FROM practice_sessions ps
       JOIN musicas m ON ps.musica_id = m.id
-      ORDER BY 
-        CASE ps.status 
-          WHEN 'needs_practice' THEN 1 
-          WHEN 'practiced' THEN 2 
-          WHEN 'mastered' THEN 3 
+      ORDER BY
+        CASE ps.status
+          WHEN 'needs_practice' THEN 1
+          WHEN 'practiced' THEN 2
+          WHEN 'mastered' THEN 3
         END,
         ps.last_practiced_at DESC NULLS LAST
     `)
-    
+
     const rows = stmt.all() as PracticeSessionRow[]
     return rows.map(row => ({
       id: row.id,
@@ -50,6 +58,10 @@ export const practiceSessionsDb = {
         artista: row.artista,
         tom_original: row.tom_original,
         cifra: row.cifra,
+        groove: row.groove,
+        drum_pattern_id: row.drum_pattern_id,
+        bpm: row.bpm,
+        volume: row.volume,
       },
     }))
   },
@@ -58,21 +70,25 @@ export const practiceSessionsDb = {
   getById(id: number): PracticeSessionWithMusica | null {
     const db = getDb()
     const stmt = db.prepare(`
-      SELECT 
+      SELECT
         ps.*,
         m.id as m_id,
         m.titulo,
         m.artista,
         m.tom_original,
-        m.cifra
+        m.cifra,
+        m.groove,
+        m.drum_pattern_id,
+        m.bpm,
+        m.volume
       FROM practice_sessions ps
       JOIN musicas m ON ps.musica_id = m.id
       WHERE ps.id = ?
     `)
-    
+
     const row = stmt.get(id) as PracticeSessionRow | undefined
     if (!row) return null
-    
+
     return {
       id: row.id,
       musica_id: row.musica_id,
@@ -89,6 +105,10 @@ export const practiceSessionsDb = {
         artista: row.artista,
         tom_original: row.tom_original,
         cifra: row.cifra,
+        groove: row.groove,
+        drum_pattern_id: row.drum_pattern_id,
+        bpm: row.bpm,
+        volume: row.volume,
       },
     }
   },

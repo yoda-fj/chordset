@@ -4,6 +4,8 @@ import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { PracticeTimer } from '@/components/practice/PracticeTimer';
 import { CifraViewer } from '@/components/chords/CifraViewer';
+import { DrumPad } from '@/components/chords/DrumPad';
+import { useDrumPadSettings } from '@/hooks/useDrumPadSettings';
 import { formatDuration } from '@/lib/practice-utils';
 import { 
   PracticeStatus, 
@@ -41,6 +43,9 @@ export default function EnsaioDetailPage() {
   const [practiceTime, setPracticeTime] = useState(0);
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+
+  // Drum pad da música da sessão (estado + persistência no hook compartilhado)
+  const drumPad = useDrumPadSettings(session?.musicas ?? null);
 
   useEffect(() => {
     async function fetchSession() {
@@ -258,6 +263,16 @@ export default function EnsaioDetailPage() {
               className="w-full h-32 px-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 resize-none"
             />
           </div>
+
+          {/* Drum Pad / Ritmo da música */}
+          <DrumPad
+            initialGroove={drumPad.groove}
+            initialBpm={drumPad.bpm}
+            initialVolume={drumPad.volume}
+            onGrooveChange={drumPad.onGrooveChange}
+            onBpmChange={drumPad.onBpmChange}
+            onVolumeChange={drumPad.onVolumeChange}
+          />
         </div>
       </div>
     </div>

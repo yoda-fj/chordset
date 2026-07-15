@@ -1,4 +1,6 @@
 // Practice session types
+import type { MusicaJoin } from './database';
+
 export type PracticeStatus = 'needs_practice' | 'practiced' | 'mastered';
 export type DifficultyLevel = 'easy' | 'medium' | 'hard';
 
@@ -15,13 +17,7 @@ export interface PracticeSession {
 }
 
 export interface PracticeSessionWithMusica extends PracticeSession {
-  musicas: {
-    id: number;
-    titulo: string;
-    artista: string;
-    tom_original: string | null;
-    cifra: string | null;
-  };
+  musicas: MusicaJoin;
 }
 
 export type PracticeSessionInsert = Omit<PracticeSession, 'id' | 'created_at' | 'updated_at'>;

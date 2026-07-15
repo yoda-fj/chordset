@@ -52,7 +52,7 @@ export interface UpdateMusicaInput {
 }
 
 // Subconjunto de Musica retornado pelos JOINs de setlist/practice
-export type MusicaJoin = Pick<Musica, 'id' | 'titulo' | 'artista' | 'tom_original' | 'cifra'>;
+export type MusicaJoin = Pick<Musica, 'id' | 'titulo' | 'artista' | 'tom_original' | 'cifra' | 'groove' | 'drum_pattern_id' | 'bpm' | 'volume'>;
 
 // =====================================
 // TABELA: templates

@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import * as Tone from 'tone';
-import { getSamplerUrls } from '@/lib/drum-samples';
+import { getSamplerUrls, volumeToDb } from '@/lib/drum-samples';
 import { Play, Pause, Square, Volume2, VolumeX, Music } from 'lucide-react';
 
 interface DrumPadProps {
@@ -176,8 +176,9 @@ export function DrumPad({ initialGroove, initialBpm, initialVolume, onGrooveChan
     fetchPatterns();
   }, []);
 
-  // Inicializa o sampler
+  // Inicializa o sampler (com limiter para permitir mais ganho sem distorcer)
   useEffect(() => {
+    const limiter = new Tone.Limiter(-3).toDestination();
     const newSampler = new Tone.Sampler({
       urls: getSamplerUrls(selectedKit),
       onload: () => {
@@ -187,23 +188,20 @@ export function DrumPad({ initialGroove, initialBpm, initialVolume, onGrooveChan
       onerror: (err) => {
         console.error('[DrumPad] Sample load error:', err);
       }
-    }).toDestination();
+    }).connect(limiter);
 
-    // Volume inicial (15dB boost para compensar samples baixos)
-    newSampler.volume.value = 15;
     setSampler(newSampler);
 
     return () => {
       newSampler.dispose();
+      limiter.dispose();
     };
   }, [selectedKit]);
 
-  // Atualiza volume (0-1 linear para dB, com +15 boost para som mais alto)
+  // Atualiza volume (0-1 linear para dB, com boost para som mais alto)
   useEffect(() => {
     if (sampler) {
-      // Converte 0-1 para -5dB a +25dB (com boost de +15)
-      const dbValue = isMuted ? -Infinity : ((volume - 0.5) * 20) + 15;
-      sampler.volume.value = dbValue;
+      sampler.volume.value = isMuted ? -Infinity : volumeToDb(volume);
     }
   }, [volume, isMuted, sampler]);
 
@@ -351,6 +349,17 @@ export function DrumPad({ initialGroove, initialBpm, initialVolume, onGrooveChan
     Tone.Transport.stop();
     setIsPlaying(false);
     setActivePads(new Set());
+  }, []);
+
+  // Para o playback ao desmontar (troca de música no setlist remonta o componente via key)
+  useEffect(() => {
+    return () => {
+      if (sequenceRef.current) {
+        clearInterval(sequenceRef.current);
+        sequenceRef.current = null;
+      }
+      Tone.Transport.stop();
+    };
   }, []);
 
   // Auto-restart playback when groove selection or kit changes
