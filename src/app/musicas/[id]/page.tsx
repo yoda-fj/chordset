@@ -62,6 +62,7 @@ export default function MusicaPage() {
   const ritmoLimiterRef = useRef<Tone.Limiter | null>(null)
   const ritmoBpmTimeoutRef = useRef<NodeJS.Timeout | null>(null)
   const ritmoVolumeTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+  const ritmoPendingRef = useRef<{ bpm?: number; volume?: number }>({})
 
   // Audio recording
   const audioRecorder = useAudioRecorder({
@@ -157,26 +158,39 @@ export default function MusicaPage() {
     }
   }
 
-  // Andamento/volume do ritmo — salvos na música com debounce
+  // Andamento/volume do ritmo — salvos na música com debounce; o que estiver
+  // pendente é descarregado (flush) ao sair da página para não perder alterações
   const saveRitmoField = (body: Record<string, number>) => {
     fetch(`/api/musicas/${musicaId}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body)
+      body: JSON.stringify(body),
+      // keepalive entrega o request mesmo durante o unload da página
+      keepalive: true,
     }).catch(e => console.error('Error saving ritmo settings:', e))
+  }
+
+  const flushRitmoPending = () => {
+    const pending = ritmoPendingRef.current
+    ritmoPendingRef.current = {}
+    if (pending.bpm !== undefined || pending.volume !== undefined) {
+      saveRitmoField({ ...pending })
+    }
   }
 
   const handleRitmoBpmChange = (value: number) => {
     if (!value) return
     setRitmoBpm(value)
+    ritmoPendingRef.current.bpm = value
     if (ritmoBpmTimeoutRef.current) clearTimeout(ritmoBpmTimeoutRef.current)
-    ritmoBpmTimeoutRef.current = setTimeout(() => saveRitmoField({ bpm: value }), 1000)
+    ritmoBpmTimeoutRef.current = setTimeout(flushRitmoPending, 1000)
   }
 
   const handleRitmoVolumeChange = (value: number) => {
     setRitmoVolume(value)
+    ritmoPendingRef.current.volume = value
     if (ritmoVolumeTimeoutRef.current) clearTimeout(ritmoVolumeTimeoutRef.current)
-    ritmoVolumeTimeoutRef.current = setTimeout(() => saveRitmoField({ volume: value }), 1000)
+    ritmoVolumeTimeoutRef.current = setTimeout(flushRitmoPending, 1000)
   }
 
   // Aplica andamento/volume ao vivo durante o playback
@@ -190,15 +204,22 @@ export default function MusicaPage() {
     }
   }, [ritmoVolume])
 
-  // Para o ritmo ao sair da página
+  // Para o ritmo e grava alterações pendentes ao sair da página (navegação SPA)
+  // e no pagehide (reload/fechar aba — o keepalive entrega o save)
   useEffect(() => {
+    window.addEventListener('pagehide', flushRitmoPending)
     return () => {
+      window.removeEventListener('pagehide', flushRitmoPending)
       ritmoSeqRef.current?.stop()
       ritmoSeqRef.current?.dispose()
       ritmoSamplerRef.current?.dispose()
       ritmoLimiterRef.current?.dispose()
       Tone.Transport.stop()
+      if (ritmoBpmTimeoutRef.current) clearTimeout(ritmoBpmTimeoutRef.current)
+      if (ritmoVolumeTimeoutRef.current) clearTimeout(ritmoVolumeTimeoutRef.current)
+      flushRitmoPending()
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- flush só no desmontar/pagehide, de propósito
   }, [])
 
   const playRitmo = async () => {

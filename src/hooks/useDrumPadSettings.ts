@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import type { Musica } from '@/types/database'
 
 // Subconjunto de Musica necessário para as configurações do DrumPad.
@@ -13,6 +13,12 @@ interface DrumPadValues {
   volume: number
 }
 
+type SaveKind = 'groove' | 'bpm' | 'volume'
+interface PendingSave {
+  musicaId: number
+  body: Record<string, string | number | null>
+}
+
 /**
  * Estado + persistência das configurações do DrumPad (groove, bpm, volume).
  * Salva na própria música via PUT /api/musicas/[id] com debounce de 1s.
@@ -21,12 +27,15 @@ interface DrumPadValues {
  * Os valores são derivados da música a cada render; alterações feitas na
  * sessão ficam em `overrides` (por música), para que trocar de música e
  * voltar no setlist não mostre dados velhos do carregamento inicial.
+ *
+ * Saves pendentes carregam o id da música-alvo e são descarregados (flush)
+ * ao desmontar — sair da tela ou trocar de música antes do debounce não
+ * perde a alteração nem grava na música errada.
  */
 export function useDrumPadSettings(musica: DrumPadMusica | null) {
   const [overrides, setOverrides] = useState<Record<number, DrumPadValues>>({})
-  const grooveTimeoutRef = useRef<NodeJS.Timeout | null>(null)
-  const bpmTimeoutRef = useRef<NodeJS.Timeout | null>(null)
-  const volumeTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+  const timersRef = useRef<Partial<Record<SaveKind, NodeJS.Timeout>>>({})
+  const pendingRef = useRef<Partial<Record<SaveKind, PendingSave>>>({})
 
   const musicaId = musica?.id ?? null
 
@@ -38,14 +47,44 @@ export function useDrumPadSettings(musica: DrumPadMusica | null) {
         volume: musica?.volume ?? 0.7,
       }
 
-  const save = (body: Record<string, string | number | null>) => {
-    if (musicaId === null) return
-    fetch(`/api/musicas/${musicaId}`, {
+  const flushKind = useCallback((kind: SaveKind) => {
+    const pending = pendingRef.current[kind]
+    if (!pending) return
+    pendingRef.current[kind] = undefined
+    fetch(`/api/musicas/${pending.musicaId}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body)
+      body: JSON.stringify(pending.body),
+      // keepalive entrega o request mesmo durante o unload da página
+      keepalive: true,
     }).catch(e => console.error('Error saving drum pad settings:', e))
+  }, [])
+
+  const flushAll = useCallback(() => {
+    for (const kind of ['groove', 'bpm', 'volume'] as SaveKind[]) {
+      const timer = timersRef.current[kind]
+      if (timer) clearTimeout(timer)
+      flushKind(kind)
+    }
+  }, [flushKind])
+
+  const scheduleSave = (kind: SaveKind, body: Record<string, string | number | null>) => {
+    if (musicaId === null) return
+    pendingRef.current[kind] = { musicaId, body }
+    const existing = timersRef.current[kind]
+    if (existing) clearTimeout(existing)
+    timersRef.current[kind] = setTimeout(() => flushKind(kind), 1000)
   }
+
+  // Grava o que estiver pendente ao desmontar (navegação SPA) e no pagehide
+  // (reload/fechar aba — React não desmonta, mas o keepalive entrega o save)
+  useEffect(() => {
+    window.addEventListener('pagehide', flushAll)
+    return () => {
+      window.removeEventListener('pagehide', flushAll)
+      flushAll()
+    }
+  }, [flushAll])
 
   const setOverride = (partial: Partial<DrumPadValues>) => {
     if (musicaId === null) return
@@ -57,23 +96,18 @@ export function useDrumPadSettings(musica: DrumPadMusica | null) {
 
   const onGrooveChange = (grooveId: string, drumPatternId: number | null) => {
     setOverride({ groove: grooveId })
-    if (grooveTimeoutRef.current) clearTimeout(grooveTimeoutRef.current)
-    grooveTimeoutRef.current = setTimeout(() => {
-      save({ groove: grooveId.startsWith('db-') ? null : grooveId, drum_pattern_id: drumPatternId })
-    }, 1000)
+    scheduleSave('groove', { groove: grooveId.startsWith('db-') ? null : grooveId, drum_pattern_id: drumPatternId })
   }
 
   const onBpmChange = (newBpm: number) => {
     if (newBpm == null) return
     setOverride({ bpm: newBpm })
-    if (bpmTimeoutRef.current) clearTimeout(bpmTimeoutRef.current)
-    bpmTimeoutRef.current = setTimeout(() => save({ bpm: newBpm }), 1000)
+    scheduleSave('bpm', { bpm: newBpm })
   }
 
   const onVolumeChange = (newVolume: number) => {
     setOverride({ volume: newVolume })
-    if (volumeTimeoutRef.current) clearTimeout(volumeTimeoutRef.current)
-    volumeTimeoutRef.current = setTimeout(() => save({ volume: newVolume }), 1000)
+    scheduleSave('volume', { volume: newVolume })
   }
 
   return { ...values, onGrooveChange, onBpmChange, onVolumeChange }

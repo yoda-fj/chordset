@@ -157,8 +157,6 @@ export function DrumPad({ initialGroove, initialBpm, initialVolume, onGrooveChan
   const activePadsTimeoutRef = useRef<Map<string, NodeJS.Timeout>>(new Map());
   const sequenceRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const currentPatternRef = useRef<{ pattern: DrumHit[]; bpm: number } | null>(null);
-  const bpmTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const volumeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Fetch custom patterns from database
   useEffect(() => {
@@ -462,20 +460,14 @@ export function DrumPad({ initialGroove, initialBpm, initialVolume, onGrooveChan
   const handleBpmChange = (newBpm: number) => {
     setBpm(newBpm);
     Tone.Transport.bpm.value = newBpm;
-    // Debounce save to API
-    if (bpmTimeoutRef.current) clearTimeout(bpmTimeoutRef.current);
-    bpmTimeoutRef.current = setTimeout(() => {
-      onBpmChange?.(newBpm);
-    }, 1000);
+    // Persistência (com debounce) fica no useDrumPadSettings da página
+    onBpmChange?.(newBpm);
   };
 
   const handleVolumeChange = (newVolume: number) => {
     setVolume(newVolume);
-    // Debounce save to API
-    if (volumeTimeoutRef.current) clearTimeout(volumeTimeoutRef.current);
-    volumeTimeoutRef.current = setTimeout(() => {
-      onVolumeChange?.(newVolume);
-    }, 1000);
+    // Persistência (com debounce) fica no useDrumPadSettings da página
+    onVolumeChange?.(newVolume);
   };
 
   if (!isLoaded) {
