@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { ArrowLeft, Save, Loader2, Download, X, Search, Camera, Music } from 'lucide-react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { TagInput } from '@/components/setlist/TagInput'
 import { ImportPhotoModal } from '@/components/ocr/ImportPhotoModal'
 import { VersionSelector } from '@/components/cifraclub/VersionSelector'
@@ -436,9 +437,12 @@ export default function NewMusicaPage() {
                       className="w-full text-left p-3 border rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50 flex items-center gap-3"
                     >
                       {result.image ? (
-                        <img
+                        <Image
                           src={result.image}
                           alt={result.titulo}
+                          width={48}
+                          height={48}
+                          unoptimized
                           className="w-12 h-12 rounded object-cover flex-shrink-0"
                         />
                       ) : (
