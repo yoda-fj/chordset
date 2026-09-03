@@ -7,42 +7,73 @@ const BASE_URL = 'https://www.cifraclub.com.br/';
 export class CifraClubScraper {
   private browser: Browser | null = null;
 
+  // Mutex simples (fila em memória) serializando scrapes.
+  // Cada scrape só começa quando o anterior termina (sucesso ou erro).
+  private queue: Promise<unknown> = Promise.resolve();
+
+  private enqueue<T>(fn: () => Promise<T>): Promise<T> {
+    const run = this.queue.then(fn, fn);
+    // A fila nunca rejeita, senão travaria os próximos scrapes
+    this.queue = run.catch(() => {});
+    return run;
+  }
+
   private async getBrowser(): Promise<Browser> {
-    if (!this.browser) {
-      const launchArgs: string[] = [];
-      this.browser = await chromium.launch({ 
-        headless: true, 
-        args: launchArgs,
-        executablePath: process.env.PLAYWRIGHT_CHROMIUM_PATH,
-      });
+    if (this.browser && this.browser.isConnected()) {
+      return this.browser;
     }
-    return this.browser;
+    this.browser = null;
+    const launchArgs: string[] = [];
+    const browser = await chromium.launch({
+      headless: true,
+      args: launchArgs,
+      executablePath: process.env.PLAYWRIGHT_CHROMIUM_PATH,
+    });
+    // Se o browser morrer (crash, OOM, kill), limpa a referência
+    // para que a próxima chamada faça re-launch em vez de usar instância morta
+    browser.on('disconnected', () => {
+      if (this.browser === browser) {
+        this.browser = null;
+      }
+    });
+    this.browser = browser;
+    return browser;
   }
 
   async scrape(artist: string, song: string, version?: string): Promise<CifraResponse> {
+    return this.enqueue(() => this.doScrape(artist, song, version));
+  }
+
+  private async doScrape(artist: string, song: string, version?: string): Promise<CifraResponse> {
     let url = `${BASE_URL}${artist}/${song}`;
     if (version && version !== 'principal') {
       url += `/${version}`;
     }
-    
-    let browser: Browser | null = null;
 
     try {
-      browser = await this.getBrowser();
-      const page = await browser.newPage();
+      const browser = await this.getBrowser();
+      // Context isolado por scrape: fechar o context fecha a página junto,
+      // sem derrubar o browser reutilizável
+      const context = await browser.newContext();
+      try {
+        const page = await context.newPage();
+        page.setDefaultTimeout(15000);
 
-      await page.goto(url, { waitUntil: 'domcontentloaded' });
-      await page.waitForSelector('.cifra_cnt', { timeout: 15000 });
+        await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 30000 });
+        await page.waitForSelector('.cifra_cnt', { timeout: 15000 });
 
-      const result: Partial<CifraResult> = { cifraclub_url: url };
-      await this.getDetails(page, result);
-      await this.getCifra(page, result);
+        const result: Partial<CifraResult> = { cifraclub_url: url };
+        await this.getDetails(page, result);
+        await this.getCifra(page, result);
 
-      return result as CifraResult;
+        return result as CifraResult;
+      } finally {
+        // Fecha context+page SEMPRE (inclusive em timeout) — sem isso vazam
+        // um contexto/página por importação
+        await context.close().catch(() => {});
+      }
     } catch (err) {
       return { cifraclub_url: url, error: (err as Error).message };
-    } finally {
-      // Don't close browser - keep it for reuse
     }
   }
 

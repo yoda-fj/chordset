@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { eventosDb } from '@/lib/eventos-db'
 import { jsonError, parseId, saveAudioUpload, deleteAudioFile } from '@/lib/api-helpers'
+import { isAudioSizeExceeded } from '@/lib/validation'
 
 interface RouteParams {
   params: Promise<{ id: string }>
@@ -13,6 +14,12 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     const eventoId = parseId(id)
     if (eventoId === null) {
       return jsonError('ID inválido', 400)
+    }
+
+    // Rejeita cedo payloads grandes (content-length) antes de parsear o FormData
+    const contentLength = Number(request.headers.get('content-length'))
+    if (isAudioSizeExceeded(contentLength)) {
+      return jsonError('Arquivo de áudio excede o limite de 15MB', 413)
     }
 
     // Verify evento exists

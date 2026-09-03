@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { musicasDb } from '@/lib/musicas-db'
 import { jsonError } from '@/lib/api-helpers'
+import { musicaCreateSchema } from '@/lib/validation'
 
 // GET /api/musicas - Listar todas as músicas
 export async function GET(request: NextRequest) {
@@ -27,18 +28,18 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    
-    // Validação
-    if (!body.titulo || !body.artista) {
-      return jsonError('Título e artista são obrigatórios', 400)
+
+    const parsedBody = musicaCreateSchema.safeParse(body)
+    if (!parsedBody.success) {
+      return jsonError('Payload inválido', 400, parsedBody.error.issues)
     }
-    
+
     const musica = musicasDb.create({
-      titulo: body.titulo,
-      artista: body.artista,
-      tom_original: body.tom_original,
-      cifra: body.cifra,
-      tags: body.tags || []
+      titulo: parsedBody.data.titulo,
+      artista: parsedBody.data.artista ?? '',
+      tom_original: parsedBody.data.tom_original ?? undefined,
+      cifra: parsedBody.data.cifra ?? undefined,
+      tags: parsedBody.data.tags ?? []
     })
     
     return NextResponse.json(musica, { status: 201 })

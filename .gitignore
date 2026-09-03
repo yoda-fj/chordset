@@ -16,3 +16,8 @@ next-env.d.ts
 /public/samples/drums/*.wav
 /public/samples/drums/**/*.wav
 /public/samples/drums/
+
+# Audio uploads (user content - persisted via AUDIO_STORAGE_PATH)
+/data/audio/
+/public/musicas-audio/
+/public/eventos-audio/

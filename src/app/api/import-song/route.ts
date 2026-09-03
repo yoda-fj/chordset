@@ -4,6 +4,7 @@ import { getScraper } from '@/lib/cifraclub-scraper/cifraclub'
 import { ensureChordProFormat } from '@/utils/chordpro-converter'
 import { cleanChordText, extractKeyFromChord } from '@/utils/chord-transposer'
 import { musicasDb } from '@/lib/musicas-db'
+import { importSongSchema } from '@/lib/validation'
 
 // Força runtime Node.js (não Edge) pra Playwright funcionar
 export const runtime = 'nodejs'
@@ -26,19 +27,22 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
 
+    const parsedBody = importSongSchema.safeParse(body);
+    if (!parsedBody.success) {
+      return NextResponse.json(
+        { error: 'Payload inválido', issues: parsedBody.error.issues },
+        { status: 400 }
+      );
+    }
+
+    const { query: rawQuery, url: rawUrl, save } = parsedBody.data;
+
     // ---------
     // MODO 1: Buscar música (sem importar)
     // POST { query: "Coldplay The Scientist" }
     // ---------
-    if (body.query && !body.url) {
-      const query = String(body.query).trim()
-
-      if (query.length < 2) {
-        return NextResponse.json(
-          { error: 'Query deve ter pelo menos 2 caracteres' },
-          { status: 400 }
-        );
-      }
+    if (rawQuery) {
+      const query = rawQuery.trim()
 
       const searchResult = await search(query);
       const results = searchResult.songs.map((s) => {
@@ -65,17 +69,10 @@ export async function POST(request: NextRequest) {
     // MODO 2: Importar música específica
     // POST { url: "https://www.cifraclub.com.br/coldplay/the-scientist" }
     // ---------
-    if (body.url && !body.query) {
-      const { url } = body;
+    if (rawUrl) {
+      const url = rawUrl;
 
-      if (!url) {
-        return NextResponse.json(
-          { error: 'URL é obrigatória para importação' },
-          { status: 400 }
-        );
-      }
-
-      const parsed = parseCifraClubUrl(String(url))
+      const parsed = parseCifraClubUrl(url)
       if (!parsed) {
         return NextResponse.json(
           { success: false, error: 'URL inválida do Cifra Club', provider: 'cifraclub' },
@@ -101,18 +98,15 @@ export async function POST(request: NextRequest) {
         artista: scrapeResult.artist,
         tom_original: tomOriginal,
         cifra: cifraLimpa,
-        url: String(url),
+        url,
         provider: 'cifraclub',
       }
 
       // Se pediu para salvar no banco também
-      if (body.save !== false) {
+      if (save !== false) {
         try {
-          // Verifica se já existe
-          const existing = musicasDb.getAll().find(
-            m => m.titulo.toLowerCase() === song.titulo.toLowerCase() &&
-                 m.artista.toLowerCase() === song.artista.toLowerCase()
-          );
+          // Verifica se já existe (dedup via query parametrizada, sem varrer a tabela)
+          const existing = musicasDb.findByTituloArtista(song.titulo, song.artista);
 
           if (existing) {
             return NextResponse.json({
