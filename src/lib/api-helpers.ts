@@ -25,6 +25,23 @@ export function parseId(raw: string): number | null {
 
 export type AudioDir = 'musicas-audio' | 'eventos-audio'
 
+/**
+ * Diretório raiz de armazenamento de áudio.
+ * Dev: ./data/audio (padrão) | Docker/prod: /data/audio (via env AUDIO_STORAGE_PATH).
+ * Subdiretórios: musicas/ e eventos/.
+ */
+const AUDIO_STORAGE_PATH = process.env.AUDIO_STORAGE_PATH || join(process.cwd(), 'data', 'audio')
+
+/** Mapeia o dir público (URL) para o subdiretório de armazenamento. */
+const AUDIO_STORAGE_SUBDIRS: Record<AudioDir, string> = {
+  'musicas-audio': 'musicas',
+  'eventos-audio': 'eventos',
+}
+
+function audioStorageDir(dir: AudioDir): string {
+  return join(AUDIO_STORAGE_PATH, AUDIO_STORAGE_SUBDIRS[dir])
+}
+
 const ALLOWED_AUDIO_TYPES = ['audio/mpeg', 'audio/wav', 'audio/ogg', 'audio/webm', 'audio/mp3', 'audio/x-m4a']
 
 const AUDIO_CONTENT_TYPES: Record<string, string> = {
@@ -40,7 +57,7 @@ export type AudioUploadResult =
   | { ok: false; error: NextResponse }
 
 /**
- * Valida e salva o arquivo 'audio' do formData em public/<dir>.
+ * Valida e salva o arquivo 'audio' do formData em AUDIO_STORAGE_PATH/<subdir>.
  * Retorna a audioUrl pública ou um erro pronto pra resposta.
  */
 export async function saveAudioUpload(
@@ -60,7 +77,7 @@ export async function saveAudioUpload(
     return { ok: false, error: jsonError('Tipo de arquivo não permitido. Use MP3, WAV, OGG, WebM ou M4A', 400) }
   }
 
-  const uploadDir = join(process.cwd(), 'public', dir)
+  const uploadDir = audioStorageDir(dir)
   await mkdir(uploadDir, { recursive: true })
 
   const ext = extname(file.name) || '.webm'
@@ -76,8 +93,16 @@ export async function saveAudioUpload(
  */
 export async function deleteAudioFile(audioUrl: string | null): Promise<void> {
   if (!audioUrl) return
-  const filepath = join(process.cwd(), 'public', audioUrl)
   try {
+    // Extrai dir e filename da URL pública (ex.: '/musicas-audio/musica-1-123.webm')
+    const segments = audioUrl.split('/').filter(Boolean)
+    if (segments.length !== 2) return
+    const dir = segments[0] as AudioDir
+    const filename = segments[1]
+    if (!(dir in AUDIO_STORAGE_SUBDIRS)) return
+    if (filename.includes('..') || filename.includes('/') || filename.includes('\\')) return
+
+    const filepath = join(audioStorageDir(dir), filename)
     if (existsSync(filepath)) {
       await unlink(filepath)
     }
@@ -87,7 +112,7 @@ export async function deleteAudioFile(audioUrl: string | null): Promise<void> {
 }
 
 /**
- * Serve um arquivo de áudio de public/<dir> com proteção contra path traversal.
+ * Serve um arquivo de áudio de AUDIO_STORAGE_PATH/<subdir> com proteção contra path traversal.
  */
 export function serveAudioFile(dir: AudioDir, filename: string): NextResponse {
   const decoded = decodeURIComponent(filename)
@@ -95,7 +120,7 @@ export function serveAudioFile(dir: AudioDir, filename: string): NextResponse {
     return jsonError('Invalid filename', 400)
   }
 
-  const audioDir = join(process.cwd(), 'public', dir)
+  const audioDir = audioStorageDir(dir)
   const resolvedPath = resolve(join(audioDir, decoded))
   if (!resolvedPath.startsWith(resolve(audioDir))) {
     return jsonError('Invalid path', 400)
