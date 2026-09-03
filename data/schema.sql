@@ -63,6 +63,7 @@ CREATE TABLE IF NOT EXISTS eventos (
   template_id INTEGER,
   tags TEXT DEFAULT '[]', -- JSON array de tags
   observacoes TEXT,
+  audio_url TEXT, -- URL/caminho para gravação de áudio do evento
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (template_id) REFERENCES templates(id)
