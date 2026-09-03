@@ -1,5 +1,21 @@
 # ChordSet - Progresso e Features
 
+## 🏁 Fase 0 — Fundação Crítica (CONCLUÍDA 2026-09-03, branch `fase-0-fundacao`)
+
+Plano: `docs/PLANO-TRIPLE-A.md` (v2, aprovado por 3 agentes revisores — ver `docs/aaa-reviews/`)
+
+- [x] **0.10 Backup**: export/import JSON (`POST /api/backup/export|import`, scripts CLI) — restore verificado: 7 tabelas idênticas linha a linha
+- [x] **0.2 Auth**: bypass de `/api/cifraclub/*` REMOVIDO (401 sem credencial, verificado via curl); allowlist explícita de extensões estáticas; rate limit 20 req/min por IP (429 + Retry-After) em scraping/OCR/import — `src/lib/rate-limit.ts` com 5 testes
+- [x] **0.3 Áudio persistente**: uploads em `AUDIO_STORAGE_PATH` (default `./data/audio`, prod `/data/audio`) — sobrevivem a redeploy; symlinks no Dockerfile; `scripts/migrate-audio.ts`; teste E2E real de upload+serve
+- [x] **0.9 Scraper hotfix**: `context.close()` no finally (fim do vazamento), mutex serializando scrapes, re-launch em `disconnected`. ⚠️ **Scraping falhando em 03/09**: seletor `.cifra_cnt` não encontrado (site mudou ou bloqueia headless) — reengenharia fetch+Cheerio (3B.4) ganhou prioridade
+- [x] **0.1+0.4 Integridade**: `foreign_keys=ON`, `busy_timeout=5000`, `synchronous=NORMAL`; migrations versionadas (`schema_migrations`, 001 base + 002 UNIQUE(evento_id,ordem)); `scripts/sanitize-orphans.ts` (dry-run padrão; banco real: **0 órfãos**); testes de cascade (8)
+- [x] **0.5 Validação**: zod em OCR/import/musicas/áudio (400 com issues; 413 > 15MB); dedup de import via query parametrizada; 17 testes
+- [x] **0.6 CI**: `.github/workflows/ci.yml` (quality em PR: `lint:ci` zero-warning + tsc + test; docker-build só na main); warning `<img>` corrigido (next/image unoptimized); vitest exclui `.next`
+- [x] **0.7 Docker hardening**: ver seção Docker/Deploy abaixo
+- [x] **0.8 Spike PWA**: **GO** — Serwist 9.5.12 funciona via `next build --webpack` (Turbopack gera falso positivo: exit 0 sem sw.js!). Detalhes em `docs/aaa-reviews/07-spike-pwa.md`. Pendente para 3B: Dockerfile precisa copiar `public/` no estágio final e build apontar para webpack
+
+**Gate ao fim da Fase 0:** tsc ✅ · lint:ci 0 warnings ✅ · 73 testes ✅
+
 ## 🚀 Funcionalidades Implementadas
 
 ### Core
