@@ -40,8 +40,8 @@ export interface CreateMusicaInput {
 export interface UpdateMusicaInput {
   titulo?: string;
   artista?: string;
-  tom_original?: string;
-  cifra?: string;
+  tom_original?: string | null;
+  cifra?: string | null;
   tags?: string[];
   observacao?: string | null;
   audio_url?: string | null;

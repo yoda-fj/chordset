@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getProviderConfig, getApiKey } from '@/lib/llm-providers';
 import { jsonError } from '@/lib/api-helpers';
+import { ocrRequestSchema } from '@/lib/validation';
 
 interface ExtractedCifra {
   titulo: string;
@@ -36,15 +37,13 @@ REGRAS IMPORTANTES:
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { imageBase64, imageUrl, provider: providerId } = body;
+    const parsedBody = ocrRequestSchema.safeParse(body);
 
-    if (!imageBase64 && !imageUrl) {
-      return jsonError('Imagem é obrigatória (envie base64 ou URL)', 400);
+    if (!parsedBody.success) {
+      return jsonError('Payload inválido', 400, parsedBody.error.issues);
     }
 
-    if (!providerId) {
-      return jsonError('Provider é obrigatório', 400);
-    }
+    const { imageBase64, imageUrl, provider: providerId } = parsedBody.data;
 
     const provider = getProviderConfig(providerId);
     if (!provider) {

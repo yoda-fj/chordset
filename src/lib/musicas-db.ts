@@ -34,6 +34,20 @@ export const musicasDb = {
     return rowToMusica(row)
   },
 
+  /**
+   * Busca case-insensitive por (titulo, artista) — usado no dedup do import-song.
+   * Query parametrizada, sem varrer a tabela inteira em memória.
+   */
+  findByTituloArtista(titulo: string, artista: string): Musica | null {
+    const db = getDb()
+    const stmt = db.prepare(
+      'SELECT * FROM musicas WHERE lower(titulo) = lower(?) AND lower(artista) = lower(?) LIMIT 1'
+    )
+    const row = stmt.get(titulo, artista) as MusicaRow | undefined
+    if (!row) return null
+    return rowToMusica(row)
+  },
+
   create(input: CreateMusicaInput): Musica {
     const db = getDb()
     const stmt = db.prepare(`

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { writeFile, mkdir, unlink } from 'fs/promises'
 import { join, resolve, extname } from 'path'
 import { existsSync, createReadStream, statSync } from 'fs'
+import { isAudioSizeExceeded, MAX_AUDIO_SIZE_BYTES } from './validation'
 
 /**
  * Resposta de erro padronizada da API: { error: message }
@@ -71,6 +72,16 @@ export async function saveAudioUpload(
 
   if (!file) {
     return { ok: false, error: jsonError('Nenhum arquivo de áudio fornecido', 400) }
+  }
+
+  if (isAudioSizeExceeded(file.size)) {
+    return {
+      ok: false,
+      error: jsonError(
+        `Arquivo de áudio excede o limite de ${MAX_AUDIO_SIZE_BYTES / (1024 * 1024)}MB`,
+        413
+      ),
+    }
   }
 
   if (!ALLOWED_AUDIO_TYPES.includes(file.type) && !file.name.match(/\.(mp3|wav|ogg|webm|m4a)$/i)) {
