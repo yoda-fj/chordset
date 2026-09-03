@@ -48,6 +48,15 @@
 - [x] Dockerfile multistage
 - [x] Basic Auth via middleware
 - [x] Output standalone no next.config.js
+- [x] Hardening (Tarefa 0.7): container roda como usuário não-root `nextjs` (uid 1001)
+  - `docker-entrypoint.sh` (root) faz `chown -R nextjs:nodejs /data` em runtime e
+    executa `su-exec nextjs node server.js` — necessário porque o volume /data do
+    Coolify é montado root-owned e sobrescreve permissões de build
+  - `git` removido da imagem final (mantido `curl` p/ healthcheck + `su-exec`)
+  - `--legacy-peer-deps` removido do `npm ci`: a flag entrou no commit b84fa85
+    ("React 19 compatibility") quando o lucide-react não declarava peer react 19;
+    `lucide-react@^1.24.0` atual declara `react: ^16.5.1 || ^17 || ^18 || ^19`,
+    e `npm ci` sem a flag instala os 519 pacotes sem ERESOLVE (validado localmente)
 - [x] Variáveis BASIC_AUTH_USER/BASIC_AUTH_PASSWORD
 
 ### UI/UX
