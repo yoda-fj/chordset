@@ -7,6 +7,7 @@ import Link from 'next/link'
 import { TagInput } from '@/components/setlist/TagInput'
 import { SetlistBuilder } from '@/components/setlist/SetlistBuilder'
 import { useToast } from '@/components/ui/Toast'
+import { ConfirmDialog } from '@/components/ui/Dialog'
 import { parseTags } from '@/utils/tag-utils'
 import type { SetlistMusica } from '@/components/setlist/MusicaCard'
 import { TAG_SUGGESTIONS_TEMPLATE } from '@/lib/constants'
@@ -84,9 +85,11 @@ export default function EditTemplatePage() {
     }
   }
 
-  const handleDelete = async () => {
-    if (!confirm('Tem certeza que deseja excluir este template?')) return
-    
+  const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false)
+
+  const handleDelete = () => setConfirmDeleteOpen(true)
+
+  const performDelete = async () => {
     try {
       const response = await fetch(`/api/templates/${templateId}`, {
         method: 'DELETE',
@@ -140,6 +143,13 @@ export default function EditTemplatePage() {
           <Trash2 size={18} />
           Excluir
         </button>
+        <ConfirmDialog
+          open={confirmDeleteOpen}
+          onOpenChange={setConfirmDeleteOpen}
+          title="Excluir template?"
+          description="Tem certeza que deseja excluir este template? Essa ação não pode ser desfeita."
+          onConfirm={performDelete}
+        />
       </div>
 
       {error && (

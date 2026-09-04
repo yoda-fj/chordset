@@ -6,6 +6,8 @@ import { PracticeTimer } from '@/components/practice/PracticeTimer';
 import { CifraViewer } from '@/components/chords/CifraViewer';
 import { DrumPad } from '@/components/chords/DrumPad';
 import { useDrumPadSettings } from '@/hooks/useDrumPadSettings';
+import { ConfirmDialog } from '@/components/ui/Dialog';
+import { toast } from 'sonner';
 import { formatDuration } from '@/lib/practice-utils';
 import { 
   PracticeStatus, 
@@ -87,15 +89,17 @@ export default function EnsaioDetailPage() {
       const updated = await response.json();
       setSession(updated);
     } catch (err) {
-      alert(err instanceof Error ? err.message : 'Erro ao salvar');
+      toast.error(err instanceof Error ? err.message : 'Erro ao salvar');
     } finally {
       setIsSaving(false);
     }
   };
 
-  const handleDelete = async () => {
-    if (!confirm('Tem certeza que deseja excluir esta sessão?')) return;
-    
+  const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
+
+  const handleDelete = () => setConfirmDeleteOpen(true);
+
+  const performDelete = async () => {
     setIsDeleting(true);
     try {
       const response = await fetch(`/api/practice-sessions/${id}`, {
@@ -105,7 +109,7 @@ export default function EnsaioDetailPage() {
       if (!response.ok) throw new Error('Erro ao excluir');
       router.push('/ensaios');
     } catch (err) {
-      alert(err instanceof Error ? err.message : 'Erro ao excluir');
+      toast.error(err instanceof Error ? err.message : 'Erro ao excluir');
       setIsDeleting(false);
     }
   };
@@ -167,6 +171,13 @@ export default function EnsaioDetailPage() {
             <Trash2 className="w-4 h-4" />
             {isDeleting ? 'Excluindo...' : 'Excluir'}
           </button>
+          <ConfirmDialog
+            open={confirmDeleteOpen}
+            onOpenChange={setConfirmDeleteOpen}
+            title="Excluir sessão?"
+            description="Tem certeza que deseja excluir esta sessão de ensaio? Essa ação não pode ser desfeita."
+            onConfirm={performDelete}
+          />
           <button
             onClick={handleSave}
             disabled={isSaving}

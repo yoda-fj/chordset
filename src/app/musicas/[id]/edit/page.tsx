@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { ArrowLeft, Save, Loader2, Trash2 } from 'lucide-react'
 import Link from 'next/link'
 import { TagInput } from '@/components/setlist/TagInput'
+import { ConfirmDialog } from '@/components/ui/Dialog'
 import type { Musica } from '@/types/database'
 import { TOM_OPCOES, TAG_SUGGESTIONS_MUSICA } from '@/lib/constants'
 
@@ -94,8 +95,12 @@ export default function EditMusicaPage({ params }: EditMusicaPageProps) {
     }
   }
 
-  const handleDelete = async () => {
-    if (!musicaId || !confirm('Tem certeza que deseja excluir esta música?')) return
+  const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false)
+
+  const handleDelete = () => setConfirmDeleteOpen(true)
+
+  const performDelete = async () => {
+    if (!musicaId) return
 
     try {
       const response = await fetch(`/api/musicas/${musicaId}`, {
@@ -157,6 +162,13 @@ export default function EditMusicaPage({ params }: EditMusicaPageProps) {
           <Trash2 size={18} />
           Excluir
         </button>
+        <ConfirmDialog
+          open={confirmDeleteOpen}
+          onOpenChange={setConfirmDeleteOpen}
+          title="Excluir música?"
+          description="Tem certeza que deseja excluir esta música? Essa ação não pode ser desfeita."
+          onConfirm={performDelete}
+        />
       </div>
 
       {error && (

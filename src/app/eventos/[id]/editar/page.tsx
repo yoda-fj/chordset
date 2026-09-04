@@ -7,6 +7,7 @@ import Link from 'next/link'
 import { TagInput } from '@/components/setlist/TagInput'
 import { SetlistBuilder } from '@/components/setlist/SetlistBuilder'
 import { useToast } from '@/components/ui/Toast'
+import { ConfirmDialog } from '@/components/ui/Dialog'
 import type { SetlistMusica } from '@/components/setlist/MusicaCard'
 import type { EventoWithTemplate, Template } from '@/types/database'
 import { STATUS_OPCOES, TAG_SUGGESTIONS_EVENTO } from '@/lib/constants'
@@ -156,9 +157,11 @@ export default function EditEventoPage() {
     }
   }
 
-  const handleDelete = async () => {
-    if (!confirm('Tem certeza que deseja excluir este evento?')) return
+  const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false)
 
+  const handleDelete = () => setConfirmDeleteOpen(true)
+
+  const performDelete = async () => {
     try {
       const response = await fetch(`/api/eventos/${eventoId}`, {
         method: 'DELETE',
@@ -216,6 +219,13 @@ export default function EditEventoPage() {
           <Trash2 size={18} />
           Excluir
         </button>
+        <ConfirmDialog
+          open={confirmDeleteOpen}
+          onOpenChange={setConfirmDeleteOpen}
+          title="Excluir evento?"
+          description="Tem certeza que deseja excluir este evento? Essa ação não pode ser desfeita."
+          onConfirm={performDelete}
+        />
       </div>
 
       <h1 className="text-2xl font-bold text-ink">{isStudyList ? 'Editar Lista de Estudo' : 'Editar Evento'}</h1>

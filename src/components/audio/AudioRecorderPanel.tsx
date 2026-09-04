@@ -1,7 +1,9 @@
 'use client'
 
+import { useState } from 'react'
 import { Mic, Upload, Trash2, Play, Pause, X, Loader2 } from 'lucide-react'
 import type { UseAudioRecorderReturn } from '@/hooks/useAudioRecorder'
+import { ConfirmDialog } from '@/components/ui/Dialog'
 
 interface AudioRecorderPanelProps extends UseAudioRecorderReturn {
   title?: string
@@ -25,6 +27,8 @@ export function AudioRecorderPanel({
   togglePlayback,
   formatTime,
 }: AudioRecorderPanelProps) {
+  const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false)
+
   return (
     <>
       <h2 className="text-base font-semibold text-ink mb-3">{title}</h2>
@@ -43,12 +47,19 @@ export function AudioRecorderPanel({
           />
           <span className="flex-1 text-sm text-ink-muted">Sua gravação</span>
           <button
-            onClick={deleteAudio}
+            onClick={() => setConfirmDeleteOpen(true)}
             className="p-1 text-danger hover:bg-danger/10 rounded-lg"
             title="Excluir gravação"
           >
             <Trash2 size={14} />
           </button>
+          <ConfirmDialog
+            open={confirmDeleteOpen}
+            onOpenChange={setConfirmDeleteOpen}
+            title="Excluir gravação?"
+            description="Deseja realmente excluir a gravação? Essa ação não pode ser desfeita."
+            onConfirm={deleteAudio}
+          />
         </div>
       )}
 

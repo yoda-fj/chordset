@@ -22,8 +22,12 @@ const mono = JetBrains_Mono({
 })
 
 export const metadata: Metadata = {
-  title: 'Setlist Tools',
-  description: 'Sistema de gerenciamento de setlists',
+  title: {
+    default: 'ChordSet',
+    template: '%s · ChordSet',
+  },
+  description: 'Seu repertório, do ensaio ao palco — cifras, setlists e ritmos em um só lugar.',
+  applicationName: 'ChordSet',
 }
 
 const navLinkClass =
@@ -49,7 +53,7 @@ export default function RootLayout({
                       href="/"
                       className="text-xl font-bold font-display text-brand"
                     >
-                      Setlist Tools
+                      ChordSet
                     </Link>
                   </div>
                   <div className="flex items-center space-x-4">

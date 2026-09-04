@@ -4,6 +4,8 @@ import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { Trash2, Plus, Play, Square } from 'lucide-react'
 import * as Tone from 'tone'
+import { toast } from 'sonner'
+import { ConfirmDialog } from '@/components/ui/Dialog'
 import type { DrumPattern } from '@/types/database'
 
 const NOTE_MAP: Record<string, string> = {
@@ -117,18 +119,23 @@ export default function DrumPatternsPage() {
     setPlayingId(pattern.id)
   }
 
-  const deletePattern = async (id: number) => {
-    if (!confirm('Tem certeza que deseja excluir este ritmo?')) return
+  const [deleteTarget, setDeleteTarget] = useState<number | null>(null)
+
+  const deletePattern = (id: number) => setDeleteTarget(id)
+
+  const performDelete = async () => {
+    const id = deleteTarget
+    if (id === null) return
     try {
       const res = await fetch(`/api/drum-patterns/${id}`, { method: 'DELETE' })
       if (!res.ok) {
         const data = await res.json()
-        alert(data.error || 'Erro ao excluir')
+        toast.error(data.error || 'Erro ao excluir')
         return
       }
       setPatterns(patterns.filter(p => p.id !== id))
     } catch {
-      alert('Erro ao excluir ritmo')
+      toast.error('Erro ao excluir ritmo')
     }
   }
 
@@ -207,6 +214,14 @@ export default function DrumPatternsPage() {
           ))}
         </div>
       )}
+
+      <ConfirmDialog
+        open={deleteTarget !== null}
+        onOpenChange={(open) => { if (!open) setDeleteTarget(null) }}
+        title="Excluir ritmo?"
+        description="Tem certeza que deseja excluir este ritmo? Essa ação não pode ser desfeita."
+        onConfirm={performDelete}
+      />
     </div>
   )
 }
