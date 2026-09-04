@@ -18,7 +18,11 @@ export default function SetlistPage() {
   const [evento, setEvento] = useState<EventoWithTemplate | null>(null)
   const [musicas, setMusicas] = useState<EventoMusicaWithMusica[]>([])
   const [selectedIndex, setSelectedIndex] = useState(0)
-  const [showSidebar, setShowSidebar] = useState(true)
+  // Sidebar de repertório: aberta por padrão só no desktop (lg);
+  // no mobile começa fechada pra não cobrir a cifra com o backdrop
+  const [showSidebar, setShowSidebar] = useState(
+    () => typeof window !== 'undefined' && window.innerWidth >= 1024
+  )
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const wakeLockRef = useRef<WakeLockSentinel | null>(null)
@@ -173,7 +177,7 @@ export default function SetlistPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand"></div>
       </div>
     )
   }
@@ -181,8 +185,8 @@ export default function SetlistPage() {
   if (error || !evento) {
     return (
       <div className="text-center py-12">
-        <p className="text-gray-500">{error || 'Evento não encontrado'}</p>
-        <Link href="/eventos" className="text-indigo-600 mt-4 inline-block">Voltar</Link>
+        <p className="text-ink-muted">{error || 'Evento não encontrado'}</p>
+        <Link href="/eventos" className="text-brand mt-4 inline-block">Voltar</Link>
       </div>
     )
   }
@@ -190,18 +194,59 @@ export default function SetlistPage() {
   const selectedMusica = musicas[selectedIndex]
   const cifra = selectedMusica?.musicas?.cifra || null
 
+  // Painel direito (observações + áudio + ritmo) — compartilhado entre
+  // a sidebar desktop (empurra) e o drawer mobile (sobrepõe a cifra)
+  const rightPanel = (
+    <div className="w-full flex flex-col gap-4">
+      {/* Observacao */}
+      <div className="bg-surface-overlay p-4 rounded-lg border">
+        <h2 className="text-base font-semibold text-ink mb-3">Observações</h2>
+        <div className="relative">
+          <textarea
+            value={observacao}
+            onChange={(e) => handleObservacaoChange(e.target.value)}
+            onBlur={saveObservacao}
+            placeholder="Adicione observações..."
+            className="w-full p-3 bg-surface border rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-brand min-h-[120px] text-sm text-ink placeholder:text-ink-faint"
+          />
+          {savingObs && (
+            <span className="absolute top-2 right-2 text-xs text-ink-faint">Salvando...</span>
+          )}
+        </div>
+      </div>
+
+      {/* Audio Recording/Upload */}
+      <div className="bg-surface-overlay p-4 rounded-lg border">
+        <AudioRecorderPanel {...audioRecorder} />
+      </div>
+
+      {/* Drum Pad / Ritmo da música selecionada */}
+      {selectedMusica && (
+        <DrumPad
+          key={selectedMusica.musica_id}
+          initialGroove={drumPad.groove}
+          initialBpm={drumPad.bpm}
+          initialVolume={drumPad.volume}
+          onGrooveChange={drumPad.onGrooveChange}
+          onBpmChange={drumPad.onBpmChange}
+          onVolumeChange={drumPad.onVolumeChange}
+        />
+      )}
+    </div>
+  )
+
   return (
-    <div className="h-[100dvh] flex flex-col bg-gray-100 overflow-hidden">
+    <div className="h-[100dvh] flex flex-col bg-surface overflow-hidden">
       {/* Header */}
-      <header className="bg-white border-b px-4 py-3 flex items-center justify-between shrink-0">
+      <header className="bg-surface-raised border-b px-4 py-3 flex items-center justify-between shrink-0">
         <div className="flex items-center gap-2">
           <div>
-            <h1 className="font-bold text-gray-900">{evento.nome}</h1>
-            <p className="text-sm text-gray-500">{selectedIndex + 1} de {musicas.length}</p>
+            <h1 className="font-bold text-ink">{evento.nome}</h1>
+            <p className="text-sm text-ink-muted">{selectedIndex + 1} de {musicas.length}</p>
           </div>
         </div>
 
-        <button onClick={() => router.back()} className="p-2 hover:bg-gray-100 rounded-lg" title="Fechar">
+        <button onClick={() => router.back()} className="p-2 hover:bg-surface-overlay rounded-lg text-ink" title="Fechar">
           <X size={20} />
         </button>
       </header>
@@ -211,7 +256,7 @@ export default function SetlistPage() {
         {/* Sidebar */}
         <aside className={`
           ${showSidebar ? 'w-72' : 'w-0'}
-          bg-white border-r transition-all duration-200 overflow-hidden flex-shrink-0 hidden lg:block
+          bg-surface-raised border-r transition-all duration-200 overflow-hidden flex-shrink-0 hidden lg:block
         `}>
           <div className="w-72 overflow-y-auto h-full flex flex-col">
             {/* Navigation buttons */}
@@ -219,20 +264,20 @@ export default function SetlistPage() {
               <button
                 onClick={goPrev}
                 disabled={selectedIndex === 0}
-                className="p-2 rounded-lg hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed"
+                className="p-2 rounded-lg text-ink hover:bg-surface-overlay disabled:opacity-30 disabled:cursor-not-allowed"
               >
                 <ChevronLeft size={20} />
               </button>
               <button
                 onClick={() => toggleComplete(selectedIndex)}
-                className={`p-2 rounded-lg ${selectedMusica?.confirmada ? 'bg-green-100 text-green-700 hover:bg-green-200' : 'hover:bg-gray-100'}`}
+                className={`p-2 rounded-lg ${selectedMusica?.confirmada ? 'bg-success/15 text-success hover:bg-success/25' : 'text-ink hover:bg-surface-overlay'}`}
               >
                 <Check size={20} />
               </button>
               <button
                 onClick={goNext}
                 disabled={selectedIndex === musicas.length - 1}
-                className="p-2 rounded-lg hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed"
+                className="p-2 rounded-lg text-ink hover:bg-surface-overlay disabled:opacity-30 disabled:cursor-not-allowed"
               >
                 <ChevronRight size={20} />
               </button>
@@ -242,17 +287,17 @@ export default function SetlistPage() {
                 <button
                   key={item.id}
                   onClick={() => selectMusica(index)}
-                  className={`w-full text-left p-3 rounded-lg mb-1 transition-colors ${index === selectedIndex ? 'bg-indigo-100 text-indigo-900' : 'hover:bg-gray-50'}`}
+                  className={`w-full text-left p-3 rounded-lg mb-1 transition-colors ${index === selectedIndex ? 'bg-brand/15 text-brand' : 'text-ink hover:bg-surface-overlay'}`}
                 >
                   <div className="flex items-start gap-3">
-                    <span className={`flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-xs ${item.confirmada ? 'bg-green-500 text-white' : index === selectedIndex ? 'bg-indigo-500 text-white' : 'bg-gray-200 text-gray-600'}`}>
+                    <span className={`flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-xs ${item.confirmada ? 'bg-success text-surface' : index === selectedIndex ? 'bg-brand text-surface' : 'bg-surface-overlay text-ink-muted'}`}>
                       {item.confirmada ? <Check size={14} /> : index + 1}
                     </span>
                     <div className="flex-1 min-w-0">
-                      <div className={`font-medium truncate ${item.confirmada ? 'line-through text-gray-500' : ''}`}>
+                      <div className={`font-medium truncate ${item.confirmada ? 'line-through text-ink-faint' : ''}`}>
                         {item.musicas?.titulo}
                       </div>
-                      <div className="text-sm text-gray-500 truncate">{item.musicas?.artista}</div>
+                      <div className="text-sm text-ink-muted truncate">{item.musicas?.artista}</div>
                     </div>
                   </div>
                 </button>
@@ -267,10 +312,10 @@ export default function SetlistPage() {
         )}
 
         {/* Mobile sidebar */}
-        <aside className={`${showSidebar ? 'translate-x-0' : '-translate-x-full'} fixed left-0 top-0 bottom-0 w-72 bg-white z-50 transition-transform duration-200 lg:hidden overflow-y-auto flex flex-col`}>
+        <aside className={`${showSidebar ? 'translate-x-0' : '-translate-x-full'} fixed left-0 top-0 bottom-0 w-72 max-w-[85vw] bg-surface-raised z-50 transition-transform duration-200 lg:hidden overflow-y-auto flex flex-col`}>
           <div className="p-4 border-b flex items-center justify-between shrink-0">
-            <h2 className="font-semibold">Repertório</h2>
-            <button onClick={() => setShowSidebar(false)} className="p-2"><X size={20} /></button>
+            <h2 className="font-semibold text-ink">Repertório</h2>
+            <button onClick={() => setShowSidebar(false)} className="p-2 text-ink-muted hover:text-ink" aria-label="Fechar repertório"><X size={20} /></button>
           </div>
           {/* Navigation buttons */}
           <div className="p-2 border-b flex items-center justify-center gap-2 shrink-0">
@@ -283,7 +328,7 @@ export default function SetlistPage() {
             </button>
             <button
               onClick={() => toggleComplete(selectedIndex)}
-              className={`p-2 rounded-lg ${selectedMusica?.confirmada ? 'bg-green-100 text-green-700 hover:bg-green-200' : 'hover:bg-gray-100'}`}
+              className={`p-2 rounded-lg ${selectedMusica?.confirmada ? 'bg-success/15 text-success hover:bg-success/25' : 'text-ink hover:bg-surface-overlay'}`}
             >
               <Check size={20} />
             </button>
@@ -300,15 +345,15 @@ export default function SetlistPage() {
               <button
                 key={item.id}
                 onClick={() => { selectMusica(index); setShowSidebar(false) }}
-                className={`w-full text-left p-3 rounded-lg mb-1 transition-colors ${index === selectedIndex ? 'bg-indigo-100 text-indigo-900' : 'hover:bg-gray-50'}`}
+                className={`w-full text-left p-3 rounded-lg mb-1 transition-colors ${index === selectedIndex ? 'bg-brand/15 text-brand' : 'text-ink hover:bg-surface-overlay'}`}
               >
                 <div className="flex items-start gap-3">
-                  <span className={`flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-xs ${item.confirmada ? 'bg-green-500 text-white' : index === selectedIndex ? 'bg-indigo-500 text-white' : 'bg-gray-200 text-gray-600'}`}>
+                  <span className={`flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-xs ${item.confirmada ? 'bg-success text-surface' : index === selectedIndex ? 'bg-brand text-surface' : 'bg-surface-overlay text-ink-muted'}`}>
                     {item.confirmada ? <Check size={14} /> : index + 1}
                   </span>
                   <div className="flex-1 min-w-0">
-                    <div className={`font-medium truncate ${item.confirmada ? 'line-through text-gray-500' : ''}`}>{item.musicas?.titulo}</div>
-                    <div className="text-sm text-gray-500 truncate">{item.musicas?.artista}</div>
+                    <div className={`font-medium truncate ${item.confirmada ? 'line-through text-ink-faint' : ''}`}>{item.musicas?.titulo}</div>
+                    <div className="text-sm text-ink-muted truncate">{item.musicas?.artista}</div>
                   </div>
                 </div>
               </button>
@@ -316,11 +361,11 @@ export default function SetlistPage() {
           </div>
         </aside>
 
-        {/* Main content - Cifra */}
-        <div className={`flex flex-col h-full min-w-0 ${rightSidebarOpen ? 'w-1/2' : 'w-full'}`}>
+        {/* Main content - Cifra (sempre largura total; no mobile o painel sobrepõe) */}
+        <div className="flex flex-col h-full min-w-0 flex-1">
           {musicas.length === 0 ? (
             <div className="flex items-center justify-center h-full">
-              <div className="text-center text-gray-500">
+              <div className="text-center text-ink-muted">
                 <Music size={48} className="mx-auto mb-4 opacity-50" />
                 <p>Nenhuma música no repertório</p>
               </div>
@@ -344,54 +389,31 @@ export default function SetlistPage() {
           )}
         </div>
 
-        {/* Sidebar toggle button */}
+        {/* Sidebar toggle button — no mobile fica fixo à direita (o drawer tem X próprio) */}
         <button
           onClick={() => setRightSidebarOpen(!rightSidebarOpen)}
-          className={`absolute top-1/2 -translate-y-1/2 z-50 p-3 bg-white border shadow-lg rounded-full hover:bg-gray-50 transition-all duration-300 ${rightSidebarOpen ? 'right-80' : 'right-4'}`}
+          className={`absolute top-1/2 -translate-y-1/2 z-30 p-3 bg-surface-raised border shadow-lg rounded-full text-ink hover:bg-surface-overlay transition-all duration-300 ${rightSidebarOpen ? 'right-4 lg:right-80' : 'right-4'}`}
           title={rightSidebarOpen ? 'Fechar painel' : 'Abrir painel'}
         >
           {rightSidebarOpen ? <ChevronRightIcon size={20} /> : <ChevronLeft size={20} />}
         </button>
 
-        {/* Right Sidebar - Observations + Audio */}
-        <div className={`h-full bg-gray-50 p-4 overflow-y-auto transition-all duration-300 print:hidden flex-shrink-0 ${rightSidebarOpen ? 'w-80' : 'w-0'}`}>
-          <div className="w-full h-full flex flex-col space-y-4">
-            {/* Observacao */}
-            <div className="bg-white p-4 rounded-lg border">
-              <h2 className="text-base font-semibold text-gray-900 mb-3">Observações</h2>
-              <div className="relative">
-                <textarea
-                  value={observacao}
-                  onChange={(e) => handleObservacaoChange(e.target.value)}
-                  onBlur={saveObservacao}
-                  placeholder="Adicione observações..."
-                  className="w-full p-3 border rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-indigo-500 min-h-[120px] text-sm"
-                />
-                {savingObs && (
-                  <span className="absolute top-2 right-2 text-xs text-gray-400">Salvando...</span>
-                )}
-              </div>
-            </div>
-
-            {/* Audio Recording/Upload */}
-            <div className="bg-white p-4 rounded-lg border">
-              <AudioRecorderPanel {...audioRecorder} />
-            </div>
-
-            {/* Drum Pad / Ritmo da música selecionada */}
-            {selectedMusica && (
-              <DrumPad
-                key={selectedMusica.musica_id}
-                initialGroove={drumPad.groove}
-                initialBpm={drumPad.bpm}
-                initialVolume={drumPad.volume}
-                onGrooveChange={drumPad.onGrooveChange}
-                onBpmChange={drumPad.onBpmChange}
-                onVolumeChange={drumPad.onVolumeChange}
-              />
-            )}
-          </div>
+        {/* Right Sidebar - desktop: em fluxo, empurra a cifra */}
+        <div className={`hidden lg:block h-full bg-surface-raised border-l overflow-y-auto transition-all duration-300 print:hidden flex-shrink-0 ${rightSidebarOpen ? 'w-80 p-4' : 'w-0 overflow-hidden'}`}>
+          {rightSidebarOpen && rightPanel}
         </div>
+
+        {/* Right Sidebar - mobile: drawer que SOBREPÕE a cifra */}
+        {rightSidebarOpen && (
+          <div className="fixed inset-0 bg-black/60 z-40 lg:hidden" onClick={() => setRightSidebarOpen(false)} />
+        )}
+        <aside className={`fixed right-0 top-0 bottom-0 w-80 max-w-[85vw] bg-surface-raised border-l z-50 transition-transform duration-200 lg:hidden overflow-y-auto ${rightSidebarOpen ? 'translate-x-0' : 'translate-x-full'}`}>
+          <div className="p-4 border-b flex items-center justify-between shrink-0">
+            <h2 className="font-semibold text-ink">Painel</h2>
+            <button onClick={() => setRightSidebarOpen(false)} className="p-2 text-ink-muted hover:text-ink" aria-label="Fechar painel"><X size={20} /></button>
+          </div>
+          <div className="p-4">{rightPanel}</div>
+        </aside>
       </div>
     </div>
   )
