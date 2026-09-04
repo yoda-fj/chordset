@@ -47,7 +47,7 @@ export default function EnsaiosPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
-        <Loader2 className="w-8 h-8 animate-spin text-indigo-600" />
+        <Loader2 className="w-8 h-8 animate-spin text-brand" />
       </div>
     );
   }
@@ -55,7 +55,7 @@ export default function EnsaiosPage() {
   if (error) {
     return (
       <div className="text-center py-12">
-        <p className="text-red-600 mb-4">{error}</p>
+        <p className="text-danger mb-4">{error}</p>
       </div>
     );
   }
@@ -65,17 +65,17 @@ export default function EnsaiosPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900 flex items-center gap-2">
-            <Music className="w-6 h-6 text-indigo-600" />
+          <h1 className="text-2xl font-bold text-ink flex items-center gap-2">
+            <Music className="w-6 h-6 text-brand" />
             Ensaios
           </h1>
-          <p className="text-slate-600 mt-1">
+          <p className="text-ink-muted mt-1">
             Gerencie suas sessões de prática e acompanhe seu progresso
           </p>
         </div>
         <Link
           href="/ensaios/new"
-          className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
+          className="inline-flex items-center gap-2 px-4 py-2 bg-brand text-zinc-950 rounded-lg hover:bg-brand-600 transition-colors"
         >
           <Plus size={18} />
           Novo Ensaio
@@ -87,14 +87,14 @@ export default function EnsaiosPage() {
 
       {/* Filter */}
       <div className="flex items-center gap-2 flex-wrap">
-        <Filter className="w-4 h-4 text-slate-500" />
-        <span className="text-sm text-slate-600">Filtrar:</span>
+        <Filter className="w-4 h-4 text-ink-muted" />
+        <span className="text-sm text-ink-muted">Filtrar:</span>
         <button
           onClick={() => setFilter('all')}
           className={`px-3 py-1.5 text-sm font-medium rounded-lg transition-colors ${
             filter === 'all'
-              ? 'bg-indigo-100 text-indigo-700 border border-indigo-200'
-              : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'
+              ? 'bg-brand/15 text-brand-600 border border-brand/30'
+              : 'bg-surface-raised text-ink-muted border border-ink/10 hover:bg-surface'
           }`}
         >
           Todas
@@ -103,8 +103,8 @@ export default function EnsaiosPage() {
           onClick={() => setFilter('needs_practice')}
           className={`px-3 py-1.5 text-sm font-medium rounded-lg transition-colors ${
             filter === 'needs_practice'
-              ? 'bg-amber-100 text-amber-700 border border-amber-200'
-              : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'
+              ? 'bg-brand/15 text-brand border border-brand/30'
+              : 'bg-surface-raised text-ink-muted border border-ink/10 hover:bg-surface'
           }`}
         >
           {PRACTICE_STATUS_LABELS.needs_practice}
@@ -113,8 +113,8 @@ export default function EnsaiosPage() {
           onClick={() => setFilter('practiced')}
           className={`px-3 py-1.5 text-sm font-medium rounded-lg transition-colors ${
             filter === 'practiced'
-              ? 'bg-blue-100 text-blue-700 border border-blue-200'
-              : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'
+              ? 'bg-brand/15 text-brand-600 border border-brand/30'
+              : 'bg-surface-raised text-ink-muted border border-ink/10 hover:bg-surface'
           }`}
         >
           {PRACTICE_STATUS_LABELS.practiced}
@@ -123,8 +123,8 @@ export default function EnsaiosPage() {
           onClick={() => setFilter('mastered')}
           className={`px-3 py-1.5 text-sm font-medium rounded-lg transition-colors ${
             filter === 'mastered'
-              ? 'bg-emerald-100 text-emerald-700 border border-emerald-200'
-              : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'
+              ? 'bg-success/15 text-success border border-success/40'
+              : 'bg-surface-raised text-ink-muted border border-ink/10 hover:bg-surface'
           }`}
         >
           {PRACTICE_STATUS_LABELS.mastered}
@@ -138,12 +138,12 @@ export default function EnsaiosPage() {
             <PracticeCard key={session.id} session={session} />
           ))
         ) : (
-          <div className="text-center py-12 bg-white rounded-xl border border-slate-200">
-            <Music className="w-12 h-12 text-slate-300 mx-auto mb-3" />
-            <p className="text-slate-500 mb-4">Nenhuma sessão de ensaio ainda.</p>
+          <div className="text-center py-12 bg-surface-raised rounded-xl border border-ink/10">
+            <Music className="w-12 h-12 text-ink-muted mx-auto mb-3" />
+            <p className="text-ink-muted mb-4">Nenhuma sessão de ensaio ainda.</p>
             <Link
               href="/ensaios/new"
-              className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
+              className="inline-flex items-center gap-2 px-4 py-2 bg-brand text-zinc-950 rounded-lg hover:bg-brand-600 transition-colors"
             >
               <Plus size={18} />
               Criar primeiro ensaio

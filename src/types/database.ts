@@ -258,10 +258,10 @@ export const EVENTO_STATUS_COLORS: Record<EventoStatus, string> = {
   cancelado: 'red',
 };
 
-// Cores de badge para Tailwind
+// Cores de badge para Tailwind (tokens semânticos — Fase 1.1)
 export const EVENTO_STATUS_BADGE_CLASSES: Record<EventoStatus, string> = {
-  rascunho: 'bg-gray-100 text-gray-800 border-gray-200',
-  confirmado: 'bg-blue-100 text-blue-800 border-blue-200',
-  realizado: 'bg-green-100 text-green-800 border-green-200',
-  cancelado: 'bg-red-100 text-red-800 border-red-200',
+  rascunho: 'bg-surface-overlay text-ink border-ink/20',
+  confirmado: 'bg-brand/15 text-brand border-brand/30',
+  realizado: 'bg-success/15 text-success border-success/40',
+  cancelado: 'bg-danger/15 text-danger border-danger/40',
 };

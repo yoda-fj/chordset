@@ -47,9 +47,9 @@ export function ToastProvider({ children }: { children: ReactNode }) {
         {toasts.map((toast) => (
           <div
             key={toast.id}
-            className={`flex items-center gap-3 px-4 py-3 rounded-lg shadow-lg text-white min-w-[300px] animate-slide-in ${
-              toast.type === 'success' ? 'bg-green-600' :
-              toast.type === 'info' ? 'bg-blue-600' : 'bg-red-600'
+            className={`flex items-center gap-3 px-4 py-3 rounded-lg shadow-lg text-zinc-950 min-w-[300px] animate-slide-in ${
+              toast.type === 'success' ? 'bg-success' :
+              toast.type === 'info' ? 'bg-brand' : 'bg-danger'
             }`}
           >
             {toast.type === 'success' && <CheckCircle size={20} />}

@@ -137,7 +137,7 @@ export default function DrumPatternsPage() {
   }
 
   if (loading) return <div className="p-8 text-center">Carregando...</div>
-  if (error) return <div className="p-8 text-center text-red-500">{error}</div>
+  if (error) return <div className="p-8 text-center text-danger">{error}</div>
 
   return (
     <div className="max-w-5xl mx-auto p-4">
@@ -145,7 +145,7 @@ export default function DrumPatternsPage() {
         <h1 className="text-2xl font-bold">Ritmos de Bateria</h1>
         <Link
           href="/ritmos/new"
-          className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+          className="flex items-center gap-2 px-4 py-2 bg-brand text-zinc-950 rounded-lg hover:bg-brand-600"
         >
           <Plus size={18} />
           Novo Ritmo
@@ -153,11 +153,11 @@ export default function DrumPatternsPage() {
       </div>
 
       {patterns.length === 0 ? (
-        <div className="text-center py-12 bg-gray-50 rounded-lg">
-          <p className="text-gray-500 mb-4">Nenhum ritmo criado ainda</p>
+        <div className="text-center py-12 bg-surface rounded-lg">
+          <p className="text-ink-muted mb-4">Nenhum ritmo criado ainda</p>
           <Link
             href="/ritmos/new"
-            className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+            className="inline-flex items-center gap-2 px-4 py-2 bg-brand text-zinc-950 rounded-lg hover:bg-brand-600"
           >
             <Plus size={18} />
             Criar primeiro ritmo
@@ -168,22 +168,22 @@ export default function DrumPatternsPage() {
           {patterns.map(pattern => (
             <div
               key={pattern.id}
-              className={`flex items-center justify-between p-4 bg-white border rounded-lg hover:shadow-md transition ${playingId === pattern.id ? 'ring-2 ring-blue-500' : ''}`}
+              className={`flex items-center justify-between p-4 bg-surface-raised border rounded-lg hover:shadow-md transition ${playingId === pattern.id ? 'ring-2 ring-brand' : ''}`}
             >
               <div className="flex items-center gap-4">
                 <button
                   onClick={() => playPattern(pattern)}
                   className={`w-10 h-10 rounded-full flex items-center justify-center transition ${
                     playingId === pattern.id
-                      ? 'bg-red-500 text-white hover:bg-red-600'
-                      : 'bg-blue-100 text-blue-600 hover:bg-blue-200'
+                      ? 'bg-danger text-zinc-950 hover:bg-danger'
+                      : 'bg-brand/15 text-brand hover:bg-brand/20'
                   }`}
                 >
                   {playingId === pattern.id ? <Square size={18} /> : <Play size={18} />}
                 </button>
                 <div>
                   <h3 className="font-semibold text-lg">{pattern.nome}</h3>
-                  <p className="text-sm text-gray-500">
+                  <p className="text-sm text-ink-muted">
                     {pattern.bpm} BPM · Kit {pattern.kit} · {formatDate(pattern.created_at)}
                   </p>
                 </div>
@@ -191,13 +191,13 @@ export default function DrumPatternsPage() {
               <div className="flex items-center gap-2">
                 <Link
                   href={`/ritmos/${pattern.id}`}
-                  className="px-3 py-1.5 text-blue-600 border border-blue-200 rounded hover:bg-blue-50"
+                  className="px-3 py-1.5 text-brand border border-brand/30 rounded hover:bg-brand/10"
                 >
                   Editar
                 </Link>
                 <button
                   onClick={() => deletePattern(pattern.id)}
-                  className="p-2 text-red-500 hover:bg-red-50 rounded"
+                  className="p-2 text-danger hover:bg-danger/10 rounded"
                   title="Excluir"
                 >
                   <Trash2 size={18} />

@@ -49,7 +49,7 @@ export default function EventosPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
-        <Loader2 className="w-8 h-8 animate-spin text-indigo-600" />
+        <Loader2 className="w-8 h-8 animate-spin text-brand" />
       </div>
     )
   }
@@ -57,10 +57,10 @@ export default function EventosPage() {
   if (error) {
     return (
       <div className="text-center py-12">
-        <p className="text-red-600 mb-4">{error}</p>
+        <p className="text-danger mb-4">{error}</p>
         <button
           onClick={() => window.location.reload()}
-          className="text-indigo-600 hover:text-indigo-700 font-medium"
+          className="text-brand hover:text-brand-600 font-medium"
         >
           Tentar novamente
         </button>
@@ -71,10 +71,10 @@ export default function EventosPage() {
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">Eventos</h1>
+        <h1 className="text-2xl font-bold text-ink">Eventos</h1>
         <Link
           href="/eventos/new"
-          className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
+          className="inline-flex items-center gap-2 px-4 py-2 bg-brand text-zinc-950 rounded-lg hover:bg-brand-600 transition-colors"
         >
           <Plus size={18} />
           Novo Evento
@@ -83,17 +83,17 @@ export default function EventosPage() {
 
       <div className="mb-6 flex gap-4">
         <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-ink-faint" size={20} />
           <input
             type="text"
             placeholder="Buscar eventos..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500"
+            className="w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-brand"
           />
         </div>
         <select 
-          className="px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500"
+          className="px-4 py-2 border rounded-lg focus:ring-2 focus:ring-brand"
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value)}
         >
@@ -105,7 +105,7 @@ export default function EventosPage() {
         </select>
         <input
           type="date"
-          className="px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500"
+          className="px-4 py-2 border rounded-lg focus:ring-2 focus:ring-brand"
           value={dateFilter}
           onChange={(e) => setDateFilter(e.target.value)}
         />
@@ -116,7 +116,7 @@ export default function EventosPage() {
               setStatusFilter('')
               setDateFilter('')
             }}
-            className="px-4 py-2 text-gray-600 hover:text-gray-800"
+            className="px-4 py-2 text-ink-muted hover:text-ink"
           >
             Limpar
           </button>
@@ -128,12 +128,12 @@ export default function EventosPage() {
           <Link
             key={evento.id}
             href={`/eventos/${evento.id}`}
-            className="block bg-white border rounded-lg p-4 hover:shadow-md transition-shadow"
+            className="block bg-surface-raised border rounded-lg p-4 hover:shadow-md transition-shadow"
           >
             <div className="flex items-start justify-between gap-4">
               <div className="flex-1">
                 <div className="flex items-center gap-3 mb-2">
-                  <h3 className="text-lg font-medium text-gray-900">
+                  <h3 className="text-lg font-medium text-ink">
                     {evento.nome}
                   </h3>
                   <span
@@ -145,7 +145,7 @@ export default function EventosPage() {
                   </span>
                 </div>
 
-                <div className="flex flex-wrap gap-4 text-sm text-gray-500">
+                <div className="flex flex-wrap gap-4 text-sm text-ink-muted">
                   <span className="flex items-center gap-1">
                     <Calendar size={16} />
                     {evento.data
@@ -160,13 +160,13 @@ export default function EventosPage() {
                     </span>
                   )}
                   {evento.templates && (
-                    <span className="text-indigo-600">
+                    <span className="text-brand">
                       Template: {evento.templates.nome}
                     </span>
                   )}
                   <Link
                     href={`/eventos/${evento.id}`}
-                    className="text-indigo-600 hover:text-indigo-700 font-medium"
+                    className="text-brand hover:text-brand-600 font-medium"
                   >
                     Editar
                   </Link>
@@ -177,7 +177,7 @@ export default function EventosPage() {
                     {evento.tags.map((tag) => (
                       <span
                         key={tag}
-                        className="text-xs px-2 py-0.5 bg-gray-100 text-gray-600 rounded-full"
+                        className="text-xs px-2 py-0.5 bg-surface-overlay text-ink-muted rounded-full"
                       >
                         {tag}
                       </span>
@@ -191,15 +191,15 @@ export default function EventosPage() {
       </div>
 
       {filteredEventos.length === 0 && (
-        <div className="text-center py-12 bg-gray-50 rounded-lg">
-          <p className="text-gray-500 mb-4">
+        <div className="text-center py-12 bg-surface rounded-lg">
+          <p className="text-ink-muted mb-4">
             {searchTerm || statusFilter || dateFilter
               ? 'Nenhum evento encontrado com esses filtros'
               : 'Nenhum evento encontrado'}
           </p>
           <Link
             href="/eventos/new"
-            className="text-indigo-600 hover:text-indigo-700 font-medium"
+            className="text-brand hover:text-brand-600 font-medium"
           >
             Criar primeiro evento
           </Link>

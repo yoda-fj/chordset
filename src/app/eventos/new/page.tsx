@@ -64,41 +64,41 @@ export default function NewEventoPage() {
       <div className="mb-6">
         <Link
           href="/eventos"
-          className="inline-flex items-center gap-2 text-gray-600 hover:text-gray-900"
+          className="inline-flex items-center gap-2 text-ink-muted hover:text-ink"
         >
           <ArrowLeft size={18} />
           Voltar para Eventos
         </Link>
       </div>
 
-      <h1 className="text-2xl font-bold text-gray-900 mb-6">
+      <h1 className="text-2xl font-bold text-ink mb-6">
         {isStudyList ? 'Nova Lista de Estudo' : 'Novo Evento'}
       </h1>
 
       {error && (
-        <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700">
+        <div className="mb-4 p-4 bg-danger/10 border border-danger/40 rounded-lg text-danger">
           {error}
         </div>
       )}
 
       <form onSubmit={handleSubmit} className="max-w-2xl">
-        <div className="bg-white p-6 rounded-lg border space-y-6">
+        <div className="bg-surface-raised p-6 rounded-lg border space-y-6">
           {/* Study List Toggle */}
-          <div className="flex items-center gap-2 p-3 bg-gray-50 rounded-lg border">
+          <div className="flex items-center gap-2 p-3 bg-surface rounded-lg border">
             <input
               type="checkbox"
               id="isStudyList"
               checked={isStudyList}
               onChange={(e) => setIsStudyList(e.target.checked)}
-              className="w-4 h-4 text-indigo-600 rounded border-gray-300"
+              className="w-4 h-4 text-brand rounded border-ink/20"
             />
-            <label htmlFor="isStudyList" className="text-sm text-gray-600 cursor-pointer">
+            <label htmlFor="isStudyList" className="text-sm text-ink-muted cursor-pointer">
               É uma lista de estudo (sem data, local ou status)
             </label>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-ink mb-1">
               {isStudyList ? 'Nome da Lista *' : 'Nome do Evento *'}
             </label>
             <input
@@ -106,7 +106,7 @@ export default function NewEventoPage() {
               value={nome}
               onChange={(e) => setNome(e.target.value)}
               required={!isStudyList}
-              className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500"
+              className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-brand"
               placeholder={isStudyList ? 'Ex: Estudos para guitarra' : 'Ex: Culto de Domingo'}
             />
           </div>
@@ -115,26 +115,26 @@ export default function NewEventoPage() {
           {!isStudyList && (
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-ink mb-1">
                   Data
                 </label>
                 <input
                   type="date"
                   value={data}
                   onChange={(e) => setData(e.target.value)}
-                  className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500"
+                  className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-brand"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-ink mb-1">
                   Hora
                 </label>
                 <input
                   type="time"
                   value={hora}
                   onChange={(e) => setHora(e.target.value)}
-                  className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500"
+                  className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-brand"
                 />
               </div>
             </div>
@@ -143,14 +143,14 @@ export default function NewEventoPage() {
           {/* Only show local if NOT study list */}
           {!isStudyList && (
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-ink mb-1">
                 Local
               </label>
               <input
                 type="text"
                 value={local}
                 onChange={(e) => setLocal(e.target.value)}
-                className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500"
+                className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-brand"
                 placeholder="Ex: Igreja Principal"
               />
             </div>
@@ -159,13 +159,13 @@ export default function NewEventoPage() {
           {/* Only show status if NOT study list */}
           {!isStudyList && (
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-ink mb-1">
                 Status
               </label>
               <select
                 value={status}
                 onChange={(e) => setStatus(e.target.value)}
-                className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 bg-white"
+                className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-brand bg-surface-raised"
               >
                 {STATUS_OPCOES.map((opcao) => (
                   <option key={opcao.value} value={opcao.value}>
@@ -179,7 +179,7 @@ export default function NewEventoPage() {
           {/* Only show tags if NOT study list */}
           {!isStudyList && (
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-ink mb-1">
                 Tags
               </label>
               <TagInput
@@ -192,14 +192,14 @@ export default function NewEventoPage() {
           )}
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-ink mb-1">
               Observações
             </label>
             <textarea
               value={observacoes}
               onChange={(e) => setObservacoes(e.target.value)}
               rows={3}
-              className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500"
+              className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-brand"
               placeholder="Observações adicionais..."
             />
           </div>
@@ -208,14 +208,14 @@ export default function NewEventoPage() {
         <div className="flex justify-end gap-3 mt-6">
           <Link
             href="/eventos"
-            className="px-4 py-2 text-gray-600 hover:text-gray-800"
+            className="px-4 py-2 text-ink-muted hover:text-ink"
           >
             Cancelar
           </Link>
           <button
             type="submit"
             disabled={saving || !isValid}
-            className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50 transition-colors"
+            className="inline-flex items-center gap-2 px-4 py-2 bg-brand text-zinc-950 rounded-lg hover:bg-brand-600 disabled:opacity-50 transition-colors"
           >
             {saving ? (
               <>

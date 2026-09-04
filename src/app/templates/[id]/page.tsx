@@ -103,7 +103,7 @@ export default function EditTemplatePage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <Loader2 className="w-8 h-8 animate-spin text-indigo-600" />
+        <Loader2 className="w-8 h-8 animate-spin text-brand" />
       </div>
     )
   }
@@ -111,8 +111,8 @@ export default function EditTemplatePage() {
   if (error && !nome) {
     return (
       <div className="text-center py-12">
-        <p className="text-red-600 mb-4">{error}</p>
-        <Link href="/templates" className="text-indigo-600 hover:text-indigo-700">
+        <p className="text-danger mb-4">{error}</p>
+        <Link href="/templates" className="text-brand hover:text-brand-600">
           Voltar para Templates
         </Link>
       </div>
@@ -124,7 +124,7 @@ export default function EditTemplatePage() {
       <div className="mb-6">
         <Link
           href="/templates"
-          className="inline-flex items-center gap-2 text-gray-600 hover:text-gray-900"
+          className="inline-flex items-center gap-2 text-ink-muted hover:text-ink"
         >
           <ArrowLeft size={18} />
           Voltar para Templates
@@ -132,10 +132,10 @@ export default function EditTemplatePage() {
       </div>
 
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">Editar Template</h1>
+        <h1 className="text-2xl font-bold text-ink">Editar Template</h1>
         <button
           onClick={handleDelete}
-          className="inline-flex items-center gap-2 px-4 py-2 text-red-600 hover:text-red-700 border border-red-200 rounded-lg hover:bg-red-50 transition-colors"
+          className="inline-flex items-center gap-2 px-4 py-2 text-danger hover:text-danger border border-danger/40 rounded-lg hover:bg-danger/10 transition-colors"
         >
           <Trash2 size={18} />
           Excluir
@@ -143,15 +143,15 @@ export default function EditTemplatePage() {
       </div>
 
       {error && (
-        <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700">
+        <div className="mb-4 p-4 bg-danger/10 border border-danger/40 rounded-lg text-danger">
           {error}
         </div>
       )}
 
       <form onSubmit={handleSubmit} className="space-y-6">
-        <div className="bg-white p-6 rounded-lg border space-y-4">
+        <div className="bg-surface-raised p-6 rounded-lg border space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-ink mb-1">
               Nome *
             </label>
             <input
@@ -159,24 +159,24 @@ export default function EditTemplatePage() {
               value={nome}
               onChange={(e) => setNome(e.target.value)}
               required
-              className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500"
+              className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-brand"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-ink mb-1">
               Descrição
             </label>
             <textarea
               value={descricao}
               onChange={(e) => setDescricao(e.target.value)}
               rows={3}
-              className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500"
+              className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-brand"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-ink mb-1">
               Tags
             </label>
             <TagInput
@@ -187,7 +187,7 @@ export default function EditTemplatePage() {
           </div>
         </div>
 
-        <div className="bg-white p-6 rounded-lg border">
+        <div className="bg-surface-raised p-6 rounded-lg border">
           <SetlistBuilder
             musicas={musicas}
             onChange={setMusicas}
@@ -200,14 +200,14 @@ export default function EditTemplatePage() {
         <div className="flex justify-end gap-3">
           <Link
             href="/templates"
-            className="px-4 py-2 text-gray-600 hover:text-gray-800"
+            className="px-4 py-2 text-ink-muted hover:text-ink"
           >
             Cancelar
           </Link>
           <button
             type="submit"
             disabled={saving || !nome.trim()}
-            className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50 transition-colors"
+            className="inline-flex items-center gap-2 px-4 py-2 bg-brand text-zinc-950 rounded-lg hover:bg-brand-600 disabled:opacity-50 transition-colors"
           >
             {saving ? <Loader2 size={18} className="animate-spin" /> : <Save size={18} />}
             {saving ? 'Salvando...' : 'Salvar Alterações'}

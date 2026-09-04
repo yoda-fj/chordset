@@ -210,13 +210,13 @@ export function SetlistBuilder({
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h3 className="text-lg font-medium text-gray-900">
+        <h3 className="text-lg font-medium text-ink">
           Músicas ({musicas.length})
         </h3>
         <button
           type="button"
           onClick={() => setShowAddModal(true)}
-          className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
+          className="inline-flex items-center gap-2 px-4 py-2 bg-brand text-zinc-950 rounded-lg hover:bg-brand-600 transition-colors"
         >
           <Plus size={18} />
           Adicionar Música
@@ -224,12 +224,12 @@ export function SetlistBuilder({
       </div>
 
       {musicas.length === 0 ? (
-        <div className="text-center py-12 bg-gray-50 rounded-lg border-2 border-dashed">
-          <p className="text-gray-500">Nenhuma música adicionada</p>
+        <div className="text-center py-12 bg-surface rounded-lg border-2 border-dashed">
+          <p className="text-ink-muted">Nenhuma música adicionada</p>
           <button
             type="button"
             onClick={() => setShowAddModal(true)}
-            className="mt-2 text-indigo-600 hover:text-indigo-700 font-medium"
+            className="mt-2 text-brand hover:text-brand-600 font-medium"
           >
             Adicionar primeira música
           </button>
@@ -272,17 +272,17 @@ export function SetlistBuilder({
 
       {showAddModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-[80vh] flex flex-col">
+          <div className="bg-surface-raised rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-[80vh] flex flex-col">
             <div className="p-4 border-b">
               <h3 className="text-lg font-medium">Adicionar Música</h3>
               <div className="mt-2 relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-ink-faint" size={18} />
                 <input
                   type="text"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   placeholder="Buscar música..."
-                  className="w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500"
+                  className="w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-brand"
                   autoFocus
                 />
               </div>
@@ -290,9 +290,9 @@ export function SetlistBuilder({
 
             <div className="flex-1 overflow-auto p-4">
               {loadingMusicas ? (
-                <p className="text-center text-gray-500 py-8">Carregando músicas...</p>
+                <p className="text-center text-ink-muted py-8">Carregando músicas...</p>
               ) : filteredMusicas.length === 0 ? (
-                <p className="text-center text-gray-500 py-8">Nenhuma música encontrada</p>
+                <p className="text-center text-ink-muted py-8">Nenhuma música encontrada</p>
               ) : (
                 <div className="space-y-2">
                   {filteredMusicas.map((musica) => (
@@ -300,15 +300,15 @@ export function SetlistBuilder({
                       key={musica.id}
                       type="button"
                       onClick={() => handleAddMusica(musica)}
-                      className="w-full text-left p-3 border rounded-lg hover:bg-gray-50 transition-colors"
+                      className="w-full text-left p-3 border rounded-lg hover:bg-surface transition-colors"
                     >
                       <div className="font-medium">{musica.titulo}</div>
-                      <div className="text-sm text-gray-500">{musica.artista}</div>
+                      <div className="text-sm text-ink-muted">{musica.artista}</div>
                       <div className="flex gap-1 mt-1">
                         {musica.tags.map((tag) => (
                           <span
                             key={tag}
-                            className="text-xs px-2 py-0.5 bg-gray-100 rounded-full"
+                            className="text-xs px-2 py-0.5 bg-surface-overlay rounded-full"
                           >
                             {tag}
                           </span>
@@ -326,7 +326,7 @@ export function SetlistBuilder({
                   setShowAddModal(false)
                   setSearchTerm('')
                 }}
-                className="px-4 py-2 text-gray-600 hover:text-gray-800"
+                className="px-4 py-2 text-ink-muted hover:text-ink"
               >
                 Cancelar
               </button>

@@ -186,25 +186,25 @@ export default function NewMusicaPage() {
       <div className="mb-6">
         <Link
           href="/musicas"
-          className="inline-flex items-center gap-2 text-gray-600 hover:text-gray-900"
+          className="inline-flex items-center gap-2 text-ink-muted hover:text-ink"
         >
           <ArrowLeft size={18} />
           Voltar para Músicas
         </Link>
       </div>
 
-      <h1 className="text-2xl font-bold text-gray-900 mb-6">Nova Música</h1>
+      <h1 className="text-2xl font-bold text-ink mb-6">Nova Música</h1>
 
       {error && (
-        <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700">
+        <div className="mb-4 p-4 bg-danger/10 border border-danger/40 rounded-lg text-danger">
           {error}
         </div>
       )}
 
       <form onSubmit={handleSubmit} className="max-w-2xl">
-        <div className="bg-white p-6 rounded-lg border space-y-6">
+        <div className="bg-surface-raised p-6 rounded-lg border space-y-6">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-ink mb-1">
               Título *
             </label>
             <input
@@ -212,13 +212,13 @@ export default function NewMusicaPage() {
               value={titulo}
               onChange={(e) => setTitulo(e.target.value)}
               required
-              className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500"
+              className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-brand"
               placeholder="Ex: Amazing Grace"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-ink mb-1">
               Artista *
             </label>
             <input
@@ -226,19 +226,19 @@ export default function NewMusicaPage() {
               value={artista}
               onChange={(e) => setArtista(e.target.value)}
               required
-              className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500"
+              className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-brand"
               placeholder="Ex: John Newton"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-ink mb-1">
               Tom Original
             </label>
             <select
               value={tomOriginal}
               onChange={(e) => setTomOriginal(e.target.value)}
-              className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 bg-white"
+              className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-brand bg-surface-raised"
             >
               <option value="">Selecionar tom...</option>
               {TOM_OPCOES.map((tom) => (
@@ -247,13 +247,13 @@ export default function NewMusicaPage() {
                 </option>
               ))}
             </select>
-            <p className="mt-1 text-xs text-gray-500">
+            <p className="mt-1 text-xs text-ink-muted">
               Tom em que a música foi originalmente gravada
             </p>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-ink mb-1">
               Tags
             </label>
             <TagInput
@@ -262,25 +262,25 @@ export default function NewMusicaPage() {
               suggestions={TAG_SUGGESTIONS_MUSICA}
               placeholder="Adicionar tag..."
             />
-            <p className="mt-1 text-xs text-gray-500">
+            <p className="mt-1 text-xs text-ink-muted">
               Adicione tags para facilitar a organização (ex: louvor, hino, clássico)
             </p>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-ink mb-1">
               Cifra
             </label>
             
             {/* Abas Editar/Preview */}
-            <div className="flex border-b border-gray-200 mb-2">
+            <div className="flex border-b border-ink/10 mb-2">
               <button
                 type="button"
                 onClick={() => setCifraTab('edit')}
                 className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
                   cifraTab === 'edit'
-                    ? 'border-indigo-600 text-indigo-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700'
+                    ? 'border-brand text-brand'
+                    : 'border-transparent text-ink-muted hover:text-ink'
                 }`}
               >
                 Editar
@@ -290,8 +290,8 @@ export default function NewMusicaPage() {
                 onClick={() => setCifraTab('preview')}
                 className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
                   cifraTab === 'preview'
-                    ? 'border-indigo-600 text-indigo-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700'
+                    ? 'border-brand text-brand'
+                    : 'border-transparent text-ink-muted hover:text-ink'
                 }`}
               >
                 Preview
@@ -306,10 +306,10 @@ export default function NewMusicaPage() {
                     value={cifra}
                     onChange={(e) => setCifra(e.target.value)}
                     rows={10}
-                    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 font-mono text-sm"
+                    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-brand font-mono text-sm"
                     placeholder="Cole aqui a cifra da música...&#10;&#10;Exemplo:&#10;Tom: G&#10;&#10;[Intro] G  D  Em  C&#10;&#10;[Verso 1]&#10;G              D&#10;Amazing grace..."
                   />
-                  <p className="mt-1 text-xs text-gray-500">
+                  <p className="mt-1 text-xs text-ink-muted">
                     Use fonte monoespaçada para manter o alinhamento dos acordes
                   </p>
                 </>
@@ -319,7 +319,7 @@ export default function NewMusicaPage() {
                     {cifra.trim() ? (
                       <CifraPreview cifra={cifra} />
                     ) : (
-                      <div className="p-8 text-center text-gray-400 text-sm">
+                      <div className="p-8 text-center text-ink-faint text-sm">
                         Nenhuma cifra para preview
                       </div>
                     )}
@@ -334,7 +334,7 @@ export default function NewMusicaPage() {
           <button
             type="button"
             onClick={() => setShowImport(true)}
-            className="inline-flex items-center gap-2 px-4 py-2 text-indigo-600 border border-indigo-600 rounded-lg hover:bg-indigo-50 transition-colors"
+            className="inline-flex items-center gap-2 px-4 py-2 text-brand border border-brand rounded-lg hover:bg-brand/10 transition-colors"
           >
             <Download size={18} />
             Importar do Cifra Club
@@ -342,21 +342,21 @@ export default function NewMusicaPage() {
           <button
             type="button"
             onClick={() => setShowPhotoImport(true)}
-            className="inline-flex items-center gap-2 px-4 py-2 text-indigo-600 border border-indigo-600 rounded-lg hover:bg-indigo-50 transition-colors"
+            className="inline-flex items-center gap-2 px-4 py-2 text-brand border border-brand rounded-lg hover:bg-brand/10 transition-colors"
           >
             <Camera size={18} />
             Importar via Foto
           </button>
           <Link
             href="/musicas"
-            className="px-4 py-2 text-gray-600 hover:text-gray-800"
+            className="px-4 py-2 text-ink-muted hover:text-ink"
           >
             Cancelar
           </Link>
           <button
             type="submit"
             disabled={saving || !isValid}
-            className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50 transition-colors"
+            className="inline-flex items-center gap-2 px-4 py-2 bg-brand text-zinc-950 rounded-lg hover:bg-brand-600 disabled:opacity-50 transition-colors"
           >
             {saving ? (
               <>
@@ -376,7 +376,7 @@ export default function NewMusicaPage() {
       {/* Import Modal */}
       {showImport && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-[80vh] flex flex-col">
+          <div className="bg-surface-raised rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-[80vh] flex flex-col">
             <div className="p-4 border-b flex items-center justify-between">
               <h3 className="text-lg font-medium">Importar do Cifra Club</h3>
               <button
@@ -386,7 +386,7 @@ export default function NewMusicaPage() {
                   setImportResults([])
                   setImportError(null)
                 }}
-                className="text-gray-400 hover:text-gray-600"
+                className="text-ink-faint hover:text-ink-muted"
               >
                 <X size={20} />
               </button>
@@ -395,20 +395,20 @@ export default function NewMusicaPage() {
             <div className="p-4 border-b">
               <form onSubmit={handleSearchImport} className="flex gap-2">
                 <div className="relative flex-1">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-ink-faint" size={18} />
                   <input
                     type="text"
                     value={importQuery}
                     onChange={(e) => setImportQuery(e.target.value)}
                     placeholder="Buscar música ou artista..."
-                    className="w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500"
+                    className="w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-brand"
                     autoFocus
                   />
                 </div>
                 <button
                   type="submit"
                   disabled={importLoading || !importQuery.trim()}
-                  className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50"
+                  className="px-4 py-2 bg-brand text-zinc-950 rounded-lg hover:bg-brand-600 disabled:opacity-50"
                 >
                   {importLoading ? <Loader2 size={18} className="animate-spin" /> : 'Buscar'}
                 </button>
@@ -417,15 +417,15 @@ export default function NewMusicaPage() {
 
             <div className="flex-1 overflow-auto p-4">
               {importError && (
-                <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
+                <div className="mb-4 p-3 bg-danger/10 border border-danger/40 rounded-lg text-danger text-sm">
                   {importError}
                 </div>
               )}
 
               {importLoading ? (
                 <div className="flex items-center justify-center py-12">
-                  <Loader2 size={24} className="animate-spin text-indigo-600" />
-                  <span className="ml-2 text-gray-500">Buscando...</span>
+                  <Loader2 size={24} className="animate-spin text-brand" />
+                  <span className="ml-2 text-ink-muted">Buscando...</span>
                 </div>
               ) : importResults.length > 0 ? (
                 <div className="space-y-2">
@@ -434,7 +434,7 @@ export default function NewMusicaPage() {
                       key={result.id}
                       onClick={() => handleSelectResult(result)}
                       disabled={importingSong}
-                      className="w-full text-left p-3 border rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50 flex items-center gap-3"
+                      className="w-full text-left p-3 border rounded-lg hover:bg-surface transition-colors disabled:opacity-50 flex items-center gap-3"
                     >
                       {result.image ? (
                         <Image
@@ -446,32 +446,32 @@ export default function NewMusicaPage() {
                           className="w-12 h-12 rounded object-cover flex-shrink-0"
                         />
                       ) : (
-                        <div className="w-12 h-12 rounded bg-gray-200 flex-shrink-0 flex items-center justify-center">
-                          <Music size={20} className="text-gray-400" />
+                        <div className="w-12 h-12 rounded bg-surface-overlay flex-shrink-0 flex items-center justify-center">
+                          <Music size={20} className="text-ink-faint" />
                         </div>
                       )}
                       <div className="flex-1 min-w-0">
                         <div className="font-medium truncate">{result.titulo}</div>
-                        <div className="text-sm text-gray-500 truncate">{result.artista}</div>
+                        <div className="text-sm text-ink-muted truncate">{result.artista}</div>
                         {result.tom && (
-                          <div className="text-xs text-indigo-600 mt-0.5">Tom: {result.tom}</div>
+                          <div className="text-xs text-brand mt-0.5">Tom: {result.tom}</div>
                         )}
                       </div>
                     </button>
                   ))}
                 </div>
               ) : (
-                <div className="text-center py-12 text-gray-500">
+                <div className="text-center py-12 text-ink-muted">
                   Digite um termo de busca para encontrar músicas
                 </div>
               )}
             </div>
 
             {importingSong && (
-              <div className="p-4 border-t bg-gray-50">
+              <div className="p-4 border-t bg-surface">
                 <div className="flex items-center justify-center">
-                  <Loader2 size={20} className="animate-spin text-indigo-600" />
-                  <span className="ml-2 text-gray-600">Importando cifra...</span>
+                  <Loader2 size={20} className="animate-spin text-brand" />
+                  <span className="ml-2 text-ink-muted">Importando cifra...</span>
                 </div>
               </div>
             )}

@@ -51,12 +51,12 @@ export function PracticeTimer({ onTimeUpdate, initialTime = 0, autoStart = false
   };
 
   return (
-    <div className="practice-timer bg-white rounded-xl p-4 border border-slate-200 shadow-sm">
+    <div className="practice-timer bg-surface-raised rounded-xl p-4 border border-ink/10 shadow-sm">
       <div className="timer-display text-center mb-4">
-        <div className={`text-5xl font-bold font-mono ${isRunning ? 'text-emerald-600' : 'text-slate-700'}`}>
+        <div className={`text-5xl font-bold font-mono ${isRunning ? 'text-success' : 'text-ink'}`}>
           {formatTime(seconds)}
         </div>
-        <div className="text-sm text-slate-500 mt-1">
+        <div className="text-sm text-ink-muted mt-1">
           {isRunning ? 'Praticando...' : 'Pausado'}
         </div>
       </div>
@@ -66,8 +66,8 @@ export function PracticeTimer({ onTimeUpdate, initialTime = 0, autoStart = false
           onClick={toggleTimer}
           className={`flex items-center justify-center w-14 h-14 rounded-full transition-all hover:scale-105 ${
             isRunning 
-              ? 'bg-amber-500 hover:bg-amber-600 text-white' 
-              : 'bg-emerald-500 hover:bg-emerald-600 text-white'
+              ? 'bg-brand hover:bg-brand-600 text-zinc-950'
+              : 'bg-success hover:bg-success text-zinc-950'
           }`}
         >
           {isRunning ? <Pause size={28} /> : <Play size={28} className="ml-1" />}
@@ -75,7 +75,7 @@ export function PracticeTimer({ onTimeUpdate, initialTime = 0, autoStart = false
         
         <button
           onClick={resetTimer}
-          className="flex items-center justify-center w-10 h-10 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 transition-all"
+          className="flex items-center justify-center w-10 h-10 rounded-full bg-surface-overlay hover:bg-surface-overlay text-ink-muted transition-all"
           title="Reiniciar"
         >
           <RotateCcw size={18} />

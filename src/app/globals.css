@@ -2,6 +2,64 @@
 @tailwind components;
 @tailwind utilities;
 
+/*
+ * Design tokens ChordSet (Fase 1.1/1.2) — dark-first.
+ * :root já é o tema escuro (zinc-950/preto): zero flash claro no cold start,
+ * mesmo antes de qualquer JS. O modo claro é a exceção (classe .light no <html>,
+ * aplicada pelo next-themes).
+ */
+:root,
+.dark {
+  --surface: 9 9 11; /* zinc-950 */
+  --surface-raised: 24 24 27; /* zinc-900 */
+  --surface-overlay: 39 39 42; /* zinc-800 */
+  --ink: 250 250 250; /* zinc-50 */
+  --ink-muted: 161 161 170; /* zinc-400 */
+  --ink-faint: 113 113 122; /* zinc-500 */
+
+  --brand: 255 176 32; /* #FFB020 âmbar de palco */
+  --chord: 52 211 153; /* #34D399 */
+  --section: 167 139 250; /* #A78BFA */
+  --tab: 251 191 36; /* #FBBF24 */
+  --danger: 248 113 113; /* #F87171 */
+  --success: 52 211 153; /* #34D399 */
+
+  color-scheme: dark;
+}
+
+:root.light {
+  --surface: 250 250 250; /* zinc-50 */
+  --surface-raised: 255 255 255;
+  --surface-overlay: 244 244 245; /* zinc-100 */
+  --ink: 24 24 27; /* zinc-900 */
+  --ink-muted: 82 82 91; /* zinc-600 */
+  --ink-faint: 161 161 170; /* zinc-400 */
+
+  color-scheme: light;
+}
+
+html {
+  background-color: rgb(var(--surface));
+}
+
+body {
+  background-color: rgb(var(--surface));
+  color: rgb(var(--ink));
+}
+
+/* Inputs/selects herdam os tokens (evita fundo claro nativo no dark) */
+input,
+select,
+textarea {
+  background-color: rgb(var(--surface-raised));
+  color: rgb(var(--ink));
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: rgb(var(--ink-faint));
+}
+
 @keyframes slide-in {
   from {
     transform: translateX(100%);

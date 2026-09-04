@@ -82,25 +82,25 @@ export default function NewEnsaioPage() {
       <div>
         <Link
           href="/ensaios"
-          className="inline-flex items-center gap-2 text-gray-600 hover:text-gray-900"
+          className="inline-flex items-center gap-2 text-ink-muted hover:text-ink"
         >
           <ArrowLeft size={18} />
           Voltar para Ensaios
         </Link>
       </div>
 
-      <h1 className="text-2xl font-bold text-gray-900">Novo Ensaio</h1>
+      <h1 className="text-2xl font-bold text-ink">Novo Ensaio</h1>
 
       {error && (
-        <div className="p-4 bg-red-50 border border-red-200 rounded-lg text-red-700">
+        <div className="p-4 bg-danger/10 border border-danger/40 rounded-lg text-danger">
           {error}
         </div>
       )}
 
       {/* Difficulty Selection */}
-      <div className="bg-white p-6 rounded-lg border space-y-4">
+      <div className="bg-surface-raised p-6 rounded-lg border space-y-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-ink mb-2">
             Dificuldade
           </label>
           <div className="flex gap-3">
@@ -112,11 +112,11 @@ export default function NewEnsaioPage() {
                 className={`px-4 py-2 rounded-lg border transition-colors ${
                   difficulty === d
                     ? d === 'easy'
-                      ? 'bg-green-100 border-green-300 text-green-800'
+                      ? 'bg-success/15 border-success/40 text-success'
                       : d === 'medium'
-                      ? 'bg-yellow-100 border-yellow-300 text-yellow-800'
-                      : 'bg-red-100 border-red-300 text-red-800'
-                    : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50'
+                      ? 'bg-brand/15 border-brand/40 text-brand-600'
+                      : 'bg-danger/15 border-danger/50 text-danger'
+                    : 'bg-surface-raised border-ink/10 text-ink-muted hover:bg-surface'
                 }`}
               >
                 {d === 'easy' ? 'Fácil' : d === 'medium' ? 'Médio' : 'Difícil'}
@@ -127,25 +127,25 @@ export default function NewEnsaioPage() {
       </div>
 
       {/* Music Selection */}
-      <div className="bg-white p-6 rounded-lg border space-y-4">
+      <div className="bg-surface-raised p-6 rounded-lg border space-y-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-ink mb-2">
             Selecione a Música
           </label>
           
           {selectedMusica ? (
-            <div className="p-4 bg-indigo-50 border border-indigo-200 rounded-lg">
+            <div className="p-4 bg-brand/10 border border-brand/30 rounded-lg">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <Music className="text-indigo-500" size={20} />
+                  <Music className="text-brand" size={20} />
                   <div>
-                    <div className="font-medium text-gray-900">{selectedMusica.titulo}</div>
-                    <div className="text-sm text-gray-500">{selectedMusica.artista}</div>
+                    <div className="font-medium text-ink">{selectedMusica.titulo}</div>
+                    <div className="text-sm text-ink-muted">{selectedMusica.artista}</div>
                   </div>
                 </div>
                 <button
                   onClick={() => setSelectedMusica(null)}
-                  className="text-gray-400 hover:text-gray-600"
+                  className="text-ink-faint hover:text-ink-muted"
                 >
                   Trocar
                 </button>
@@ -154,24 +154,24 @@ export default function NewEnsaioPage() {
           ) : (
             <>
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-ink-faint" size={18} />
                 <input
                   type="text"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   placeholder="Buscar música..."
-                  className="w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500"
+                  className="w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-brand"
                   autoFocus
                 />
               </div>
 
               <div className="max-h-64 overflow-auto border rounded-lg">
                 {loading ? (
-                  <div className="p-4 text-center text-gray-500">
+                  <div className="p-4 text-center text-ink-muted">
                     <Loader2 className="w-6 h-6 animate-spin mx-auto" />
                   </div>
                 ) : filteredMusicas.length === 0 ? (
-                  <div className="p-4 text-center text-gray-500">
+                  <div className="p-4 text-center text-ink-muted">
                     Nenhuma música encontrada
                   </div>
                 ) : (
@@ -180,13 +180,13 @@ export default function NewEnsaioPage() {
                       <button
                         key={musica.id}
                         onClick={() => setSelectedMusica(musica)}
-                        className="w-full text-left p-3 hover:bg-gray-50 transition-colors"
+                        className="w-full text-left p-3 hover:bg-surface transition-colors"
                       >
                         <div className="flex items-center gap-3">
-                          <Music className="text-gray-400" size={16} />
+                          <Music className="text-ink-faint" size={16} />
                           <div>
-                            <div className="font-medium text-gray-900">{musica.titulo}</div>
-                            <div className="text-sm text-gray-500">{musica.artista}</div>
+                            <div className="font-medium text-ink">{musica.titulo}</div>
+                            <div className="text-sm text-ink-muted">{musica.artista}</div>
                           </div>
                         </div>
                       </button>
@@ -203,14 +203,14 @@ export default function NewEnsaioPage() {
       <div className="flex justify-end gap-3">
         <Link
           href="/ensaios"
-          className="px-4 py-2 text-gray-600 hover:text-gray-800"
+          className="px-4 py-2 text-ink-muted hover:text-ink"
         >
           Cancelar
         </Link>
         <button
           onClick={handleCreate}
           disabled={!selectedMusica || saving}
-          className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50 transition-colors"
+          className="inline-flex items-center gap-2 px-4 py-2 bg-brand text-zinc-950 rounded-lg hover:bg-brand-600 disabled:opacity-50 transition-colors"
         >
           {saving ? (
             <>
