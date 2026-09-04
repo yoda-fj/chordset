@@ -1,15 +1,33 @@
 import type { Metadata } from 'next'
-import { Inter } from 'next/font/google'
+import { Space_Grotesk, Instrument_Sans, JetBrains_Mono } from 'next/font/google'
 import Link from 'next/link'
 import './globals.css'
 import ClientLayout from '@/components/ui/ClientLayout'
+import { ThemeProvider } from '@/components/ui/ThemeProvider'
 
-const inter = Inter({ subsets: ['latin'] })
+// Fase 1.3 — Fontes via next/font/google com CSS variables
+const display = Space_Grotesk({
+  subsets: ['latin'],
+  variable: '--font-display',
+})
+
+const sans = Instrument_Sans({
+  subsets: ['latin'],
+  variable: '--font-sans',
+})
+
+const mono = JetBrains_Mono({
+  subsets: ['latin'],
+  variable: '--font-mono',
+})
 
 export const metadata: Metadata = {
   title: 'Setlist Tools',
   description: 'Sistema de gerenciamento de setlists',
 }
+
+const navLinkClass =
+  'text-ink-muted hover:text-ink px-3 py-2 rounded-md text-sm font-medium transition-colors'
 
 export default function RootLayout({
   children,
@@ -17,56 +35,48 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="pt-BR">
-      <body className={inter.className}>
-        <div className="min-h-screen bg-gray-50">
-          <nav className="bg-white shadow-sm border-b site-nav">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-              <div className="flex justify-between h-16">
-                <div className="flex items-center">
-                  <Link href="/" className="text-xl font-bold text-indigo-600">
-                    Setlist Tools
-                  </Link>
-                </div>
-                <div className="flex items-center space-x-4">
-                  <Link
-                    href="/ritmos"
-                    className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
-                  >
-                    Ritmos
-                  </Link>
-                  <Link
-                    href="/eventos"
-                    className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
-                  >
-                    Eventos
-                  </Link>
-                  <Link
-                    href="/templates"
-                    className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
-                  >
-                    Templates
-                  </Link>
-                  <Link
-                    href="/musicas"
-                    className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
-                  >
-                    Músicas
-                  </Link>
-                  <Link
-                    href="/ensaios"
-                    className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
-                  >
-                    Ensaios
-                  </Link>
+    <html lang="pt-BR" className="dark" suppressHydrationWarning>
+      <body
+        className={`${sans.variable} ${display.variable} ${mono.variable} font-sans bg-surface text-ink antialiased`}
+      >
+        <ThemeProvider>
+          <div className="min-h-screen bg-surface">
+            <nav className="bg-surface-raised border-b border-ink/10 site-nav">
+              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div className="flex justify-between h-16">
+                  <div className="flex items-center">
+                    <Link
+                      href="/"
+                      className="text-xl font-bold font-display text-brand"
+                    >
+                      Setlist Tools
+                    </Link>
+                  </div>
+                  <div className="flex items-center space-x-4">
+                    <Link href="/ritmos" className={navLinkClass}>
+                      Ritmos
+                    </Link>
+                    <Link href="/eventos" className={navLinkClass}>
+                      Eventos
+                    </Link>
+                    <Link href="/templates" className={navLinkClass}>
+                      Templates
+                    </Link>
+                    <Link href="/musicas" className={navLinkClass}>
+                      Músicas
+                    </Link>
+                    <Link href="/ensaios" className={navLinkClass}>
+                      Ensaios
+                    </Link>
+                  </div>
                 </div>
               </div>
-            </div>
-          </nav>
-          <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 site-main">
-            <ClientLayout>{children}</ClientLayout>
-          </main>
-        </div>
+            </nav>
+            <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 site-main">
+              <ClientLayout>{children}</ClientLayout>
+            </main>
+          </div>
+        </ThemeProvider>
       </body>
     </html>
   )

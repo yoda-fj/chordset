@@ -117,7 +117,7 @@ export default function EnsaioDetailPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
-        <Loader2 className="w-8 h-8 animate-spin text-indigo-600" />
+        <Loader2 className="w-8 h-8 animate-spin text-brand" />
       </div>
     );
   }
@@ -125,10 +125,10 @@ export default function EnsaioDetailPage() {
   if (error || !session) {
     return (
       <div className="text-center py-12">
-        <p className="text-red-600 mb-4">{error || 'Sessão não encontrada'}</p>
+        <p className="text-danger mb-4">{error || 'Sessão não encontrada'}</p>
         <button
           onClick={() => router.push('/ensaios')}
-          className="text-indigo-600 hover:text-indigo-700"
+          className="text-brand hover:text-brand-600"
         >
           Voltar para Ensaios
         </button>
@@ -145,13 +145,13 @@ export default function EnsaioDetailPage() {
         <div className="flex items-center gap-3">
           <button
             onClick={() => router.push('/ensaios')}
-            className="p-2 hover:bg-slate-100 rounded-lg transition-colors"
+            className="p-2 hover:bg-surface-overlay rounded-lg transition-colors"
           >
-            <ArrowLeft className="w-5 h-5 text-slate-600" />
+            <ArrowLeft className="w-5 h-5 text-ink-muted" />
           </button>
           <div>
-            <h1 className="text-2xl font-bold text-slate-900">{musicas?.titulo}</h1>
-            <div className="flex items-center gap-2 text-slate-600">
+            <h1 className="text-2xl font-bold text-ink">{musicas?.titulo}</h1>
+            <div className="flex items-center gap-2 text-ink-muted">
               <User className="w-4 h-4" />
               <span>{musicas?.artista}</span>
             </div>
@@ -162,7 +162,7 @@ export default function EnsaioDetailPage() {
           <button
             onClick={handleDelete}
             disabled={isDeleting}
-            className="inline-flex items-center gap-2 px-3 py-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+            className="inline-flex items-center gap-2 px-3 py-2 text-danger hover:bg-danger/10 rounded-lg transition-colors"
           >
             <Trash2 className="w-4 h-4" />
             {isDeleting ? 'Excluindo...' : 'Excluir'}
@@ -170,7 +170,7 @@ export default function EnsaioDetailPage() {
           <button
             onClick={handleSave}
             disabled={isSaving}
-            className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50 transition-colors"
+            className="flex items-center gap-2 px-4 py-2 bg-brand text-zinc-950 rounded-lg hover:bg-brand-600 disabled:opacity-50 transition-colors"
           >
             <Save className="w-4 h-4" />
             {isSaving ? 'Salvando...' : 'Salvar'}
@@ -194,23 +194,23 @@ export default function EnsaioDetailPage() {
         {/* Sidebar - Practice Tools */}
         <div className="space-y-4">
           {/* Timer */}
-          <div className="bg-white rounded-xl p-4 border border-slate-200 shadow-sm">
-            <h2 className="text-lg font-semibold text-slate-900 mb-3 flex items-center gap-2">
-              <Clock className="w-5 h-5 text-indigo-600" />
+          <div className="bg-surface-raised rounded-xl p-4 border border-ink/10 shadow-sm">
+            <h2 className="text-lg font-semibold text-ink mb-3 flex items-center gap-2">
+              <Clock className="w-5 h-5 text-brand" />
               Cronômetro de Prática
             </h2>
             <PracticeTimer 
               initialTime={practiceTime}
               onTimeUpdate={handleTimeUpdate}
             />
-            <div className="mt-2 text-sm text-slate-600">
+            <div className="mt-2 text-sm text-ink-muted">
               Tempo total acumulado: <span className="font-medium">{formatDuration(practiceTime)}</span>
             </div>
           </div>
 
           {/* Status Selection */}
-          <div className="bg-white rounded-xl p-4 border border-slate-200 shadow-sm">
-            <h3 className="text-sm font-semibold text-slate-900 mb-3">Status</h3>
+          <div className="bg-surface-raised rounded-xl p-4 border border-ink/10 shadow-sm">
+            <h3 className="text-sm font-semibold text-ink mb-3">Status</h3>
             <div className="flex flex-wrap gap-2">
               {(['needs_practice', 'practiced', 'mastered'] as PracticeStatus[]).map((s) => (
                 <button
@@ -219,7 +219,7 @@ export default function EnsaioDetailPage() {
                   className={`flex items-center gap-1.5 px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
                     status === s
                       ? PRACTICE_STATUS_BADGE_CLASSES[s]
-                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                      : 'bg-surface-overlay text-ink-muted hover:bg-surface-overlay'
                   }`}
                 >
                   {s === 'mastered' && <CheckCircle className="w-4 h-4" />}
@@ -231,8 +231,8 @@ export default function EnsaioDetailPage() {
           </div>
 
           {/* Difficulty Selection */}
-          <div className="bg-white rounded-xl p-4 border border-slate-200 shadow-sm">
-            <h3 className="text-sm font-semibold text-slate-900 mb-3">Dificuldade</h3>
+          <div className="bg-surface-raised rounded-xl p-4 border border-ink/10 shadow-sm">
+            <h3 className="text-sm font-semibold text-ink mb-3">Dificuldade</h3>
             <div className="flex flex-wrap gap-2">
               {(['easy', 'medium', 'hard'] as DifficultyLevel[]).map((d) => (
                 <button
@@ -241,7 +241,7 @@ export default function EnsaioDetailPage() {
                   className={`px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
                     difficulty === d
                       ? DIFFICULTY_BADGE_CLASSES[d]
-                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                      : 'bg-surface-overlay text-ink-muted hover:bg-surface-overlay'
                   }`}
                 >
                   {DIFFICULTY_LABELS[d]}
@@ -251,8 +251,8 @@ export default function EnsaioDetailPage() {
           </div>
 
           {/* Notes */}
-          <div className="bg-white rounded-xl p-4 border border-slate-200 shadow-sm">
-            <h3 className="text-sm font-semibold text-slate-900 mb-3 flex items-center gap-2">
+          <div className="bg-surface-raised rounded-xl p-4 border border-ink/10 shadow-sm">
+            <h3 className="text-sm font-semibold text-ink mb-3 flex items-center gap-2">
               <FileText className="w-4 h-4" />
               Observações
             </h3>
@@ -260,7 +260,7 @@ export default function EnsaioDetailPage() {
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               placeholder="Adicione suas observações sobre esta música..."
-              className="w-full h-32 px-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 resize-none"
+              className="w-full h-32 px-3 py-2 text-sm border border-ink/20 rounded-lg focus:ring-2 focus:ring-brand focus:border-brand resize-none"
             />
           </div>
 

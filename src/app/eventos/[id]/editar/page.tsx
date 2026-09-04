@@ -177,7 +177,7 @@ export default function EditEventoPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
-        <Loader2 className="w-8 h-8 animate-spin text-indigo-600" />
+        <Loader2 className="w-8 h-8 animate-spin text-brand" />
       </div>
     )
   }
@@ -185,10 +185,10 @@ export default function EditEventoPage() {
   if (error && !evento) {
     return (
       <div className="text-center py-12">
-        <p className="text-red-600 mb-4">{error}</p>
+        <p className="text-danger mb-4">{error}</p>
         <Link
           href="/eventos"
-          className="text-indigo-600 hover:text-indigo-700 font-medium"
+          className="text-brand hover:text-brand-600 font-medium"
         >
           Voltar para Eventos
         </Link>
@@ -204,41 +204,41 @@ export default function EditEventoPage() {
       <div className="flex items-center justify-between">
         <Link
           href={`/eventos/${eventoId}`}
-          className="inline-flex items-center gap-2 text-gray-600 hover:text-gray-900"
+          className="inline-flex items-center gap-2 text-ink-muted hover:text-ink"
         >
           <ArrowLeft size={18} />
           Voltar
         </Link>
         <button
           onClick={handleDelete}
-          className="inline-flex items-center gap-2 px-4 py-2 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors"
+          className="inline-flex items-center gap-2 px-4 py-2 text-danger hover:text-danger hover:bg-danger/10 rounded-lg transition-colors"
         >
           <Trash2 size={18} />
           Excluir
         </button>
       </div>
 
-      <h1 className="text-2xl font-bold text-gray-900">{isStudyList ? 'Editar Lista de Estudo' : 'Editar Evento'}</h1>
+      <h1 className="text-2xl font-bold text-ink">{isStudyList ? 'Editar Lista de Estudo' : 'Editar Evento'}</h1>
 
       {error && (
-        <div className="p-4 bg-red-50 border border-red-200 rounded-lg text-red-700">
+        <div className="p-4 bg-danger/10 border border-danger/40 rounded-lg text-danger">
           {error}
         </div>
       )}
 
       {/* Dados do Evento */}
-      <form onSubmit={handleSubmit} className="bg-white p-6 rounded-lg border space-y-6">
+      <form onSubmit={handleSubmit} className="bg-surface-raised p-6 rounded-lg border space-y-6">
         {/* Study List Toggle - só mostra se não for study list já criado */}
         {!studyListLocked && (
-          <div className="flex items-center gap-2 p-3 bg-gray-50 rounded-lg border">
+          <div className="flex items-center gap-2 p-3 bg-surface rounded-lg border">
             <input
               type="checkbox"
               id="isStudyList"
               checked={isStudyList}
               onChange={(e) => setIsStudyList(e.target.checked)}
-              className="w-4 h-4 text-indigo-600 rounded border-gray-300"
+              className="w-4 h-4 text-brand rounded border-ink/20"
             />
-            <label htmlFor="isStudyList" className="text-sm text-gray-600 cursor-pointer">
+            <label htmlFor="isStudyList" className="text-sm text-ink-muted cursor-pointer">
               É uma lista de estudo (sem data, local ou status)
             </label>
           </div>
@@ -246,7 +246,7 @@ export default function EditEventoPage() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="md:col-span-2">
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-ink mb-1">
               {isStudyList ? 'Nome da Lista *' : 'Nome do Evento *'}
             </label>
             <input
@@ -254,49 +254,49 @@ export default function EditEventoPage() {
               value={nome}
               onChange={(e) => setNome(e.target.value)}
               required={!isStudyList}
-              className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500"
+              className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-brand"
               placeholder={isStudyList ? 'Ex: Estudos para guitarra' : 'Ex: Culto de Domingo'}
             />
           </div>
 
           {!isStudyList && (
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-ink mb-1">
                 Data
               </label>
               <input
                 type="date"
                 value={data}
                 onChange={(e) => setData(e.target.value)}
-                className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500"
+                className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-brand"
               />
             </div>
           )}
 
           {!isStudyList && (
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-ink mb-1">
                 Hora
               </label>
               <input
                 type="time"
                 value={hora}
                 onChange={(e) => setHora(e.target.value)}
-                className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500"
+                className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-brand"
               />
             </div>
           )}
 
           {!isStudyList && (
             <div className="md:col-span-2">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-ink mb-1">
                 Local
               </label>
               <input
                 type="text"
                 value={local}
                 onChange={(e) => setLocal(e.target.value)}
-                className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500"
+                className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-brand"
                 placeholder="Ex: Igreja Principal"
               />
             </div>
@@ -304,13 +304,13 @@ export default function EditEventoPage() {
 
           {!isStudyList && (
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-ink mb-1">
                 Status
               </label>
               <select
                 value={status}
                 onChange={(e) => setStatus(e.target.value)}
-                className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 bg-white"
+                className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-brand bg-surface-raised"
               >
                 {STATUS_OPCOES.map((opcao) => (
                   <option key={opcao.value} value={opcao.value}>
@@ -323,7 +323,7 @@ export default function EditEventoPage() {
 
           {!isStudyList && (
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-ink mb-1">
                 Tags
               </label>
               <TagInput
@@ -336,14 +336,14 @@ export default function EditEventoPage() {
           )}
 
           <div className="md:col-span-2">
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-ink mb-1">
               Observações
             </label>
             <textarea
               value={observacoes}
               onChange={(e) => setObservacoes(e.target.value)}
               rows={3}
-              className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500"
+              className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-brand"
               placeholder="Observações adicionais..."
             />
           </div>
@@ -352,14 +352,14 @@ export default function EditEventoPage() {
         <div className="flex justify-end gap-3 pt-4 border-t">
           <Link
             href={`/eventos/${eventoId}`}
-            className="px-4 py-2 text-gray-600 hover:text-gray-800"
+            className="px-4 py-2 text-ink-muted hover:text-ink"
           >
             Cancelar
           </Link>
           <button
             type="submit"
             disabled={saving || !isValid}
-            className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50 transition-colors"
+            className="inline-flex items-center gap-2 px-4 py-2 bg-brand text-zinc-950 rounded-lg hover:bg-brand-600 disabled:opacity-50 transition-colors"
           >
             {saving ? (
               <Loader2 size={18} className="animate-spin" />
@@ -372,16 +372,16 @@ export default function EditEventoPage() {
       </form>
 
       {/* Repertório do Evento */}
-      <div className="bg-white p-4 md:p-6 rounded-lg border">
+      <div className="bg-surface-raised p-4 md:p-6 rounded-lg border">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold text-gray-900">Repertório</h2>
+          <h2 className="text-lg font-semibold text-ink">Repertório</h2>
           <button
             type="button"
             onClick={() => {
               setShowImportModal(true)
               loadTemplates()
             }}
-            className="inline-flex items-center gap-2 px-3 py-2 text-sm bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+            className="inline-flex items-center gap-2 px-3 py-2 text-sm bg-surface-overlay text-ink rounded-lg hover:bg-surface-overlay transition-colors"
           >
             <FileText size={16} />
             Importar do Template
@@ -399,21 +399,21 @@ export default function EditEventoPage() {
       {/* Modal de Importar do Template */}
       {showImportModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg shadow-xl max-w-md w-full">
+          <div className="bg-surface-raised rounded-lg shadow-xl max-w-md w-full">
             <div className="flex items-center justify-between p-4 border-b">
               <h3 className="text-lg font-medium">Importar do Template</h3>
               <button
                 onClick={() => setShowImportModal(false)}
-                className="text-gray-400 hover:text-gray-600"
+                className="text-ink-faint hover:text-ink-muted"
               >
                 <X size={20} />
               </button>
             </div>
             <div className="p-4">
               {loadingTemplates ? (
-                <p className="text-center py-4 text-gray-500">Carregando templates...</p>
+                <p className="text-center py-4 text-ink-muted">Carregando templates...</p>
               ) : templates.length === 0 ? (
-                <p className="text-center py-4 text-gray-500">Nenhum template encontrado</p>
+                <p className="text-center py-4 text-ink-muted">Nenhum template encontrado</p>
               ) : (
                 <div className="space-y-2 max-h-60 overflow-auto">
                   {templates.map((template) => (
@@ -422,10 +422,10 @@ export default function EditEventoPage() {
                       type="button"
                       onClick={() => handleImportTemplate(template.id)}
                       disabled={importing}
-                      className="w-full text-left p-3 border rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50"
+                      className="w-full text-left p-3 border rounded-lg hover:bg-surface transition-colors disabled:opacity-50"
                     >
                       <div className="font-medium">{template.nome}</div>
-                      <div className="text-sm text-gray-500">
+                      <div className="text-sm text-ink-muted">
                         {template.descricao || 'Sem descrição'}
                       </div>
                     </button>
@@ -437,7 +437,7 @@ export default function EditEventoPage() {
               <button
                 type="button"
                 onClick={() => setShowImportModal(false)}
-                className="px-4 py-2 text-gray-600 hover:text-gray-800"
+                className="px-4 py-2 text-ink-muted hover:text-ink"
               >
                 Cancelar
               </button>

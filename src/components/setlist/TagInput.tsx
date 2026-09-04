@@ -42,16 +42,16 @@ export function TagInput({ tags, onChange, placeholder = 'Adicionar tag...', sug
 
   return (
     <div className="relative">
-      <div className="flex flex-wrap gap-2 p-2 border rounded-lg bg-white focus-within:ring-2 focus-within:ring-indigo-500 focus-within:border-indigo-500">
+      <div className="flex flex-wrap gap-2 p-2 border rounded-lg bg-surface-raised focus-within:ring-2 focus-within:ring-brand focus-within:border-brand">
         {tags.map((tag) => (
           <span
             key={tag}
-            className="inline-flex items-center gap-1 px-2 py-1 bg-indigo-100 text-indigo-800 text-sm rounded-full"
+            className="inline-flex items-center gap-1 px-2 py-1 bg-brand/15 text-brand-600 text-sm rounded-full"
           >
             {tag}
             <button
               onClick={() => removeTag(tag)}
-              className="hover:text-indigo-600"
+              className="hover:text-brand"
               type="button"
             >
               <X size={14} />
@@ -74,12 +74,12 @@ export function TagInput({ tags, onChange, placeholder = 'Adicionar tag...', sug
       </div>
 
       {showSuggestions && filteredSuggestions.length > 0 && (
-        <div className="absolute z-10 w-full mt-1 bg-white border rounded-lg shadow-lg max-h-40 overflow-auto">
+        <div className="absolute z-10 w-full mt-1 bg-surface-raised border rounded-lg shadow-lg max-h-40 overflow-auto">
           {filteredSuggestions.map((suggestion) => (
             <button
               key={suggestion}
               onClick={() => addTag(suggestion)}
-              className="w-full px-3 py-2 text-left text-sm hover:bg-gray-100"
+              className="w-full px-3 py-2 text-left text-sm hover:bg-surface-overlay"
               type="button"
             >
               {suggestion}

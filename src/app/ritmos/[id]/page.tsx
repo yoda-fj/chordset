@@ -204,14 +204,14 @@ export default function DrumPatternEditorPage() {
   return (
     <div className="max-w-6xl mx-auto p-4">
       <div className="flex items-center gap-4 mb-6">
-        <Link href="/ritmos" className="p-2 hover:bg-gray-100 rounded-full">
+        <Link href="/ritmos" className="p-2 hover:bg-surface-overlay rounded-full">
           <ArrowLeft size={20} />
         </Link>
         <h1 className="text-2xl font-bold">{isNew ? 'Novo Ritmo' : 'Editar Ritmo'}</h1>
       </div>
 
       {/* Controls */}
-      <div className="flex items-center gap-4 mb-6 p-4 bg-gray-50 rounded-lg">
+      <div className="flex items-center gap-4 mb-6 p-4 bg-surface rounded-lg">
         <div className="flex-1">
           <label className="block text-sm font-medium mb-1">Nome</label>
           <input
@@ -250,8 +250,8 @@ export default function DrumPatternEditorPage() {
             disabled={!isLoaded}
             className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium ${
               isPlaying
-                ? 'bg-red-500 text-white hover:bg-red-600'
-                : 'bg-green-500 text-white hover:bg-green-600'
+                ? 'bg-danger text-zinc-950 hover:bg-danger'
+                : 'bg-success text-zinc-950 hover:bg-success'
             } disabled:opacity-50`}
           >
             {isPlaying ? <><Square size={18} /> Parar</> : <><Play size={18} /> Tocar</>}
@@ -259,7 +259,7 @@ export default function DrumPatternEditorPage() {
           <button
             onClick={savePattern}
             disabled={saving || !nome}
-            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+            className="flex items-center gap-2 px-4 py-2 bg-brand text-zinc-950 rounded-lg hover:bg-brand-600 disabled:opacity-50"
           >
             <Save size={18} />
             {saving ? 'Salvando...' : 'Salvar'}
@@ -270,9 +270,9 @@ export default function DrumPatternEditorPage() {
       {/* Status */}
       <div className="mb-4">
         {!isLoaded ? (
-          <span className="text-orange-500">⏳ Carregando samples...</span>
+          <span className="text-brand">⏳ Carregando samples...</span>
         ) : (
-          <span className="text-green-500">✓ Samples prontos</span>
+          <span className="text-success">✓ Samples prontos</span>
         )}
       </div>
 
@@ -286,8 +286,8 @@ export default function DrumPatternEditorPage() {
               <div
                 key={i}
                 className={`w-8 text-center text-xs font-mono ${
-                  i % 4 === 0 ? 'font-bold text-blue-600' : 'text-gray-400'
-                } ${currentStep === i ? 'text-red-500' : ''}`}
+                  i % 4 === 0 ? 'font-bold text-brand' : 'text-ink-faint'
+                } ${currentStep === i ? 'text-danger' : ''}`}
               >
                 {i + 1}
               </div>
@@ -299,10 +299,10 @@ export default function DrumPatternEditorPage() {
             <div key={inst.key} className="flex items-center mb-1">
               <button
                 onClick={() => testSound(inst.key)}
-                className="w-28 flex items-center gap-1 px-2 py-1 text-sm font-medium text-left hover:bg-gray-100 rounded"
+                className="w-28 flex items-center gap-1 px-2 py-1 text-sm font-medium text-left hover:bg-surface-overlay rounded"
                 title="Testar som"
               >
-                <Volume2 size={12} className="text-gray-400" />
+                <Volume2 size={12} className="text-ink-faint" />
                 {inst.label}
               </button>
               {Array.from({ length: TOTAL_STEPS }, (_, i) => (
@@ -312,8 +312,8 @@ export default function DrumPatternEditorPage() {
                   className={`w-8 h-8 rounded mx-0.5 transition-all ${
                     steps[inst.key][i]
                       ? 'shadow-sm'
-                      : 'bg-gray-100 hover:bg-gray-200'
-                  } ${currentStep === i ? 'ring-2 ring-red-400' : ''}`}
+                      : 'bg-surface-overlay hover:bg-surface-overlay'
+                  } ${currentStep === i ? 'ring-2 ring-danger' : ''}`}
                   style={
                     steps[inst.key][i]
                       ? { backgroundColor: inst.color, opacity: 0.9 }
@@ -330,7 +330,7 @@ export default function DrumPatternEditorPage() {
             {Array.from({ length: TOTAL_STEPS / 4 }, (_, i) => (
               <div
                 key={i}
-                className="w-32 text-center text-xs text-gray-400 border-t pt-1"
+                className="w-32 text-center text-xs text-ink-faint border-t pt-1"
               >
                 {i + 1}ª batida
               </div>

@@ -56,13 +56,13 @@ export function MusicaCard({ musica, onRemove, onUpdate, isEvento = false }: Mus
     <div
       ref={setNodeRef}
       style={style}
-      className="bg-white border rounded-lg p-3 md:p-4 shadow-sm hover:shadow-md transition-shadow"
+      className="bg-surface-raised border rounded-lg p-3 md:p-4 shadow-sm hover:shadow-md transition-shadow"
     >
       <div className="flex items-start gap-2 md:gap-3">
         <button
           {...attributes}
           {...listeners}
-          className="mt-1 text-gray-400 hover:text-gray-600 cursor-grab active:cursor-grabbing touch-none select-none p-2 -m-2"
+          className="mt-1 text-ink-faint hover:text-ink-muted cursor-grab active:cursor-grabbing touch-none select-none p-2 -m-2"
           style={{ touchAction: 'none' }}
         >
           <GripVertical size={20} />
@@ -72,17 +72,17 @@ export function MusicaCard({ musica, onRemove, onUpdate, isEvento = false }: Mus
           {/* Título e artista */}
           <div className="flex items-start justify-between gap-2">
             <div className="flex items-center gap-2 min-w-0">
-              <Music className="text-indigo-500 flex-shrink-0" size={16} />
+              <Music className="text-brand flex-shrink-0" size={16} />
               <div className="min-w-0">
-                <h4 className="font-medium text-gray-900 text-sm md:text-base truncate">{musica.musicas.titulo}</h4>
-                <p className="text-xs md:text-sm text-gray-500 truncate">{musica.musicas.artista}</p>
+                <h4 className="font-medium text-ink text-sm md:text-base truncate">{musica.musicas.titulo}</h4>
+                <p className="text-xs md:text-sm text-ink-muted truncate">{musica.musicas.artista}</p>
               </div>
             </div>
 
             {onRemove && (
               <button
                 onClick={onRemove}
-                className="text-gray-400 hover:text-red-500 transition-colors flex-shrink-0"
+                className="text-ink-faint hover:text-danger transition-colors flex-shrink-0"
               >
                 <X size={18} />
               </button>
@@ -93,11 +93,11 @@ export function MusicaCard({ musica, onRemove, onUpdate, isEvento = false }: Mus
           <div className="mt-2 md:mt-3 flex flex-wrap items-center gap-2 md:gap-3">
             {/* Tom */}
             <div className="flex items-center gap-1">
-              <label className="text-xs font-medium text-gray-500">Tom:</label>
+              <label className="text-xs font-medium text-ink-muted">Tom:</label>
               <select
                 value={tom || ''}
                 onChange={(e) => onUpdate?.({ tom: e.target.value || undefined })}
-                className="text-xs md:text-sm border rounded px-1 md:px-2 py-1 bg-gray-50 focus:ring-2 focus:ring-indigo-500"
+                className="text-xs md:text-sm border rounded px-1 md:px-2 py-1 bg-surface focus:ring-2 focus:ring-brand"
               >
                 <option value="">Orig.</option>
                 {['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'].map((t) => (
@@ -118,7 +118,7 @@ export function MusicaCard({ musica, onRemove, onUpdate, isEvento = false }: Mus
             value={musica.observacoes || ''}
             onChange={(e) => onUpdate?.({ observacoes: e.target.value })}
             placeholder="Obs..."
-            className="mt-2 w-full text-xs md:text-sm border rounded px-2 py-1 bg-gray-50 focus:ring-2 focus:ring-indigo-500"
+            className="mt-2 w-full text-xs md:text-sm border rounded px-2 py-1 bg-surface focus:ring-2 focus:ring-brand"
           />
         </div>
       </div>

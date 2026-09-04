@@ -15,10 +15,10 @@ const STATUS_LABELS: Record<string, string> = {
 }
 
 const STATUS_COLORS: Record<string, string> = {
-  rascunho: 'bg-gray-100 text-gray-700',
-  confirmado: 'bg-blue-100 text-blue-700',
-  realizado: 'bg-green-100 text-green-700',
-  cancelado: 'bg-red-100 text-red-700',
+  rascunho: 'bg-surface-overlay text-ink',
+  confirmado: 'bg-brand/15 text-brand-600',
+  realizado: 'bg-success/15 text-success',
+  cancelado: 'bg-danger/15 text-danger',
 }
 
 export default function EventoPage() {
@@ -87,7 +87,7 @@ export default function EventoPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
-        <Loader2 className="w-8 h-8 animate-spin text-indigo-600" />
+        <Loader2 className="w-8 h-8 animate-spin text-brand" />
       </div>
     )
   }
@@ -95,8 +95,8 @@ export default function EventoPage() {
   if (error || !evento) {
     return (
       <div className="text-center py-12">
-        <p className="text-red-600 mb-4">{error || 'Evento não encontrado'}</p>
-        <Link href="/eventos" className="text-indigo-600 hover:text-indigo-700 font-medium">
+        <p className="text-danger mb-4">{error || 'Evento não encontrado'}</p>
+        <Link href="/eventos" className="text-brand hover:text-brand-600 font-medium">
           Voltar para Eventos
         </Link>
       </div>
@@ -120,7 +120,7 @@ export default function EventoPage() {
       <div className="flex items-center justify-between">
         <Link
           href="/eventos"
-          className="inline-flex items-center gap-2 text-gray-600 hover:text-gray-900"
+          className="inline-flex items-center gap-2 text-ink-muted hover:text-ink"
         >
           <ArrowLeft size={18} />
           Voltar
@@ -129,7 +129,7 @@ export default function EventoPage() {
           {musicas.length > 0 && (
             <Link
               href={`/eventos/${eventoId}/setlist`}
-              className="inline-flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+              className="inline-flex items-center gap-2 px-4 py-2 bg-success text-zinc-950 rounded-lg hover:bg-success/80 transition-colors"
             >
               <Play size={18} />
               <span className="hidden sm:inline">Ao Vivo</span>
@@ -137,14 +137,14 @@ export default function EventoPage() {
           )}
           <Link
             href={`/eventos/${eventoId}/editar`}
-            className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
+            className="inline-flex items-center gap-2 px-4 py-2 bg-brand text-zinc-950 rounded-lg hover:bg-brand-600 transition-colors"
           >
             <Edit size={18} />
             Editar
           </Link>
           <button
             onClick={() => setShowCloneModal(true)}
-            className="inline-flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+            className="inline-flex items-center gap-2 px-4 py-2 bg-surface-overlay text-ink rounded-lg hover:bg-surface-overlay transition-colors"
           >
             <Copy size={18} />
             Clonar
@@ -153,28 +153,28 @@ export default function EventoPage() {
       </div>
 
       {/* Info */}
-      <div className="bg-white p-6 rounded-lg border">
+      <div className="bg-surface-raised p-6 rounded-lg border">
         <div className="flex items-start justify-between mb-4">
-          <h1 className="text-2xl font-bold text-gray-900">{evento.nome}</h1>
-          <span className={`px-3 py-1 rounded-full text-sm font-medium ${STATUS_COLORS[evento.status] || 'bg-gray-100 text-gray-700'}`}>
+          <h1 className="text-2xl font-bold text-ink">{evento.nome}</h1>
+          <span className={`px-3 py-1 rounded-full text-sm font-medium ${STATUS_COLORS[evento.status] || 'bg-surface-overlay text-ink'}`}>
             {STATUS_LABELS[evento.status] || evento.status}
           </span>
         </div>
 
         {!isStudyList && (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="flex items-center gap-2 text-gray-600">
+            <div className="flex items-center gap-2 text-ink-muted">
               <Calendar size={18} />
               <span>{dataFormatada}</span>
             </div>
             {evento.hora && (
-              <div className="flex items-center gap-2 text-gray-600">
+              <div className="flex items-center gap-2 text-ink-muted">
                 <Clock size={18} />
                 <span>{evento.hora}</span>
               </div>
             )}
             {evento.local && (
-              <div className="flex items-center gap-2 text-gray-600">
+              <div className="flex items-center gap-2 text-ink-muted">
                 <MapPin size={18} />
                 <span>{evento.local}</span>
               </div>
@@ -185,7 +185,7 @@ export default function EventoPage() {
         {evento.tags?.length > 0 && (
           <div className="flex flex-wrap gap-2 mt-4">
             {evento.tags.map((tag: string) => (
-              <span key={tag} className="px-2 py-1 bg-gray-100 text-gray-600 rounded text-sm">
+              <span key={tag} className="px-2 py-1 bg-surface-overlay text-ink-muted rounded text-sm">
                 {tag}
               </span>
             ))}
@@ -194,43 +194,43 @@ export default function EventoPage() {
 
         {evento.observacoes && (
           <div className="mt-4 pt-4 border-t">
-            <p className="text-gray-600 whitespace-pre-wrap">{evento.observacoes}</p>
+            <p className="text-ink-muted whitespace-pre-wrap">{evento.observacoes}</p>
           </div>
         )}
       </div>
 
       {/* Repertório */}
-      <div className="bg-white p-6 rounded-lg border">
+      <div className="bg-surface-raised p-6 rounded-lg border">
         <div className="flex items-center gap-2 mb-4">
-          <Music size={20} className="text-indigo-500" />
-          <h2 className="text-lg font-semibold text-gray-900">
+          <Music size={20} className="text-brand" />
+          <h2 className="text-lg font-semibold text-ink">
             Repertório ({musicas.length})
           </h2>
         </div>
 
         {musicas.length === 0 ? (
-          <p className="text-gray-500 text-center py-8">Nenhuma música no repertório</p>
+          <p className="text-ink-muted text-center py-8">Nenhuma música no repertório</p>
         ) : (
           <div className="space-y-3">
             {musicas.map((item, index) => (
               <Link
                 key={item.id}
                 href={`/musicas/${item.musicas?.id}/cifra`}
-                className="flex items-center gap-4 p-3 border rounded-lg hover:bg-gray-50 transition-colors"
+                className="flex items-center gap-4 p-3 border rounded-lg hover:bg-surface transition-colors"
               >
-                <span className="text-gray-400 font-medium w-6">{index + 1}.</span>
+                <span className="text-ink-faint font-medium w-6">{index + 1}.</span>
                 <div className="flex-1">
-                  <div className="font-medium text-gray-900">{item.musicas?.titulo}</div>
-                  <div className="text-sm text-gray-500">{item.musicas?.artista}</div>
+                  <div className="font-medium text-ink">{item.musicas?.titulo}</div>
+                  <div className="text-sm text-ink-muted">{item.musicas?.artista}</div>
                 </div>
                 {item.tom_evento && (
-                  <span className="text-sm text-gray-500">Tom: {item.tom_evento}</span>
+                  <span className="text-sm text-ink-muted">Tom: {item.tom_evento}</span>
                 )}
                 {item.responsavel && (
-                  <span className="text-sm text-gray-500">Resp: {item.responsavel}</span>
+                  <span className="text-sm text-ink-muted">Resp: {item.responsavel}</span>
                 )}
                 {item.confirmada && (
-                  <span className="px-2 py-1 bg-green-100 text-green-700 rounded text-xs">OK</span>
+                  <span className="px-2 py-1 bg-success/15 text-success rounded text-xs">OK</span>
                 )}
               </Link>
             ))}
@@ -241,9 +241,9 @@ export default function EventoPage() {
       {/* Clone Modal */}
       {showCloneModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
+          <div className="bg-surface-raised rounded-lg p-6 w-full max-w-md mx-4">
             <h3 className="text-lg font-bold mb-4">Clonar Evento</h3>
-            <p className="text-gray-600 mb-4">Copiar &quot;{evento.nome}&quot; com todas as músicas?</p>
+            <p className="text-ink-muted mb-4">Copiar &quot;{evento.nome}&quot; com todas as músicas?</p>
             <input
               type="text"
               value={cloneNome}
@@ -263,14 +263,14 @@ export default function EventoPage() {
             <div className="flex gap-3 justify-end">
               <button
                 onClick={() => setShowCloneModal(false)}
-                className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg"
+                className="px-4 py-2 text-ink-muted hover:bg-surface-overlay rounded-lg"
               >
                 Cancelar
               </button>
               <button
                 onClick={handleClone}
                 disabled={!cloneNome.trim() || cloneLoading}
-                className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50"
+                className="px-4 py-2 bg-brand text-zinc-950 rounded-lg hover:bg-brand-600 disabled:opacity-50"
               >
                 {cloneLoading ? 'Clonando...' : 'Clonar'}
               </button>

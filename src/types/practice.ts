@@ -36,15 +36,15 @@ export const DIFFICULTY_LABELS: Record<DifficultyLevel, string> = {
   hard: 'Difícil',
 };
 
-// Badge classes for Tailwind
+// Badge classes for Tailwind (tokens semânticos — Fase 1.1)
 export const PRACTICE_STATUS_BADGE_CLASSES: Record<PracticeStatus, string> = {
-  needs_practice: 'bg-amber-100 text-amber-800 border-amber-200',
-  practiced: 'bg-blue-100 text-blue-800 border-blue-200',
-  mastered: 'bg-emerald-100 text-emerald-800 border-emerald-200',
+  needs_practice: 'bg-brand/15 text-brand border-brand/30',
+  practiced: 'bg-section/15 text-section border-section/30',
+  mastered: 'bg-success/15 text-success border-success/40',
 };
 
 export const DIFFICULTY_BADGE_CLASSES: Record<DifficultyLevel, string> = {
-  easy: 'bg-green-100 text-green-800 border-green-200',
-  medium: 'bg-yellow-100 text-yellow-800 border-yellow-200',
-  hard: 'bg-red-100 text-red-800 border-red-200',
+  easy: 'bg-success/15 text-success border-success/40',
+  medium: 'bg-brand/15 text-brand border-brand/30',
+  hard: 'bg-danger/15 text-danger border-danger/40',
 };
