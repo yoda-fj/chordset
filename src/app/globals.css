@@ -75,6 +75,17 @@ textarea::placeholder {
   animation: slide-in 0.3s ease-out;
 }
 
+/* Respeita prefers-reduced-motion globalmente (animações CSS) */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
 /* Hide site navigation when in fullscreen mode */
 :fullscreen .site-nav,
 :-webkit-full-screen .site-nav,

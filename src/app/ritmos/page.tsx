@@ -6,6 +6,7 @@ import { Trash2, Plus, Play, Square } from 'lucide-react'
 import * as Tone from 'tone'
 import { toast } from 'sonner'
 import { ConfirmDialog } from '@/components/ui/Dialog'
+import { Skeleton } from '@/components/ui/Skeleton'
 import type { DrumPattern } from '@/types/database'
 
 const NOTE_MAP: Record<string, string> = {
@@ -143,7 +144,14 @@ export default function DrumPatternsPage() {
     return new Date(date).toLocaleDateString('pt-BR')
   }
 
-  if (loading) return <div className="p-8 text-center">Carregando...</div>
+  if (loading) return (
+    <div className="space-y-4">
+      <Skeleton className="h-8 w-32" />
+      {Array.from({ length: 3 }).map((_, i) => (
+        <Skeleton key={i} className="h-20" />
+      ))}
+    </div>
+  )
   if (error) return <div className="p-8 text-center text-danger">{error}</div>
 
   return (

@@ -1,11 +1,15 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
 import { PracticeCard } from '@/components/practice/PracticeCard';
 import { PracticeStats } from '@/components/practice/PracticeStats';
 import { PracticeStatus, PRACTICE_STATUS_LABELS, PracticeSessionWithMusica } from '@/types/practice';
-import { Music, Filter, Loader2, Plus } from 'lucide-react';
+import { Music, Plus } from 'lucide-react';
 import Link from 'next/link';
+import { Skeleton } from '@/components/ui/Skeleton';
+import { EmptyState, ErrorState } from '@/components/ui/EmptyState';
+import { SegmentedControl } from '@/components/ui/SegmentedControl';
 
 export default function EnsaiosPage() {
   const [filter, setFilter] = useState<PracticeStatus | 'all'>('all');
@@ -46,18 +50,22 @@ export default function EnsaiosPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <Loader2 className="w-8 h-8 animate-spin text-brand" />
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <Skeleton className="h-8 w-32" />
+          <Skeleton className="h-10 w-36" />
+        </div>
+        <div className="space-y-3">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <Skeleton key={i} className="h-24" />
+          ))}
+        </div>
       </div>
     );
   }
 
   if (error) {
-    return (
-      <div className="text-center py-12">
-        <p className="text-danger mb-4">{error}</p>
-      </div>
-    );
+    return <ErrorState message={error} onRetry={() => window.location.reload()} />;
   }
 
   return (
@@ -86,69 +94,39 @@ export default function EnsaiosPage() {
       <PracticeStats sessions={sessions} />
 
       {/* Filter */}
-      <div className="flex items-center gap-2 flex-wrap">
-        <Filter className="w-4 h-4 text-ink-muted" />
-        <span className="text-sm text-ink-muted">Filtrar:</span>
-        <button
-          onClick={() => setFilter('all')}
-          className={`px-3 py-1.5 text-sm font-medium rounded-lg transition-colors ${
-            filter === 'all'
-              ? 'bg-brand/15 text-brand-600 border border-brand/30'
-              : 'bg-surface-raised text-ink-muted border border-ink/10 hover:bg-surface'
-          }`}
-        >
-          Todas
-        </button>
-        <button
-          onClick={() => setFilter('needs_practice')}
-          className={`px-3 py-1.5 text-sm font-medium rounded-lg transition-colors ${
-            filter === 'needs_practice'
-              ? 'bg-brand/15 text-brand border border-brand/30'
-              : 'bg-surface-raised text-ink-muted border border-ink/10 hover:bg-surface'
-          }`}
-        >
-          {PRACTICE_STATUS_LABELS.needs_practice}
-        </button>
-        <button
-          onClick={() => setFilter('practiced')}
-          className={`px-3 py-1.5 text-sm font-medium rounded-lg transition-colors ${
-            filter === 'practiced'
-              ? 'bg-brand/15 text-brand-600 border border-brand/30'
-              : 'bg-surface-raised text-ink-muted border border-ink/10 hover:bg-surface'
-          }`}
-        >
-          {PRACTICE_STATUS_LABELS.practiced}
-        </button>
-        <button
-          onClick={() => setFilter('mastered')}
-          className={`px-3 py-1.5 text-sm font-medium rounded-lg transition-colors ${
-            filter === 'mastered'
-              ? 'bg-success/15 text-success border border-success/40'
-              : 'bg-surface-raised text-ink-muted border border-ink/10 hover:bg-surface'
-          }`}
-        >
-          {PRACTICE_STATUS_LABELS.mastered}
-        </button>
-      </div>
+      <SegmentedControl
+        aria-label="Filtrar por status"
+        value={filter}
+        onChange={setFilter}
+        options={[
+          { value: 'all', label: 'Todas' },
+          { value: 'needs_practice', label: PRACTICE_STATUS_LABELS.needs_practice },
+          { value: 'practiced', label: PRACTICE_STATUS_LABELS.practiced },
+          { value: 'mastered', label: PRACTICE_STATUS_LABELS.mastered },
+        ]}
+      />
 
       {/* Sessions List */}
       <div className="space-y-3">
         {sortedSessions.length > 0 ? (
-          sortedSessions.map(session => (
-            <PracticeCard key={session.id} session={session} />
+          sortedSessions.map((session, i) => (
+            <motion.div
+              key={session.id}
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: Math.min(i * 0.04, 0.4), duration: 0.3 }}
+              whileTap={{ scale: 0.99 }}
+            >
+              <PracticeCard session={session} />
+            </motion.div>
           ))
         ) : (
-          <div className="text-center py-12 bg-surface-raised rounded-xl border border-ink/10">
-            <Music className="w-12 h-12 text-ink-muted mx-auto mb-3" />
-            <p className="text-ink-muted mb-4">Nenhuma sessão de ensaio ainda.</p>
-            <Link
-              href="/ensaios/new"
-              className="inline-flex items-center gap-2 px-4 py-2 bg-brand text-zinc-950 rounded-lg hover:bg-brand-600 transition-colors"
-            >
-              <Plus size={18} />
-              Criar primeiro ensaio
-            </Link>
-          </div>
+          <EmptyState
+            icon={<Music />}
+            title="Nenhuma sessão de ensaio ainda"
+            description="Registre seus ensaios para acompanhar o progresso."
+            action={{ label: 'Criar primeiro ensaio', href: '/ensaios/new' }}
+          />
         )}
       </div>
     </div>

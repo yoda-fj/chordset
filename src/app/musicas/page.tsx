@@ -2,7 +2,10 @@
 
 import { useState, useEffect, useMemo } from 'react'
 import Link from 'next/link'
-import { Plus, Search, Tag, Music, FileText, Loader2 } from 'lucide-react'
+import { motion } from 'framer-motion'
+import { Plus, Search, Tag, Music, FileText } from 'lucide-react'
+import { Skeleton } from '@/components/ui/Skeleton'
+import { EmptyState, ErrorState } from '@/components/ui/EmptyState'
 import type { Musica } from '@/types/database'
 
 export default function MusicasPage() {
@@ -56,24 +59,23 @@ export default function MusicasPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <Loader2 className="w-8 h-8 animate-spin text-brand" />
+      <div>
+        <div className="flex items-center justify-between mb-6">
+          <Skeleton className="h-8 w-32" />
+          <Skeleton className="h-10 w-36" />
+        </div>
+        <Skeleton className="h-11 w-full mb-6" />
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <Skeleton key={i} className="h-44" />
+          ))}
+        </div>
       </div>
     )
   }
 
   if (error) {
-    return (
-      <div className="text-center py-12">
-        <p className="text-danger mb-4">{error}</p>
-        <button
-          onClick={() => window.location.reload()}
-          className="text-brand hover:text-brand-600 font-medium"
-        >
-          Tentar novamente
-        </button>
-      </div>
-    )
+    return <ErrorState message={error} onRetry={() => window.location.reload()} />
   }
 
   return (
@@ -131,9 +133,13 @@ export default function MusicasPage() {
 
       {/* Grid de músicas */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {filteredMusicas.map((musica) => (
-          <div
+        {filteredMusicas.map((musica, i) => (
+          <motion.div
             key={musica.id}
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: Math.min(i * 0.04, 0.4), duration: 0.3 }}
+            whileTap={{ scale: 0.98 }}
             className="block p-6 bg-surface-raised border rounded-lg hover:shadow-md transition-shadow"
           >
             <div className="flex items-start justify-between mb-3">
@@ -183,25 +189,21 @@ export default function MusicasPage() {
                 Editar
               </Link>
             </div>
-          </div>
+          </motion.div>
         ))}
       </div>
 
       {filteredMusicas.length === 0 && (
-        <div className="text-center py-12 bg-surface rounded-lg">
-          <Music className="mx-auto h-12 w-12 text-ink-faint mb-4" />
-          <p className="text-ink-muted mb-4">
-            {searchTerm || selectedTag
+        <EmptyState
+          icon={<Music />}
+          title={
+            searchTerm || selectedTag
               ? 'Nenhuma música encontrada com esses filtros'
-              : 'Nenhuma música cadastrada'}
-          </p>
-          <Link
-            href="/musicas/new"
-            className="text-brand hover:text-brand-600 font-medium"
-          >
-            Cadastrar primeira música
-          </Link>
-        </div>
+              : 'Nenhuma música cadastrada'
+          }
+          description="Cadastre sua primeira música para montar setlists."
+          action={{ label: 'Nova Música', href: '/musicas/new' }}
+        />
       )}
     </div>
   )

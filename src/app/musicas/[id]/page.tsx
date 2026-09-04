@@ -2,7 +2,8 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { useParams } from 'next/navigation'
-import { ArrowLeft, Loader2, Music, Edit, FileText, Calendar, Play, ChevronLeft, ChevronRight, Drum, Volume2 } from 'lucide-react'
+import { ArrowLeft, Music, Edit, FileText, Calendar, Play, ChevronLeft, ChevronRight, Drum, Volume2 } from 'lucide-react'
+import { Skeleton } from '@/components/ui/Skeleton'
 import * as Tone from 'tone'
 import { getSamplerUrls, volumeToDb } from '@/lib/drum-samples'
 import type { Musica, DrumPattern, EventoStatus } from '@/types/database'
@@ -273,8 +274,10 @@ export default function MusicaPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <Loader2 className="w-8 h-8 animate-spin text-brand" />
+      <div className="space-y-4">
+        <Skeleton className="h-9 w-64" />
+        <Skeleton className="h-5 w-40" />
+        <Skeleton className="h-40 w-full" />
       </div>
     )
   }
