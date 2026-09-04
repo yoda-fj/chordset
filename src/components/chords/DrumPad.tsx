@@ -472,8 +472,8 @@ export function DrumPad({ initialGroove, initialBpm, initialVolume, onGrooveChan
 
   if (!isLoaded) {
     return (
-      <div className="bg-white rounded-xl border border-slate-200 p-4">
-        <div className="flex items-center gap-2 text-slate-500">
+      <div className="bg-surface-raised rounded-xl border p-4">
+        <div className="flex items-center gap-2 text-ink-muted">
           <Music className="w-4 h-4 animate-pulse" />
           <span className="text-sm">Carregando samples...</span>
         </div>
@@ -482,11 +482,11 @@ export function DrumPad({ initialGroove, initialBpm, initialVolume, onGrooveChan
   }
 
   return (
-    <div className="bg-white rounded-xl border border-slate-200 p-4 space-y-4">
+    <div className="bg-surface-raised rounded-xl border p-4 space-y-4">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <h3 className="font-semibold text-slate-800 flex items-center gap-2">
-          <Music className="w-4 h-4 text-indigo-600" />
+        <h3 className="font-semibold text-ink flex items-center gap-2">
+          <Music className="w-4 h-4 text-brand" />
           Drum Pad
         </h3>
         
@@ -494,7 +494,7 @@ export function DrumPad({ initialGroove, initialBpm, initialVolume, onGrooveChan
           {/* Volume */}
           <button
             onClick={() => setIsMuted(!isMuted)}
-            className="p-1.5 hover:bg-slate-100 rounded"
+            className="p-1.5 text-ink hover:bg-surface-overlay rounded"
           >
             {isMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
           </button>
@@ -502,14 +502,14 @@ export function DrumPad({ initialGroove, initialBpm, initialVolume, onGrooveChan
           {/* Play/Stop */}
           <button
             onClick={togglePlayback}
-            className={`p-2 rounded-lg ${isPlaying ? 'bg-emerald-500 text-white' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'}`}
+            className={`p-2 rounded-lg ${isPlaying ? 'bg-success text-surface' : 'bg-surface-overlay text-ink hover:bg-surface-overlay/70'}`}
           >
             {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
           </button>
           
           <button
             onClick={stopPlayback}
-            className="p-2 bg-slate-100 text-slate-700 hover:bg-slate-200 rounded-lg"
+            className="p-2 bg-surface-overlay text-ink hover:bg-surface-overlay/70 rounded-lg"
           >
             <Square className="w-4 h-4" />
           </button>
@@ -521,7 +521,7 @@ export function DrumPad({ initialGroove, initialBpm, initialVolume, onGrooveChan
         <select
           value={selectedGroove}
           onChange={(e) => handleGrooveChange(e.target.value)}
-          className="px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-sm min-w-[120px]"
+          className="px-3 py-1.5 bg-surface-overlay border rounded-lg text-sm text-ink min-w-[120px]"
         >
           <optgroup label="Presets">
             {Object.entries(PRESET_GROOVES).map(([id, groove]) => (
@@ -538,21 +538,21 @@ export function DrumPad({ initialGroove, initialBpm, initialVolume, onGrooveChan
         </select>
 
         <div className="flex items-center gap-1">
-          <span className="text-xs text-slate-500">BPM</span>
+          <span className="text-xs text-ink-muted">BPM</span>
           <input
             type="number"
             value={bpm}
             onChange={(e) => handleBpmChange(Number(e.target.value))}
             min={40}
             max={200}
-            className="w-14 px-1 py-1 bg-slate-50 border border-slate-200 rounded text-sm text-center"
+            className="w-14 px-1 py-1 bg-surface-overlay border rounded text-sm text-center text-ink"
           />
         </div>
 
         <div className="flex items-center gap-1">
           <button
             onClick={() => setIsMuted(!isMuted)}
-            className="p-1.5 hover:bg-slate-100 rounded"
+            className="p-1.5 text-ink hover:bg-surface-overlay rounded"
           >
             {isMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
           </button>
@@ -584,7 +584,7 @@ export function DrumPad({ initialGroove, initialBpm, initialVolume, onGrooveChan
         ))}
       </div>
       
-      <p className="text-xs text-slate-400 text-center">
+      <p className="text-xs text-ink-faint text-center">
         Teclas: Q-R, A-G | Espaço: Play/Stop
       </p>
     </div>
