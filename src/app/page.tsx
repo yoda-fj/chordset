@@ -4,7 +4,7 @@ export default function Home() {
   return (
     <div className="text-center py-20">
       <h1 className="text-4xl font-bold text-ink mb-4">
-        Bem-vindo ao Setlist Tools
+        Bem-vindo ao ChordSet
       </h1>
       <p className="text-lg text-ink-muted mb-8">
         Gerencie seus templates e eventos musicais

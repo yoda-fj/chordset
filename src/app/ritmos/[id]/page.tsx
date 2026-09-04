@@ -5,6 +5,7 @@ import { useRouter, useParams } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowLeft, Play, Square, Save, Volume2 } from 'lucide-react'
 import * as Tone from 'tone'
+import { toast } from 'sonner'
 import { getSamplerUrls } from '@/lib/drum-samples'
 
 const INSTRUMENTS = [
@@ -122,7 +123,7 @@ export default function DrumPatternEditorPage() {
           setSteps(converted)
         }
       } catch {
-        alert('Erro ao carregar ritmo')
+        toast.error('Erro ao carregar ritmo')
         router.push('/ritmos')
       }
     }
@@ -189,7 +190,7 @@ export default function DrumPatternEditorPage() {
       if (!res.ok) throw new Error('Erro ao salvar')
       router.push('/ritmos')
     } catch {
-      alert('Erro ao salvar ritmo')
+      toast.error('Erro ao salvar ritmo')
     } finally {
       setSaving(false)
     }

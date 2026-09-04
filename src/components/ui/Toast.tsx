@@ -1,15 +1,9 @@
 'use client'
 
-import { createContext, useContext, useState, useCallback, ReactNode } from 'react'
-import { X, CheckCircle, AlertCircle, Info } from 'lucide-react'
+import { createContext, useContext, useCallback, type ReactNode } from 'react'
+import { Toaster, toast } from 'sonner'
 
 type ToastType = 'success' | 'error' | 'info'
-
-interface Toast {
-  id: string
-  message: string
-  type: ToastType
-}
 
 interface ToastContextType {
   showToast: (message: string, type?: ToastType) => void
@@ -25,46 +19,30 @@ export function useToast() {
   return context
 }
 
+/**
+ * Provider de toast baseado em sonner (Fase 1.4).
+ * Mantém a API antiga (useToast().showToast) — call sites não mudam.
+ */
 export function ToastProvider({ children }: { children: ReactNode }) {
-  const [toasts, setToasts] = useState<Toast[]>([])
-
   const showToast = useCallback((message: string, type: ToastType = 'error') => {
-    const id = Date.now().toString()
-    setToasts((prev) => [...prev, { id, message, type }])
-    setTimeout(() => {
-      setToasts((prev) => prev.filter((t) => t.id !== id))
-    }, 4000)
+    if (type === 'success') toast.success(message)
+    else if (type === 'info') toast.info(message)
+    else toast.error(message)
   }, [])
-
-  const removeToast = (id: string) => {
-    setToasts((prev) => prev.filter((t) => t.id !== id))
-  }
 
   return (
     <ToastContext.Provider value={{ showToast }}>
       {children}
-      <div className="fixed bottom-4 right-4 z-50 flex flex-col gap-2">
-        {toasts.map((toast) => (
-          <div
-            key={toast.id}
-            className={`flex items-center gap-3 px-4 py-3 rounded-lg shadow-lg text-zinc-950 min-w-[300px] animate-slide-in ${
-              toast.type === 'success' ? 'bg-success' :
-              toast.type === 'info' ? 'bg-brand' : 'bg-danger'
-            }`}
-          >
-            {toast.type === 'success' && <CheckCircle size={20} />}
-            {toast.type === 'error' && <AlertCircle size={20} />}
-            {toast.type === 'info' && <Info size={20} />}
-            <span className="flex-1">{toast.message}</span>
-            <button
-              onClick={() => removeToast(toast.id)}
-              className="hover:opacity-80"
-            >
-              <X size={18} />
-            </button>
-          </div>
-        ))}
-      </div>
+      <Toaster
+        position="bottom-right"
+        toastOptions={{
+          style: {
+            background: 'rgb(var(--surface-raised))',
+            color: 'rgb(var(--ink))',
+            border: '1px solid rgb(var(--ink) / 0.12)',
+          },
+        }}
+      />
     </ToastContext.Provider>
   )
 }

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import type { ChangeEvent, RefObject } from 'react'
 import { apiFetch } from '@/utils/api'
+import { toast } from 'sonner'
 
 interface UseAudioRecorderOptions {
   apiBase: string
@@ -117,7 +118,7 @@ export function useAudioRecorder({
       }, 1000)
     } catch (err) {
       console.error('Error starting recording:', err)
-      alert('Não foi possível acessar o microfone')
+      toast.error('Não foi possível acessar o microfone')
     }
   }
 
@@ -144,7 +145,7 @@ export function useAudioRecorder({
       setAudioBlob(null)
     } catch (e) {
       console.error('Error uploading:', e)
-      alert(e instanceof Error ? e.message : 'Erro ao fazer upload')
+      toast.error(e instanceof Error ? e.message : 'Erro ao fazer upload')
     }
     setIsUploading(false)
   }
@@ -165,14 +166,13 @@ export function useAudioRecorder({
       setAudioBlob(null)
     } catch (e) {
       console.error('Error uploading:', e)
-      alert(e instanceof Error ? e.message : 'Erro ao fazer upload')
+      toast.error(e instanceof Error ? e.message : 'Erro ao fazer upload')
     }
     setIsUploading(false)
     e.target.value = ''
   }
 
   const deleteAudio = async () => {
-    if (!confirm('Deseja realmente excluir a gravação?')) return
     try {
       const updated = await apiFetch<{ audio_url: string | null }>(apiBase, { method: 'DELETE' })
       onUpdated(updated)
