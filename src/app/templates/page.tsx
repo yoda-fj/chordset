@@ -2,7 +2,10 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { Plus, Search, Tag, Loader2 } from 'lucide-react'
+import { motion } from 'framer-motion'
+import { Plus, Search, Tag, LayoutTemplate } from 'lucide-react'
+import { Skeleton } from '@/components/ui/Skeleton'
+import { EmptyState, ErrorState } from '@/components/ui/EmptyState'
 import { parseTags } from '@/utils/tag-utils'
 import type { Template } from '@/types/database'
 
@@ -43,24 +46,23 @@ export default function TemplatesPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <Loader2 className="w-8 h-8 animate-spin text-brand" />
+      <div>
+        <div className="flex items-center justify-between mb-6">
+          <Skeleton className="h-8 w-36" />
+          <Skeleton className="h-10 w-40" />
+        </div>
+        <Skeleton className="h-11 w-full mb-6" />
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <Skeleton key={i} className="h-36" />
+          ))}
+        </div>
       </div>
     )
   }
 
   if (error) {
-    return (
-      <div className="text-center py-12">
-        <p className="text-danger mb-4">{error}</p>
-        <button
-          onClick={() => window.location.reload()}
-          className="text-brand hover:text-brand-600 font-medium"
-        >
-          Tentar novamente
-        </button>
-      </div>
-    )
+    return <ErrorState message={error} onRetry={() => window.location.reload()} />
   }
 
   return (
@@ -90,12 +92,18 @@ export default function TemplatesPage() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {filteredTemplates.map((template) => (
-          <Link
+        {filteredTemplates.map((template, i) => (
+          <motion.div
             key={template.id}
-            href={`/templates/${template.id}`}
-            className="block p-6 bg-surface-raised border rounded-lg hover:shadow-md transition-shadow"
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: Math.min(i * 0.04, 0.4), duration: 0.3 }}
+            whileTap={{ scale: 0.98 }}
           >
+            <Link
+              href={`/templates/${template.id}`}
+              className="block p-6 bg-surface-raised border rounded-lg hover:shadow-md transition-shadow"
+            >
             <h3 className="text-lg font-medium text-ink mb-2">
               {template.nome}
             </h3>
@@ -116,21 +124,21 @@ export default function TemplatesPage() {
               ))}
             </div>
           </Link>
+          </motion.div>
         ))}
       </div>
 
       {filteredTemplates.length === 0 && (
-        <div className="text-center py-12 bg-surface rounded-lg">
-          <p className="text-ink-muted mb-4">
-            {searchTerm ? 'Nenhum template encontrado' : 'Nenhum template encontrado'}
-          </p>
-          <Link
-            href="/templates/new"
-            className="text-brand hover:text-brand-600 font-medium"
-          >
-            Criar primeiro template
-          </Link>
-        </div>
+        <EmptyState
+          icon={<LayoutTemplate />}
+          title={
+            searchTerm
+              ? 'Nenhum template encontrado com essa busca'
+              : 'Nenhum template cadastrado'
+          }
+          description="Templates são setlists modelo para montar eventos rápido."
+          action={{ label: 'Novo Template', href: '/templates/new' }}
+        />
       )}
     </div>
   )

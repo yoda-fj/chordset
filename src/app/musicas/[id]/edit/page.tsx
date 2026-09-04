@@ -6,6 +6,7 @@ import { ArrowLeft, Save, Loader2, Trash2 } from 'lucide-react'
 import Link from 'next/link'
 import { TagInput } from '@/components/setlist/TagInput'
 import { ConfirmDialog } from '@/components/ui/Dialog'
+import { Skeleton } from '@/components/ui/Skeleton'
 import type { Musica } from '@/types/database'
 import { TOM_OPCOES, TAG_SUGGESTIONS_MUSICA } from '@/lib/constants'
 
@@ -119,8 +120,9 @@ export default function EditMusicaPage({ params }: EditMusicaPageProps) {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <Loader2 className="w-8 h-8 animate-spin text-brand" />
+      <div className="space-y-4">
+        <Skeleton className="h-9 w-48" />
+        <Skeleton className="h-96 w-full" />
       </div>
     )
   }

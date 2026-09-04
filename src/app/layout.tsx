@@ -1,9 +1,9 @@
 import type { Metadata } from 'next'
 import { Space_Grotesk, Instrument_Sans, JetBrains_Mono } from 'next/font/google'
-import Link from 'next/link'
 import './globals.css'
 import ClientLayout from '@/components/ui/ClientLayout'
 import { ThemeProvider } from '@/components/ui/ThemeProvider'
+import { SiteNav } from '@/components/layout/SiteNav'
 
 // Fase 1.3 — Fontes via next/font/google com CSS variables
 const display = Space_Grotesk({
@@ -30,9 +30,6 @@ export const metadata: Metadata = {
   applicationName: 'ChordSet',
 }
 
-const navLinkClass =
-  'text-ink-muted hover:text-ink px-3 py-2 rounded-md text-sm font-medium transition-colors'
-
 export default function RootLayout({
   children,
 }: {
@@ -44,38 +41,8 @@ export default function RootLayout({
         className={`${sans.variable} ${display.variable} ${mono.variable} font-sans bg-surface text-ink antialiased`}
       >
         <ThemeProvider>
-          <div className="min-h-screen bg-surface">
-            <nav className="bg-surface-raised border-b border-ink/10 site-nav">
-              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div className="flex justify-between h-16">
-                  <div className="flex items-center">
-                    <Link
-                      href="/"
-                      className="text-xl font-bold font-display text-brand"
-                    >
-                      ChordSet
-                    </Link>
-                  </div>
-                  <div className="flex items-center space-x-4">
-                    <Link href="/ritmos" className={navLinkClass}>
-                      Ritmos
-                    </Link>
-                    <Link href="/eventos" className={navLinkClass}>
-                      Eventos
-                    </Link>
-                    <Link href="/templates" className={navLinkClass}>
-                      Templates
-                    </Link>
-                    <Link href="/musicas" className={navLinkClass}>
-                      Músicas
-                    </Link>
-                    <Link href="/ensaios" className={navLinkClass}>
-                      Ensaios
-                    </Link>
-                  </div>
-                </div>
-              </div>
-            </nav>
+          <div className="min-h-screen bg-surface pb-20 md:pb-0">
+            <SiteNav />
             <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 site-main">
               <ClientLayout>{children}</ClientLayout>
             </main>

@@ -2,7 +2,10 @@
 
 import { useState, useEffect, useMemo } from 'react'
 import Link from 'next/link'
-import { Plus, Search, Calendar, MapPin, Loader2 } from 'lucide-react'
+import { motion } from 'framer-motion'
+import { Plus, Search, Calendar, MapPin } from 'lucide-react'
+import { Skeleton } from '@/components/ui/Skeleton'
+import { EmptyState, ErrorState } from '@/components/ui/EmptyState'
 import type { EventoWithTemplate } from '@/types/database'
 import { EVENTO_STATUS_LABELS, EVENTO_STATUS_BADGE_CLASSES } from '@/types/database'
 
@@ -48,24 +51,23 @@ export default function EventosPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <Loader2 className="w-8 h-8 animate-spin text-brand" />
+      <div>
+        <div className="flex items-center justify-between mb-6">
+          <Skeleton className="h-8 w-32" />
+          <Skeleton className="h-10 w-36" />
+        </div>
+        <Skeleton className="h-11 w-full mb-6" />
+        <div className="space-y-4">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <Skeleton key={i} className="h-24" />
+          ))}
+        </div>
       </div>
     )
   }
 
   if (error) {
-    return (
-      <div className="text-center py-12">
-        <p className="text-danger mb-4">{error}</p>
-        <button
-          onClick={() => window.location.reload()}
-          className="text-brand hover:text-brand-600 font-medium"
-        >
-          Tentar novamente
-        </button>
-      </div>
-    )
+    return <ErrorState message={error} onRetry={() => window.location.reload()} />
   }
 
   return (
@@ -124,12 +126,18 @@ export default function EventosPage() {
       </div>
 
       <div className="space-y-4">
-        {filteredEventos.map((evento) => (
-          <Link
+        {filteredEventos.map((evento, i) => (
+          <motion.div
             key={evento.id}
-            href={`/eventos/${evento.id}`}
-            className="block bg-surface-raised border rounded-lg p-4 hover:shadow-md transition-shadow"
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: Math.min(i * 0.04, 0.4), duration: 0.3 }}
+            whileTap={{ scale: 0.99 }}
           >
+            <Link
+              href={`/eventos/${evento.id}`}
+              className="block bg-surface-raised border rounded-lg p-4 hover:shadow-md transition-shadow"
+            >
             <div className="flex items-start justify-between gap-4">
               <div className="flex-1">
                 <div className="flex items-center gap-3 mb-2">
@@ -187,23 +195,21 @@ export default function EventosPage() {
               </div>
             </div>
           </Link>
+          </motion.div>
         ))}
       </div>
 
       {filteredEventos.length === 0 && (
-        <div className="text-center py-12 bg-surface rounded-lg">
-          <p className="text-ink-muted mb-4">
-            {searchTerm || statusFilter || dateFilter
+        <EmptyState
+          icon={<Calendar />}
+          title={
+            searchTerm || statusFilter || dateFilter
               ? 'Nenhum evento encontrado com esses filtros'
-              : 'Nenhum evento encontrado'}
-          </p>
-          <Link
-            href="/eventos/new"
-            className="text-brand hover:text-brand-600 font-medium"
-          >
-            Criar primeiro evento
-          </Link>
-        </div>
+              : 'Nenhum evento cadastrado'
+          }
+          description="Crie um evento para montar a setlist do próximo show."
+          action={{ label: 'Novo Evento', href: '/eventos/new' }}
+        />
       )}
     </div>
   )
