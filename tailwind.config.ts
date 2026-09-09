@@ -68,6 +68,17 @@ const config: Config = {
       transitionTimingFunction: {
         spring: 'cubic-bezier(0.34, 1.56, 0.64, 1)',
       },
+      keyframes: {
+        // Pulso único do metrônomo (Fase 2.4): flash que nasce cheio e apaga
+        'ping-once': {
+          '0%': { transform: 'scale(1)', opacity: '1' },
+          '50%': { transform: 'scale(1.6)', opacity: '0.6' },
+          '100%': { transform: 'scale(1)', opacity: '0.9' },
+        },
+      },
+      animation: {
+        'ping-once': 'ping-once 0.3s ease-out',
+      },
     },
   },
   plugins: [],

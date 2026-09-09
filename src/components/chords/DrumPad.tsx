@@ -494,24 +494,29 @@ export function DrumPad({ initialGroove, initialBpm, initialVolume, onGrooveChan
           {/* Volume */}
           <button
             onClick={() => setIsMuted(!isMuted)}
-            className="p-1.5 text-ink hover:bg-surface-overlay rounded"
+            className="flex h-12 w-12 items-center justify-center text-ink hover:bg-surface-overlay rounded-lg transition-colors"
+            aria-label={isMuted ? 'Ativar som' : 'Silenciar'}
+            aria-pressed={isMuted}
           >
-            {isMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
+            {isMuted ? <VolumeX className="w-5 h-5" aria-hidden /> : <Volume2 className="w-5 h-5" aria-hidden />}
           </button>
-          
+
           {/* Play/Stop */}
           <button
             onClick={togglePlayback}
-            className={`p-2 rounded-lg ${isPlaying ? 'bg-success text-surface' : 'bg-surface-overlay text-ink hover:bg-surface-overlay/70'}`}
+            className={`flex h-12 w-12 items-center justify-center rounded-lg transition-colors ${isPlaying ? 'bg-success text-zinc-950' : 'bg-surface-overlay text-ink hover:bg-surface-overlay/70'}`}
+            aria-label={isPlaying ? 'Pausar ritmo' : 'Tocar ritmo'}
+            aria-pressed={isPlaying}
           >
-            {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
+            {isPlaying ? <Pause className="w-5 h-5" aria-hidden /> : <Play className="w-5 h-5" aria-hidden />}
           </button>
-          
+
           <button
             onClick={stopPlayback}
-            className="p-2 bg-surface-overlay text-ink hover:bg-surface-overlay/70 rounded-lg"
+            className="flex h-12 w-12 items-center justify-center bg-surface-overlay text-ink hover:bg-surface-overlay/70 rounded-lg transition-colors"
+            aria-label="Parar ritmo"
           >
-            <Square className="w-4 h-4" />
+            <Square className="w-5 h-5" aria-hidden />
           </button>
         </div>
       </div>
@@ -521,7 +526,8 @@ export function DrumPad({ initialGroove, initialBpm, initialVolume, onGrooveChan
         <select
           value={selectedGroove}
           onChange={(e) => handleGrooveChange(e.target.value)}
-          className="px-3 py-1.5 bg-surface-overlay border rounded-lg text-sm text-ink min-w-[120px]"
+          aria-label="Selecionar ritmo"
+          className="px-3 min-h-12 bg-surface-overlay border rounded-lg text-sm text-ink min-w-[120px]"
         >
           <optgroup label="Presets">
             {Object.entries(PRESET_GROOVES).map(([id, groove]) => (
@@ -545,16 +551,19 @@ export function DrumPad({ initialGroove, initialBpm, initialVolume, onGrooveChan
             onChange={(e) => handleBpmChange(Number(e.target.value))}
             min={40}
             max={200}
-            className="w-14 px-1 py-1 bg-surface-overlay border rounded text-sm text-center text-ink"
+            aria-label="BPM do ritmo"
+            className="w-16 px-1 min-h-12 bg-surface-overlay border rounded text-sm text-center text-ink"
           />
         </div>
 
         <div className="flex items-center gap-1">
           <button
             onClick={() => setIsMuted(!isMuted)}
-            className="p-1.5 text-ink hover:bg-surface-overlay rounded"
+            className="flex h-12 w-12 items-center justify-center text-ink hover:bg-surface-overlay rounded-lg transition-colors"
+            aria-label={isMuted ? 'Ativar som' : 'Silenciar'}
+            aria-pressed={isMuted}
           >
-            {isMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
+            {isMuted ? <VolumeX className="w-5 h-5" aria-hidden /> : <Volume2 className="w-5 h-5" aria-hidden />}
           </button>
           <input
             type="range"
@@ -563,7 +572,8 @@ export function DrumPad({ initialGroove, initialBpm, initialVolume, onGrooveChan
             step={0.1}
             value={isMuted ? 0 : volume}
             onChange={(e) => handleVolumeChange(Number(e.target.value))}
-            className="w-20"
+            aria-label="Volume do ritmo"
+            className="w-20 min-h-12"
           />
         </div>
       </div>
@@ -574,7 +584,8 @@ export function DrumPad({ initialGroove, initialBpm, initialVolume, onGrooveChan
           <button
             key={pad.note}
             onClick={() => playPad(pad.note)}
-            className={`relative p-4 rounded-xl font-medium text-white transition-all transform active:scale-95 ${
+            aria-label={`Tocar ${pad.label} (tecla ${pad.key})`}
+            className={`relative p-4 min-h-16 rounded-xl font-medium text-white transition-all transform active:scale-95 ${
               activePads.has(pad.note) ? 'scale-95 brightness-110' : ''
             } ${pad.color} hover:brightness-110`}
           >

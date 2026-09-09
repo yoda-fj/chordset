@@ -16,6 +16,18 @@ Plano: `docs/PLANO-TRIPLE-A.md` (v2, aprovado por 3 agentes revisores — ver `d
 
 **Gate ao fim da Fase 0:** tsc ✅ · lint:ci 0 warnings ✅ · 73 testes ✅
 
+## 🎼 Fase 2 — A Cifra (em andamento, branch `fase-2-cifra`)
+
+- [x] **2.2 Escala tipográfica de palco** (Onda 1, PR #10): zoom da cifra mín 20px / default 24px / teto 64px (era 12/16/28) com trava nos limites; acordes peso 700 cor `chord`; contraste da letra medido **17:1**
+- [x] **2.3 Stepper de tom gigante** (Onda 1, PR #10): `KeyStepper` − [ G ] + com alvos 64×64px e flip animado substitui o `<select>`; badge "original: X" quando transposto; E2E: `C/G5 → C#/G#5`
+- [x] **2.5 Alvos de toque ≥48px + aria-label** (Onda 1 na cifra, Onda 2 no DrumPad/AudioRecorderPanel): 11 controles da cifra + 16 do DrumPad verificados via Playwright
+- [x] **2.4 Metrônomo visual + tap-tempo** (Onda 2): flash sincronizado ao tick de áudio via `Tone.Draw.schedule` (pulso visível sem áudio); TAP com média móvel de 5 taps e reset após 2s; BPM ajusta em tempo real durante o play; metrônomo era **dead code** (atrás de `showSidebar=false`) — agora renderiza quando `showMetronome`
+- [x] **2.7 Lazy-load Tone.js** (Onda 2): `next/dynamic ssr:false` pro DrumPad (setlist, cifra, ensaios) e Metronome (CifraViewer); DrumPad/Metronome removidos do barrel `chords/index.ts`. **Medição (Turbopack não reporta First Load por rota — medido por chunk):** chunk Tone.js **243kB** com 0 referências no HTML inicial da cifra (antes: chunk estático da rota); carrega sob demanda no primeiro mount — verificado via curl + network capture
+- [ ] **2.6 Testes de componente** (ChordViewer/CifraViewer) — Onda 3
+- ⚠️ Pendente pra fase seguinte: páginas `ritmos/*` e `musicas/[id]` importam `tone` diretamente (editores de pattern) — lazy-load delas não era escopo da 2.7
+
+**Gate Onda 2:** lint:ci ✅ · tsc ✅ · 93/93 testes ✅ · E2E Playwright 9/9 (metrônomo, tap-tempo, flash, lazy chunk, alvos)
+
 ## 🚀 Funcionalidades Implementadas
 
 ### Core

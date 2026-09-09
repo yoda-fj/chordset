@@ -2,13 +2,20 @@
 
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
+import dynamic from 'next/dynamic';
 import { PracticeTimer } from '@/components/practice/PracticeTimer';
 import { CifraViewer } from '@/components/chords/CifraViewer';
-import { DrumPad } from '@/components/chords/DrumPad';
 import { useDrumPadSettings } from '@/hooks/useDrumPadSettings';
 import { ConfirmDialog } from '@/components/ui/Dialog';
+import { Skeleton } from '@/components/ui/Skeleton';
 import { toast } from 'sonner';
 import { formatDuration } from '@/lib/practice-utils';
+
+// 2.7: Tone.js (~243kB) só carrega quando o DrumPad monta — fora do bundle inicial
+const DrumPad = dynamic(() => import('@/components/chords/DrumPad').then((m) => m.DrumPad), {
+  ssr: false,
+  loading: () => <Skeleton className="h-64 w-full rounded-xl" />,
+});
 import { 
   PracticeStatus, 
   DifficultyLevel, 
