@@ -152,24 +152,41 @@ export const Autoscroll = ({ targetRef }: AutoscrollProps) => {
     setSpeed(newSpeed);
   };
 
+  const SPEED_LABELS: Record<SpeedLevel, string> = {
+    0: 'desligado',
+    1: 'muito lento',
+    2: 'lento',
+    3: 'médio',
+    4: 'rápido',
+    5: 'muito rápido',
+  };
+
   return (
     <div className="flex items-center gap-2">
       <button
-        className={`p-2 rounded-lg transition-all ${speed > 0 ? 'bg-emerald-500 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}
+        className={`flex h-12 w-12 items-center justify-center rounded-lg transition-colors ${speed > 0 ? 'bg-success text-zinc-950' : 'text-ink-muted hover:bg-surface-overlay hover:text-ink'}`}
         onClick={cycleSpeed}
-        title={speed === 0 ? 'Auto-scroll: Off' : `Auto-scroll: ${speed}/5`}
+        aria-label={`Auto-scroll: ${SPEED_LABELS[speed]}. Toque para mudar a velocidade.`}
+        aria-pressed={speed > 0}
       >
-        {speed === 0 ? <Gauge size={18} /> : <Play size={16} className={speed >= 4 ? 'fill-current' : ''} />}
+        {speed === 0 ? <Gauge size={20} aria-hidden /> : <Play size={18} className={speed >= 4 ? 'fill-current' : ''} aria-hidden />}
       </button>
 
       <div className="flex-1 flex items-center gap-2">
-        <div className="flex-1 h-1 bg-slate-200 rounded-full overflow-hidden">
+        <div
+          className="flex-1 h-1 bg-surface-overlay rounded-full overflow-hidden"
+          role="progressbar"
+          aria-valuenow={Math.round(progress)}
+          aria-valuemin={0}
+          aria-valuemax={100}
+          aria-label="Progresso da música"
+        >
           <div
-            className="h-full bg-emerald-500 rounded-full transition-all"
+            className="h-full bg-success rounded-full transition-all"
             style={{ width: `${progress}%` }}
           />
         </div>
-        <span className="text-xs text-slate-500 w-8">{Math.round(progress)}%</span>
+        <span className="text-xs text-ink-faint w-8">{Math.round(progress)}%</span>
       </div>
     </div>
   );

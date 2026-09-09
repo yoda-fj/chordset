@@ -100,7 +100,7 @@ export default function CifraPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="text-gray-500">Carregando...</div>
+        <div className="text-ink-muted">Carregando...</div>
       </div>
     )
   }
@@ -111,14 +111,14 @@ export default function CifraPage() {
         <div className="mb-6">
           <Link
             href="/musicas"
-            className="inline-flex items-center gap-2 text-gray-600 hover:text-gray-900"
+            className="inline-flex items-center gap-2 min-h-12 text-ink-muted hover:text-ink"
           >
             <ArrowLeft size={18} />
             Voltar
           </Link>
         </div>
-        <div className="text-center py-12 bg-gray-50 rounded-lg">
-          <p className="text-gray-500">Música não encontrada.</p>
+        <div className="text-center py-12 bg-surface-raised rounded-lg border border-ink/10">
+          <p className="text-ink-muted">Música não encontrada.</p>
         </div>
       </div>
     )
@@ -130,19 +130,19 @@ export default function CifraPage() {
         <div className="mb-6">
           <button
             onClick={() => router.back()}
-            className="inline-flex items-center gap-2 text-gray-600 hover:text-gray-900"
+            className="inline-flex items-center gap-2 min-h-12 text-ink-muted hover:text-ink"
           >
             <ArrowLeft size={18} />
             Voltar
           </button>
         </div>
 
-        <div className="text-center py-12 bg-gray-50 rounded-lg">
-          <Music className="mx-auto h-12 w-12 text-gray-300 mb-4" />
-          <p className="text-gray-500 mb-4">Esta música ainda não possui cifra cadastrada.</p>
+        <div className="text-center py-12 bg-surface-raised rounded-lg border border-ink/10">
+          <Music className="mx-auto h-12 w-12 text-ink-faint mb-4" />
+          <p className="text-ink-muted mb-4">Esta música ainda não possui cifra cadastrada.</p>
           <Link
             href={`/musicas/${musicaId}/edit`}
-            className="text-indigo-600 hover:text-indigo-700 font-medium"
+            className="inline-flex items-center min-h-12 text-brand hover:text-brand-600 font-medium"
           >
             Adicionar cifra
           </Link>
@@ -158,7 +158,7 @@ export default function CifraPage() {
         <div className="flex items-center justify-between">
           <button
             onClick={() => router.back()}
-            className="inline-flex items-center gap-2 text-gray-600 hover:text-gray-900"
+            className="inline-flex items-center gap-2 min-h-12 text-ink-muted hover:text-ink"
           >
             <ArrowLeft size={18} />
             Voltar
@@ -166,14 +166,14 @@ export default function CifraPage() {
           <div className="flex items-center gap-2">
             <Link
               href={`/musicas/${musicaId}/edit`}
-              className="inline-flex items-center gap-2 px-4 py-2 text-indigo-600 hover:text-indigo-700 border border-indigo-200 rounded-lg hover:bg-indigo-50 transition-colors"
+              className="inline-flex items-center gap-2 px-4 min-h-12 text-brand hover:text-brand-600 border border-brand/30 rounded-lg hover:bg-brand/10 transition-colors"
             >
               <Edit3 size={18} />
               Editar
             </Link>
             <button
               onClick={handlePrint}
-              className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
+              className="inline-flex items-center gap-2 px-4 min-h-12 bg-brand text-zinc-950 rounded-lg hover:bg-brand-600 transition-colors"
             >
               <Printer size={18} />
               Imprimir
@@ -202,8 +202,8 @@ export default function CifraPage() {
         {/* Sidebar toggle button */}
         <button
           onClick={() => setSidebarOpen(!sidebarOpen)}
-          className="fixed right-4 top-1/2 -translate-y-1/2 z-50 p-3 bg-white border shadow-lg rounded-full hover:bg-gray-50 print:hidden"
-          title={sidebarOpen ? 'Fechar painel' : 'Abrir painel'}
+          className="fixed right-4 top-1/2 -translate-y-1/2 z-50 flex h-12 w-12 items-center justify-center bg-surface-raised border border-ink/10 shadow-lg rounded-full hover:bg-surface-overlay print:hidden"
+          aria-label={sidebarOpen ? 'Fechar painel lateral' : 'Abrir painel lateral'}
         >
           {sidebarOpen ? <ChevronRight size={20} /> : <ChevronLeft size={20} />}
         </button>
@@ -212,24 +212,24 @@ export default function CifraPage() {
         <div className={`transition-all duration-300 print:hidden overflow-y-auto ${sidebarOpen ? 'w-80 opacity-100' : 'w-0 opacity-0'}`}>
           <div className="space-y-4 p-4">
             {/* Observacao */}
-            <div className="bg-white p-4 rounded-lg border">
-              <h2 className="text-base font-semibold text-gray-900 mb-3">Observações</h2>
+            <div className="bg-surface-raised p-4 rounded-lg border border-ink/10">
+              <h2 className="text-base font-semibold text-ink mb-3">Observações</h2>
               <div className="relative">
                 <textarea
                   value={observacao}
                   onChange={(e) => handleObservacaoChange(e.target.value)}
                   onBlur={saveObservacao}
                   placeholder="Adicione observações..."
-                  className="w-full p-3 border rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-indigo-500 min-h-[120px] text-sm"
+                  className="w-full p-3 border border-ink/20 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-brand min-h-[120px] text-sm bg-surface text-ink placeholder:text-ink-faint"
                 />
                 {savingObs && (
-                  <span className="absolute top-2 right-2 text-xs text-gray-400">Salvando...</span>
+                  <span className="absolute top-2 right-2 text-xs text-ink-faint">Salvando...</span>
                 )}
               </div>
             </div>
 
             {/* Audio Recording/Upload */}
-            <div className="bg-white p-4 rounded-lg border">
+            <div className="bg-surface-raised p-4 rounded-lg border border-ink/10">
               <AudioRecorderPanel {...audioRecorder} />
             </div>
 
