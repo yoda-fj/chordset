@@ -88,7 +88,7 @@ export const ChordViewer = ({
   chordProContent,
   title,
   artist,
-  fontSize = 16,
+  fontSize = 24,
   isFullscreen = false,
   showTablatura = true
 }: ChordViewerProps) => {
