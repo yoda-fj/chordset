@@ -56,8 +56,16 @@ function CifraLine({ line, textFormat }: { line: ParsedCifraLine; textFormat: bo
 
     case 'tab':
       return (
-        <div className="group relative">
-          <pre className="tab-line font-chord leading-relaxed text-tab opacity-80">
+        // Scroll horizontal DENTRO do bloco da tab: a página é pan-y,
+        // então a tab ganha o próprio eixo (pan-x) com fonte menor —
+        // uma linha de tab em 24px mono estoura qualquer celular.
+        <div
+          className="group relative overflow-x-auto"
+          style={{ touchAction: 'pan-x', WebkitOverflowScrolling: 'touch' }}
+        >
+          <pre
+            className="tab-line w-max font-chord text-[0.6em] leading-relaxed text-tab opacity-80"
+          >
             {line.content}
           </pre>
           <span className="pointer-events-none absolute -top-3 right-0 rounded bg-surface-overlay px-1 text-xs text-tab opacity-0 transition-opacity group-hover:opacity-100">

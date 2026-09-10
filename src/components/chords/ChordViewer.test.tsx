@@ -61,6 +61,17 @@ e|--0--0--|`;
     expect(container.querySelector('.tab-line')).toBeNull();
   });
 
+  it('tablatura tem scroll horizontal próprio e fonte reduzida (mobile)', () => {
+    const comTab = `[E]
+e|--0--0--0--0--0--0--0--0--0--0--0--0--|`;
+    const { container } = render(<ChordViewer chordProContent={comTab} />);
+    const pre = container.querySelector('.tab-line') as HTMLElement;
+    // Wrapper com overflow-x-auto (pan-x) — a página é pan-y, a tab rola por dentro
+    expect(pre.parentElement?.className).toContain('overflow-x-auto');
+    expect(pre.className).toContain('w-max');
+    expect(pre.className).toContain('text-[0.6em]');
+  });
+
   it('renderiza formato texto (acordes espaçados acima da letra)', () => {
     // isTextChordFormat exige ≥2 pares acorde+letra pra detectar o formato
     const texto = [
