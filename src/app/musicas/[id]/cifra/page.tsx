@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import dynamic from 'next/dynamic'
-import { ArrowLeft, Printer, Edit3, Music, ChevronLeft, ChevronRight } from 'lucide-react'
+import { ArrowLeft, Printer, Edit3, Music, ChevronLeft, ChevronRight, X } from 'lucide-react'
 import Link from 'next/link'
 import { CifraViewer } from '@/components/chords'
 import { useAudioRecorder } from '@/hooks/useAudioRecorder'
@@ -192,7 +192,7 @@ export default function CifraPage() {
 
       <div className="flex gap-4 flex-1 min-h-0">
         {/* Main content - Cifra */}
-        <div className={`transition-all duration-300 flex flex-col h-full ${sidebarOpen ? 'flex-1' : 'w-full'}`}>
+        <div className="flex flex-col h-full flex-1 min-w-0">
           {/* CifraViewer - reusa o mesmo componente */}
           <CifraViewer
             cifra={musica.cifra}
@@ -207,18 +207,45 @@ export default function CifraPage() {
           />
         </div>
 
-        {/* Sidebar toggle button */}
+        {/* Backdrop mobile — fecha o drawer ao tocar fora */}
+        {sidebarOpen && (
+          <div
+            className="fixed inset-0 bg-black/60 z-40 lg:hidden"
+            onClick={() => setSidebarOpen(false)}
+          />
+        )}
+
+        {/* Sidebar toggle — some sob o backdrop quando o drawer abre (o drawer tem X próprio) */}
         <button
           onClick={() => setSidebarOpen(!sidebarOpen)}
-          className="fixed right-4 top-1/2 -translate-y-1/2 z-50 flex h-12 w-12 items-center justify-center bg-surface-raised border border-ink/10 shadow-lg rounded-full hover:bg-surface-overlay print:hidden"
+          className="fixed right-4 top-1/2 -translate-y-1/2 z-30 flex h-12 w-12 items-center justify-center bg-surface-raised border border-ink/10 shadow-lg rounded-full hover:bg-surface-overlay print:hidden"
           aria-label={sidebarOpen ? 'Fechar painel lateral' : 'Abrir painel lateral'}
         >
           {sidebarOpen ? <ChevronRight size={20} /> : <ChevronLeft size={20} />}
         </button>
 
-        {/* Sidebar - Observacao + Audio + Drum Pad */}
-        <div className={`transition-all duration-300 print:hidden overflow-y-auto ${sidebarOpen ? 'w-80 opacity-100' : 'w-0 opacity-0'}`}>
-          <div className="space-y-4 p-4">
+        {/* Painel lateral — UM único aside: no mobile é drawer que SOBREPÕE a
+            cifra; no desktop fica em fluxo e empurra. Montar uma vez só evita
+            duplicar o DrumPad (2 samplers Tone.js). */}
+        <aside
+          className={`bg-surface-raised border-l border-ink/10 overflow-y-auto transition-all duration-300 print:hidden flex-shrink-0
+            fixed right-0 top-0 bottom-0 z-50 w-80 max-w-[85vw]
+            lg:static lg:z-auto lg:max-w-none
+            ${sidebarOpen ? 'translate-x-0 lg:w-80' : 'translate-x-full lg:translate-x-0 lg:w-0 lg:overflow-hidden lg:border-l-0'}`}
+        >
+          {/* Header do drawer (só mobile) */}
+          <div className="p-4 border-b border-ink/10 flex items-center justify-between lg:hidden">
+            <h2 className="font-semibold text-ink">Painel</h2>
+            <button
+              onClick={() => setSidebarOpen(false)}
+              className="flex h-12 w-12 items-center justify-center text-ink-muted hover:text-ink rounded-lg"
+              aria-label="Fechar painel lateral"
+            >
+              <X size={20} />
+            </button>
+          </div>
+
+          <div className={`space-y-4 p-4 ${sidebarOpen ? '' : 'lg:hidden'}`}>
             {/* Observacao */}
             <div className="bg-surface-raised p-4 rounded-lg border border-ink/10">
               <h2 className="text-base font-semibold text-ink mb-3">Observações</h2>
@@ -251,7 +278,7 @@ export default function CifraPage() {
               onVolumeChange={drumPad.onVolumeChange}
             />
           </div>
-        </div>
+        </aside>
       </div>
 
       <div className="mt-8 pt-4 border-t text-center text-sm text-slate-400 hidden print:block">
