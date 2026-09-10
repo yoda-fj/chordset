@@ -10,5 +10,8 @@ export default defineConfig({
   test: {
     environment: 'node',
     exclude: ['**/node_modules/**', '**/.next/**'],
+    setupFiles: ['./vitest.setup.ts'],
+    // Testes de componente (*.test.tsx) usam jsdom via docblock:
+    // // @vitest-environment jsdom
   },
 })
