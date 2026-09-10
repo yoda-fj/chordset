@@ -2,13 +2,21 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { useParams, useRouter } from 'next/navigation'
+import dynamic from 'next/dynamic'
 import { Music, Check, ChevronLeft, ChevronRight, X, ChevronRight as ChevronRightIcon } from 'lucide-react'
 import Link from 'next/link'
-import { CifraViewer, DrumPad } from '@/components/chords'
+import { CifraViewer } from '@/components/chords'
 import { useAudioRecorder } from '@/hooks/useAudioRecorder'
 import { useDrumPadSettings } from '@/hooks/useDrumPadSettings'
 import { AudioRecorderPanel } from '@/components/audio/AudioRecorderPanel'
+import { Skeleton } from '@/components/ui/Skeleton'
 import type { EventoWithTemplate, EventoMusicaWithMusica } from '@/types/database'
+
+// 2.7: Tone.js (~243kB) só carrega quando o DrumPad monta — fora do bundle inicial
+const DrumPad = dynamic(() => import('@/components/chords/DrumPad').then((m) => m.DrumPad), {
+  ssr: false,
+  loading: () => <Skeleton className="h-64 w-full rounded-xl" />,
+})
 
 export default function SetlistPage() {
   const params = useParams()

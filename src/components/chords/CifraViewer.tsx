@@ -1,9 +1,9 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
+import dynamic from 'next/dynamic';
 import { ChordViewer } from './ChordViewer';
 import { Autoscroll } from './Autoscroll';
-import { Metronome } from './Metronome';
 import { KeyStepper } from './KeyStepper';
 import { transposeCifra } from '@/utils/chord-transposer';
 import {
@@ -16,6 +16,12 @@ import {
   Eye,
   EyeOff
 } from 'lucide-react';
+
+// 2.7: Tone.js (~243kB) só carrega quando o Metronome monta — fora do bundle inicial
+const Metronome = dynamic(() => import('./Metronome').then((m) => m.Metronome), {
+  ssr: false,
+  loading: () => <div className="h-16 w-64 rounded-lg bg-surface-overlay animate-pulse" />,
+});
 
 interface CifraViewerProps {
   cifra: string | null;
@@ -72,7 +78,6 @@ export function CifraViewer({
 
   // Display settings
   const [fontSize, setFontSize] = useState(FONT_DEFAULT);
-  const [showSidebar] = useState(false);
   const [showTablatura, setShowTablatura] = useState(true);
 
   const handleTranspose = (newTom: string) => {
@@ -193,10 +198,10 @@ export function CifraViewer({
       </div>
       )}
 
-      {/* Inline tools row - only metronome now */}
-      {showSidebar && (
-        <div className="flex flex-wrap items-center gap-2 mb-2">
-          {showMetronome && <Metronome defaultBpm={100} compact />}
+      {/* Metrônomo visual (Fase 2.4) — fora do bundle inicial via next/dynamic */}
+      {showMetronome && (
+        <div className="mb-2 shrink-0">
+          <Metronome defaultBpm={100} compact />
         </div>
       )}
 
