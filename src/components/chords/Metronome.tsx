@@ -14,8 +14,11 @@ const BPM_MAX = 220;
 const TAP_RESET_MS = 2000; // gap maior que isso zera a sequência de taps
 
 /**
- * Metrônomo visual (Fase 2.4): flash sincronizado ao Tone.Transport
- * (via Tone.Draw, que alinha o frame ao tick de áudio) + tap-tempo.
+ * Metrônomo visual (Fase 2.4): pulso agendado com setInterval + Tone.now()
+ * (lookahead curto pra precisão de áudio) e flash via Tone.Draw, que alinha
+ * o frame ao tempo de áudio. NÃO usa o Tone.Transport global de propósito:
+ * ele é compartilhado com o DrumPad (que dá stop()/mexe no bpm), e o
+ * metrônomo precisa continuar tocando independente dele. Inclui tap-tempo.
  * Pulso visível mesmo sem áudio.
  */
 export const Metronome = ({ defaultBpm = 100 }: MetronomeProps) => {
@@ -23,7 +26,6 @@ export const Metronome = ({ defaultBpm = 100 }: MetronomeProps) => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [beat, setBeat] = useState(0); // incrementa a cada pulso → retrigger do flash
   const synthRef = useRef<Tone.MembraneSynth | null>(null);
-  const loopRef = useRef<Tone.Loop | null>(null);
   const tapsRef = useRef<number[]>([]);
 
   useEffect(() => {
@@ -40,34 +42,31 @@ export const Metronome = ({ defaultBpm = 100 }: MetronomeProps) => {
     }).toDestination();
 
     return () => {
-      loopRef.current?.dispose();
       synthRef.current?.dispose();
     };
   }, []);
 
-  // BPM muda em tempo real, mesmo tocando
+  // Agenda um pulso levemente à frente no tempo de áudio; o flash visual é
+  // disparado pelo Tone.Draw exatamente nesse instante
+  const schedulePulse = useCallback(() => {
+    const time = Tone.now() + 0.05;
+    synthRef.current?.triggerAttackRelease('C2', '32n', time);
+    Tone.Draw.schedule(() => setBeat((b) => b + 1), time);
+  }, []);
+
+  // Intervalo do pulso: recria quando BPM muda, mesmo tocando
   useEffect(() => {
-    Tone.Transport.bpm.value = bpm;
-  }, [bpm]);
+    if (!isPlaying) return;
+    schedulePulse(); // primeiro pulso imediato
+    const id = setInterval(schedulePulse, 60000 / bpm);
+    return () => clearInterval(id);
+  }, [isPlaying, bpm, schedulePulse]);
 
   const togglePlay = async () => {
     if (isPlaying) {
-      Tone.Transport.stop();
-      loopRef.current?.stop();
       setIsPlaying(false);
     } else {
       await Tone.start();
-
-      if (!loopRef.current) {
-        loopRef.current = new Tone.Loop((time) => {
-          synthRef.current?.triggerAttackRelease('C2', '32n', time);
-          // Flash visual alinhado ao tick de áudio (não ao setState solto)
-          Tone.Draw.schedule(() => setBeat((b) => b + 1), time);
-        }, '4n').start(0);
-      }
-
-      Tone.Transport.bpm.value = bpm;
-      Tone.Transport.start();
       setIsPlaying(true);
     }
   };

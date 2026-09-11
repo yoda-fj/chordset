@@ -202,8 +202,8 @@ export default function SetlistPage() {
   const selectedMusica = musicas[selectedIndex]
   const cifra = selectedMusica?.musicas?.cifra || null
 
-  // Painel direito (observações + áudio + ritmo) — compartilhado entre
-  // a sidebar desktop (empurra) e o drawer mobile (sobrepõe a cifra)
+  // Painel direito (observações + áudio + ritmo) — montado UMA vez no aside
+  // abaixo; o estilo muda conforme o breakpoint (drawer mobile / em fluxo no desktop)
   const rightPanel = (
     <div className="w-full flex flex-col gap-4">
       {/* Observacao */}
@@ -406,21 +406,29 @@ export default function SetlistPage() {
           {rightSidebarOpen ? <ChevronRightIcon size={20} /> : <ChevronLeft size={20} />}
         </button>
 
-        {/* Right Sidebar - desktop: em fluxo, empurra a cifra */}
-        <div className={`hidden lg:block h-full bg-surface-raised border-l overflow-y-auto transition-all duration-300 print:hidden flex-shrink-0 ${rightSidebarOpen ? 'w-80 p-4' : 'w-0 overflow-hidden'}`}>
-          {rightSidebarOpen && rightPanel}
-        </div>
-
-        {/* Right Sidebar - mobile: drawer que SOBREPÕE a cifra */}
+        {/* Backdrop mobile — fecha o drawer ao tocar fora */}
         {rightSidebarOpen && (
           <div className="fixed inset-0 bg-black/60 z-40 lg:hidden" onClick={() => setRightSidebarOpen(false)} />
         )}
-        <aside className={`fixed right-0 top-0 bottom-0 w-80 max-w-[85vw] bg-surface-raised border-l z-50 transition-transform duration-200 lg:hidden overflow-y-auto ${rightSidebarOpen ? 'translate-x-0' : 'translate-x-full'}`}>
-          <div className="p-4 border-b flex items-center justify-between shrink-0">
+
+        {/* Painel lateral — UM único aside: no mobile é drawer que SOBREPÕE a
+            cifra; no desktop fica em fluxo e empurra. Montar uma vez só evita
+            duplicar o DrumPad (2 samplers Tone.js, 2 listeners de teclado). */}
+        <aside
+          className={`bg-surface-raised border-l overflow-y-auto transition-all duration-300 print:hidden flex-shrink-0
+            fixed right-0 top-0 bottom-0 z-50 w-80 max-w-[85vw]
+            lg:static lg:z-auto lg:max-w-none lg:h-full
+            ${rightSidebarOpen ? 'translate-x-0 lg:w-80' : 'translate-x-full lg:translate-x-0 lg:w-0 lg:overflow-hidden lg:border-l-0'}`}
+        >
+          {/* Header do drawer (só mobile) */}
+          <div className="p-4 border-b flex items-center justify-between shrink-0 lg:hidden">
             <h2 className="font-semibold text-ink">Painel</h2>
             <button onClick={() => setRightSidebarOpen(false)} className="p-2 text-ink-muted hover:text-ink" aria-label="Fechar painel"><X size={20} /></button>
           </div>
-          <div className="p-4">{rightPanel}</div>
+
+          <div className={`p-4 ${rightSidebarOpen ? '' : 'lg:hidden'}`}>
+            {rightPanel}
+          </div>
         </aside>
       </div>
     </div>

@@ -143,6 +143,21 @@ const DRUM_PADS = [
   { note: 'G2', label: 'Tom H', key: 'G', color: 'bg-rose-500' },
 ];
 
+// Mesmos limites do Metronome
+const BPM_MIN = 40;
+const BPM_MAX = 220;
+
+// Teclas globais não disparam quando o foco está num campo de texto
+function isEditableTarget(target: EventTarget | null): boolean {
+  if (!(target instanceof HTMLElement)) return false;
+  return (
+    target.tagName === 'INPUT' ||
+    target.tagName === 'TEXTAREA' ||
+    target.tagName === 'SELECT' ||
+    target.isContentEditable
+  );
+}
+
 export function DrumPad({ initialGroove, initialBpm, initialVolume, onGrooveChange, onBpmChange, onVolumeChange }: DrumPadProps) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [selectedGroove, setSelectedGroove] = useState<string>(initialGroove || 'rock-8');
@@ -415,6 +430,8 @@ export function DrumPad({ initialGroove, initialBpm, initialVolume, onGrooveChan
   // Keyboard controls
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      if (isEditableTarget(e.target)) return;
+
       const pad = DRUM_PADS.find(p => p.key.toLowerCase() === e.key.toLowerCase());
       if (pad) {
         e.preventDefault();
@@ -458,10 +475,13 @@ export function DrumPad({ initialGroove, initialBpm, initialVolume, onGrooveChan
   };
 
   const handleBpmChange = (newBpm: number) => {
-    setBpm(newBpm);
-    Tone.Transport.bpm.value = newBpm;
+    // Input limpo/inválido gera NaN: ignora pra não quebrar o Tone.Transport
+    if (!Number.isFinite(newBpm)) return;
+    const clamped = Math.min(BPM_MAX, Math.max(BPM_MIN, Math.round(newBpm)));
+    setBpm(clamped);
+    Tone.Transport.bpm.value = clamped;
     // Persistência (com debounce) fica no useDrumPadSettings da página
-    onBpmChange?.(newBpm);
+    onBpmChange?.(clamped);
   };
 
   const handleVolumeChange = (newVolume: number) => {
@@ -549,8 +569,8 @@ export function DrumPad({ initialGroove, initialBpm, initialVolume, onGrooveChan
             type="number"
             value={bpm}
             onChange={(e) => handleBpmChange(Number(e.target.value))}
-            min={40}
-            max={200}
+            min={BPM_MIN}
+            max={BPM_MAX}
             aria-label="BPM do ritmo"
             className="w-16 px-1 min-h-12 bg-surface-overlay border rounded text-sm text-center text-ink"
           />

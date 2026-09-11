@@ -14,7 +14,7 @@ const FLAT_TO_SHARP: Record<string, string> = {
 /**
  * Normaliza o nome da nota pra formato de sustenido
  */
-function normalizeNote(nota: string): string {
+export function normalizeNote(nota: string): string {
   // Se tem bemol, converte pra sustenido
   if (nota.includes('b') && !nota.includes('#')) {
     // É um bemol simples (ex: Db, Eb)
