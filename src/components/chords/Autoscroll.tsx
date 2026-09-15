@@ -5,6 +5,7 @@ import { Play, Gauge } from 'lucide-react';
 
 interface AutoscrollProps {
   targetRef: React.RefObject<HTMLElement | null>;
+  bpm?: number;
 }
 
 type SpeedLevel = 0 | 1 | 2 | 3 | 4 | 5;
@@ -18,11 +19,20 @@ const SPEED_MAP: Record<SpeedLevel, number> = {
   5: 150   // muito rápido
 };
 
-export const Autoscroll = ({ targetRef }: AutoscrollProps) => {
+// Em modo BPM (bpm informado): px/s = px por batida × bpm/60.
+// A 120 BPM os níveis dão ~30/60/90/120/160 px/s — perto dos níveis fixos.
+const BPM_PX_PER_BEAT: Record<SpeedLevel, number> = {
+  0: 0, 1: 15, 2: 30, 3: 45, 4: 60, 5: 80
+};
+
+export const Autoscroll = ({ targetRef, bpm }: AutoscrollProps) => {
   const [speed, setSpeed] = useState<SpeedLevel>(0);
   const [progress, setProgress] = useState(0);
   const animationRef = useRef<number | null>(null);
   const lastTimeRef = useRef<number>(0);
+
+  const pxPerSecond = (level: SpeedLevel): number =>
+    bpm && bpm > 0 ? (BPM_PX_PER_BEAT[level] * bpm) / 60 : SPEED_MAP[level];
 
   const scroll = useCallback(function tick(timestamp: number) {
     if (speed === 0) return;
@@ -36,7 +46,7 @@ export const Autoscroll = ({ targetRef }: AutoscrollProps) => {
       }
       const deltaTime = (timestamp - lastTimeRef.current) / 1000;
       lastTimeRef.current = timestamp;
-      const scrollAmount = SPEED_MAP[speed] * deltaTime;
+      const scrollAmount = pxPerSecond(speed) * deltaTime;
       const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
       const newScrollTop = Math.min(window.scrollY + scrollAmount, maxScroll);
       window.scrollTo(0, newScrollTop);
@@ -60,7 +70,7 @@ export const Autoscroll = ({ targetRef }: AutoscrollProps) => {
       }
       const deltaTime = (timestamp - lastTimeRef.current) / 1000;
       lastTimeRef.current = timestamp;
-      const scrollAmount = SPEED_MAP[speed] * deltaTime;
+      const scrollAmount = pxPerSecond(speed) * deltaTime;
       const windowMaxScroll = document.documentElement.scrollHeight - window.innerHeight;
       const newScrollTop = Math.min(window.scrollY + scrollAmount, windowMaxScroll);
       window.scrollTo(0, newScrollTop);
@@ -82,12 +92,12 @@ export const Autoscroll = ({ targetRef }: AutoscrollProps) => {
     const deltaTime = (timestamp - lastTimeRef.current) / 1000;
     lastTimeRef.current = timestamp;
 
-    const scrollAmount = SPEED_MAP[speed] * deltaTime;
+    const scrollAmount = pxPerSecond(speed) * deltaTime;
     const newScrollTop = Math.min(element.scrollTop + scrollAmount, maxScroll);
 
     element.scrollTop = newScrollTop;
     setProgress((newScrollTop / maxScroll) * 100);
-    
+
     if (newScrollTop < maxScroll && speed > 0) {
       animationRef.current = requestAnimationFrame(tick);
     } else {
@@ -95,7 +105,7 @@ export const Autoscroll = ({ targetRef }: AutoscrollProps) => {
       setSpeed(0);
       lastTimeRef.current = 0;
     }
-  }, [speed, targetRef]);
+  }, [speed, bpm, targetRef]);
 
   useEffect(() => {
     if (speed > 0) {

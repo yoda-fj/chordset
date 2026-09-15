@@ -28,6 +28,7 @@ interface CifraViewerProps {
   titulo: string;
   artista: string;
   tomOriginal?: string | null;
+  bpm?: number;
   showMetronome?: boolean;
   showControls?: boolean;
   compact?: boolean;
@@ -53,6 +54,7 @@ export function CifraViewer({
   titulo,
   artista,
   tomOriginal,
+  bpm,
   showMetronome = false,
   showControls = true,
   className = '',
@@ -180,8 +182,8 @@ export function CifraViewer({
           )}
         </button>
 
-        {/* Autoscroll - always visible */}
-        <Autoscroll targetRef={scrollContainerRef} />
+        {/* Autoscroll - sempre visível; com bpm, velocidade segue a música */}
+        <Autoscroll targetRef={scrollContainerRef} bpm={bpm} />
 
         {/* Fullscreen */}
         <button
@@ -201,7 +203,7 @@ export function CifraViewer({
       {/* Metrônomo visual (Fase 2.4) — fora do bundle inicial via next/dynamic */}
       {showMetronome && (
         <div className="mb-2 shrink-0">
-          <Metronome defaultBpm={100} compact />
+          <Metronome defaultBpm={bpm && bpm > 0 ? bpm : 100} compact />
         </div>
       )}
 

@@ -204,6 +204,7 @@ export default function EnsaioDetailPage() {
             titulo={musicas?.titulo || ''}
             artista={musicas?.artista || ''}
             tomOriginal={musicas?.tom_original}
+            bpm={drumPad.bpm}
             showMetronome={true}
             compact={true}
           />
