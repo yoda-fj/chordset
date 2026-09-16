@@ -31,8 +31,8 @@ export const Autoscroll = ({ targetRef, bpm }: AutoscrollProps) => {
   const animationRef = useRef<number | null>(null);
   const lastTimeRef = useRef<number>(0);
 
-  const pxPerSecond = (level: SpeedLevel): number =>
-    bpm && bpm > 0 ? (BPM_PX_PER_BEAT[level] * bpm) / 60 : SPEED_MAP[level];
+  const pxPerSecond = useCallback((level: SpeedLevel): number =>
+    bpm && bpm > 0 ? (BPM_PX_PER_BEAT[level] * bpm) / 60 : SPEED_MAP[level], [bpm]);
 
   const scroll = useCallback(function tick(timestamp: number) {
     if (speed === 0) return;
@@ -105,7 +105,7 @@ export const Autoscroll = ({ targetRef, bpm }: AutoscrollProps) => {
       setSpeed(0);
       lastTimeRef.current = 0;
     }
-  }, [speed, bpm, targetRef]);
+  }, [speed, pxPerSecond, targetRef]);
 
   useEffect(() => {
     if (speed > 0) {

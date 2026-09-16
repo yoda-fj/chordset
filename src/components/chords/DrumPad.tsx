@@ -218,13 +218,9 @@ export function DrumPad({ initialGroove, initialBpm, initialVolume, onGrooveChan
     }
   }, [volume, isMuted, sampler]);
 
-  // Carrega groove salvo (apenas inicializa com BPM padrão)
-  useEffect(() => {
-    if (PRESET_GROOVES[selectedGroove]) {
-      setBpm(PRESET_GROOVES[selectedGroove].bpm);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- roda só na montagem, de propósito
-  }, []);
+  // BPM inicial vem de initialBpm (BPM salvo da música). O BPM do preset só
+  // é aplicado quando o usuário troca o groove (em handleGrooveChange) —
+  // sobrescrever aqui na montagem apagaria o andamento salvo.
 
   const playPad = useCallback((note: string) => {
     if (!sampler || !isLoaded) return;

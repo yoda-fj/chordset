@@ -90,7 +90,9 @@ export function useDrumPadSettings(musica: DrumPadMusica | null) {
     if (musicaId === null) return
     setOverrides(prev => ({
       ...prev,
-      [musicaId]: { ...values, ...partial },
+      // Espalha sobre prev para não perder updates encadeados no mesmo tick
+      // (ex.: trocar de groove chama onBpmChange + onGrooveChange seguidos)
+      [musicaId]: { ...(prev[musicaId] ?? values), ...partial },
     }))
   }
 

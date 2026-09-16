@@ -138,6 +138,10 @@ export default function MusicaPage() {
   }
 
   const saveRitmo = async (ritmoId: number | null) => {
+    // Cancela BPM/volume pendentes no debounce para não sobrescreverem o BPM do padrão novo
+    if (ritmoBpmTimeoutRef.current) clearTimeout(ritmoBpmTimeoutRef.current)
+    if (ritmoVolumeTimeoutRef.current) clearTimeout(ritmoVolumeTimeoutRef.current)
+    ritmoPendingRef.current = {}
     try {
       const found = ritmoId ? drumPatterns.find((r: DrumPattern) => r.id === ritmoId) : null
       const res = await fetch(`/api/musicas/${musicaId}`, {
@@ -479,7 +483,7 @@ export default function MusicaPage() {
                 <div>
                   <div className="font-medium text-ink">{evento.nome}</div>
                   <div className="text-sm text-ink-muted">
-                    {new Date(evento.data ?? 0).toLocaleDateString('pt-BR')}
+                    {evento.data ? new Date(evento.data).toLocaleDateString('pt-BR') : 'Sem data'}
                     {evento.hora && ` • ${evento.hora}`}
                   </div>
                 </div>

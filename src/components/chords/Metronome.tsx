@@ -24,6 +24,13 @@ const TAP_RESET_MS = 2000; // gap maior que isso zera a sequência de taps
 export const Metronome = ({ defaultBpm = 100 }: MetronomeProps) => {
   const [bpm, setBpm] = useState(defaultBpm);
   const [isPlaying, setIsPlaying] = useState(false);
+
+  // Segue o BPM da música quando ele muda (troca de groove no Drum Pad,
+  // troca de música no setlist). Ajustes locais de ± não disparam o efeito,
+  // pois defaultBpm só muda quando o BPM da música muda de fato.
+  useEffect(() => {
+    setBpm(Math.min(BPM_MAX, Math.max(BPM_MIN, defaultBpm)));
+  }, [defaultBpm]);
   const [beat, setBeat] = useState(0); // incrementa a cada pulso → retrigger do flash
   const synthRef = useRef<Tone.MembraneSynth | null>(null);
   const tapsRef = useRef<number[]>([]);
