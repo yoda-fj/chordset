@@ -6,6 +6,7 @@ import { ArrowLeft, Music, Edit, FileText, Calendar, Play, ChevronLeft, ChevronR
 import { Skeleton } from '@/components/ui/Skeleton'
 import * as Tone from 'tone'
 import { getSamplerUrls, volumeToDb } from '@/lib/drum-samples'
+import { BPM_MIN, BPM_MAX } from '@/lib/constants'
 import type { Musica, DrumPattern, EventoStatus } from '@/types/database'
 import Link from 'next/link'
 import { useAudioRecorder } from '@/hooks/useAudioRecorder'
@@ -64,6 +65,9 @@ export default function MusicaPage() {
   const ritmoBpmTimeoutRef = useRef<NodeJS.Timeout | null>(null)
   const ritmoVolumeTimeoutRef = useRef<NodeJS.Timeout | null>(null)
   const ritmoPendingRef = useRef<{ bpm?: number; volume?: number }>({})
+  // Guarda contra iniciar a sequência depois do cleanup do unmount (o onload
+  // do sampler dispara de forma assíncrona)
+  const mountedRef = useRef(true)
 
   // Audio recording
   const audioRecorder = useAudioRecorder({
@@ -212,8 +216,12 @@ export default function MusicaPage() {
   // Para o ritmo e grava alterações pendentes ao sair da página (navegação SPA)
   // e no pagehide (reload/fechar aba — o keepalive entrega o save)
   useEffect(() => {
+    // Re-armar a flag: o cleanup do StrictMode (dev) desmonta e remonta,
+    // e o ref persiste entre os ciclos — sem isso o onload do sampler nunca dispara
+    mountedRef.current = true
     window.addEventListener('pagehide', flushRitmoPending)
     return () => {
+      mountedRef.current = false
       window.removeEventListener('pagehide', flushRitmoPending)
       ritmoSeqRef.current?.stop()
       ritmoSeqRef.current?.dispose()
@@ -234,6 +242,7 @@ export default function MusicaPage() {
     if (ritmoSeqRef.current) {
       ritmoSeqRef.current.stop()
       ritmoSeqRef.current.dispose()
+      ritmoSeqRef.current = null
     }
 
     const noteMap: Record<string, string> = {
@@ -242,38 +251,45 @@ export default function MusicaPage() {
     }
 
     const urls = getSamplerUrls(selectedRitmo.kit || 'kit1')
+    const bpm = ritmoBpm || 120
+    const steps = JSON.parse(selectedRitmo.steps)
 
     if (ritmoSamplerRef.current) ritmoSamplerRef.current.dispose()
     if (ritmoLimiterRef.current) ritmoLimiterRef.current.dispose()
     const limiter = new Tone.Limiter(-3).toDestination()
-    const sampler = new Tone.Sampler({ urls }).connect(limiter)
+
+    // A sequência só começa no onload do sampler (samples carregados), sem
+    // timeout fixo. Checa montagem e se este sampler ainda é o atual — ao sair
+    // da página ou clicar de novo, o dispose do cleanup/unmount invalida o resto.
+    const sampler = new Tone.Sampler({
+      urls,
+      onload: () => {
+        if (!mountedRef.current || ritmoSamplerRef.current !== sampler) return
+
+        Tone.Transport.bpm.value = bpm
+
+        const stepArray = new Array(16).fill(0).map((_, i) => i)
+
+        ritmoSeqRef.current = new Tone.Sequence(
+          (time: number, stepIdx: number) => {
+            const instruments = ['kick', 'snare', 'hihatClosed', 'hihatOpen', 'crash', 'ride', 'tomLow', 'tomMid', 'tomHigh']
+            instruments.forEach((inst, instIdx) => {
+              if (steps[instIdx]?.[stepIdx]) {
+                sampler.triggerAttackRelease(noteMap[inst], '16n', time)
+              }
+            })
+          },
+          stepArray,
+          '16n'
+        )
+
+        ritmoSeqRef.current.start(0)
+        Tone.Transport.start()
+      },
+    }).connect(limiter)
     sampler.volume.value = volumeToDb(ritmoVolume)
     ritmoSamplerRef.current = sampler
     ritmoLimiterRef.current = limiter
-
-    // Wait for samples to load
-    await new Promise<void>((resolve) => setTimeout(resolve, 1500))
-
-    Tone.Transport.bpm.value = ritmoBpm || 120
-
-    const steps = JSON.parse(selectedRitmo.steps)
-    const stepArray = new Array(16).fill(0).map((_, i) => i)
-
-    ritmoSeqRef.current = new Tone.Sequence(
-      (time: number, stepIdx: number) => {
-        const instruments = ['kick', 'snare', 'hihatClosed', 'hihatOpen', 'crash', 'ride', 'tomLow', 'tomMid', 'tomHigh']
-        instruments.forEach((inst, instIdx) => {
-          if (steps[instIdx]?.[stepIdx]) {
-            sampler.triggerAttackRelease(noteMap[inst], '16n', time)
-          }
-        })
-      },
-      stepArray,
-      '16n'
-    )
-
-    ritmoSeqRef.current.start(0)
-    Tone.Transport.start()
   }
 
   if (loading) {
@@ -386,8 +402,8 @@ export default function MusicaPage() {
                 type="number"
                 value={ritmoBpm}
                 onChange={(e) => handleRitmoBpmChange(Number(e.target.value))}
-                min={40}
-                max={200}
+                min={BPM_MIN}
+                max={BPM_MAX}
                 className="w-16 px-2 py-1 border rounded-lg text-sm text-center focus:outline-none focus:ring-2 focus:ring-brand"
               />
             </div>

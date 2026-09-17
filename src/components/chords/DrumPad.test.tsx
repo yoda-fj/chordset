@@ -95,4 +95,23 @@ describe('DrumPad', () => {
     expect(bpmInput.value).toBe('220');
     expect(mocks.bpmParam.value).toBe(220);
   });
+
+  it('preserva initialBpm na montagem (não aplica o BPM 120 do preset rock-8)', async () => {
+    render(<DrumPad initialGroove="rock-8" initialBpm={90} />);
+    const bpmInput = (await screen.findByLabelText('BPM do ritmo')) as HTMLInputElement;
+
+    expect(bpmInput.value).toBe('90');
+    expect(mocks.bpmParam.value).toBe(0); // nenhum BPM foi forçado no Transport
+  });
+
+  it('aplica o BPM do preset ao trocar de groove (handleGrooveChange)', async () => {
+    const onBpmChange = vi.fn();
+    render(<DrumPad initialGroove="rock-8" initialBpm={90} onBpmChange={onBpmChange} />);
+    const select = await screen.findByLabelText('Selecionar ritmo');
+
+    fireEvent.change(select, { target: { value: 'balada' } });
+
+    expect((screen.getByLabelText('BPM do ritmo') as HTMLInputElement).value).toBe('70');
+    expect(onBpmChange).toHaveBeenCalledWith(70);
+  });
 });

@@ -31,10 +31,8 @@ interface CifraViewerProps {
   bpm?: number;
   showMetronome?: boolean;
   showControls?: boolean;
-  compact?: boolean;
   className?: string;
   isFullscreen?: boolean;
-  onFullscreenChange?: (isFullscreen: boolean) => void;
   onToggleSidebar?: () => void;
   sidebarOpen?: boolean;
 }
@@ -110,10 +108,10 @@ export function CifraViewer({
   }
 
   return (
-    <div className={`flex flex-col h-full ${className}`}>
+    <div className={`flex flex-col h-full min-w-0 ${className}`}>
       {/* Controls Bar */}
       {showControls && (
-        <div className={`bg-surface-raised rounded-xl p-2 border border-ink/10 shadow-sm mb-2 flex flex-wrap items-center gap-2 shrink-0 ${isFullscreen ? 'fixed top-4 left-4 right-4 z-50' : ''}`}>
+        <div className={`min-w-0 bg-surface-raised rounded-xl p-2 border border-ink/10 shadow-sm mb-2 flex flex-wrap items-center gap-2 shrink-0 ${isFullscreen ? 'fixed top-4 left-4 right-4 z-50' : ''}`}>
         {/* Sidebar toggle */}
         {onToggleSidebar && (
           <button
@@ -203,7 +201,7 @@ export function CifraViewer({
       {/* Metrônomo visual (Fase 2.4) — fora do bundle inicial via next/dynamic */}
       {showMetronome && (
         <div className="mb-2 shrink-0">
-          <Metronome defaultBpm={bpm && bpm > 0 ? bpm : 100} compact />
+          <Metronome defaultBpm={bpm && bpm > 0 ? bpm : 100} />
         </div>
       )}
 

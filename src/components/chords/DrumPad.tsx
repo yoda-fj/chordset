@@ -3,10 +3,10 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import * as Tone from 'tone';
 import { getSamplerUrls, volumeToDb } from '@/lib/drum-samples';
+import { BPM_MIN, BPM_MAX } from '@/lib/constants';
 import { Play, Pause, Square, Volume2, VolumeX, Music } from 'lucide-react';
 
 interface DrumPadProps {
-  readOnly?: boolean;
   initialGroove?: string;
   initialBpm?: number;
   initialVolume?: number;
@@ -143,10 +143,6 @@ const DRUM_PADS = [
   { note: 'G2', label: 'Tom H', key: 'G', color: 'bg-rose-500' },
 ];
 
-// Mesmos limites do Metronome
-const BPM_MIN = 40;
-const BPM_MAX = 220;
-
 // Teclas globais não disparam quando o foco está num campo de texto
 function isEditableTarget(target: EventTarget | null): boolean {
   if (!(target instanceof HTMLElement)) return false;
@@ -172,6 +168,7 @@ export function DrumPad({ initialGroove, initialBpm, initialVolume, onGrooveChan
   const activePadsTimeoutRef = useRef<Map<string, NodeJS.Timeout>>(new Map());
   const sequenceRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const currentPatternRef = useRef<{ pattern: DrumHit[]; bpm: number } | null>(null);
+  const restartTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Fetch custom patterns from database
   useEffect(() => {
@@ -367,6 +364,10 @@ export function DrumPad({ initialGroove, initialBpm, initialVolume, onGrooveChan
         clearInterval(sequenceRef.current);
         sequenceRef.current = null;
       }
+      if (restartTimeoutRef.current) {
+        clearTimeout(restartTimeoutRef.current);
+        restartTimeoutRef.current = null;
+      }
       Tone.Transport.stop();
     };
   }, []);
@@ -376,8 +377,14 @@ export function DrumPad({ initialGroove, initialBpm, initialVolume, onGrooveChan
     if (isPlaying && isLoaded) {
       stopPlayback();
       // Small delay to ensure cleanup before starting new playback
-      setTimeout(() => startPlayback(), 50);
+      restartTimeoutRef.current = setTimeout(() => startPlayback(), 50);
     }
+    return () => {
+      if (restartTimeoutRef.current) {
+        clearTimeout(restartTimeoutRef.current);
+        restartTimeoutRef.current = null;
+      }
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps -- reinicia só ao trocar groove/kit, de propósito
   }, [selectedGroove, selectedKit]);
 

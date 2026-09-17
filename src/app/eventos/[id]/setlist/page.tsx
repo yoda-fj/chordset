@@ -389,7 +389,6 @@ export default function SetlistPage() {
                 showMetronome={true}
                 showControls={true}
                 isFullscreen={isFullscreen}
-                onFullscreenChange={setIsFullscreen}
                 onToggleSidebar={() => setShowSidebar(!showSidebar)}
                 sidebarOpen={showSidebar}
                 className="h-full"

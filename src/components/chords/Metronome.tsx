@@ -3,14 +3,12 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import * as Tone from 'tone';
 import { Play, Pause, Minus, Plus } from 'lucide-react';
+import { BPM_MIN, BPM_MAX } from '@/lib/constants';
 
 interface MetronomeProps {
   defaultBpm?: number;
-  compact?: boolean;
 }
 
-const BPM_MIN = 40;
-const BPM_MAX = 220;
 const TAP_RESET_MS = 2000; // gap maior que isso zera a sequência de taps
 
 /**

@@ -54,25 +54,10 @@ export function getSamplerUrls(kitName: string = 'kit1'): Record<string, string>
   };
 }
 
-// Direct sample paths for Tone.Player
-export function getSamplePaths(kitName: string = 'kit1'): Record<string, string> {
-  const kit = DRUM_SAMPLES[kitName] || DRUM_SAMPLES.kit1;
-  return {
-    'C1': `/drum-samples/kick/${kit.kick}`,
-    'D1': `/drum-samples/snare/${kit.snare}`,
-    'F#1': `/drum-samples/hihat-closed/${kit.hihatClosed}`,
-    'A#1': `/drum-samples/hihat-closed/${kit.hihatOpen}`,
-    'C2': `/drum-samples/crash/${kit.crash}`,
-    'D2': `/drum-samples/ride/${kit.ride}`,
-    'E2': `/drum-samples/tom/${kit.tomLow}`,
-    'F2': `/drum-samples/tom/${kit.tomMid}`,
-    'G2': `/drum-samples/tom/${kit.tomHigh}`,
-  };
-}
-
 // Converte volume linear 0-1 para dB com boost generoso — os samples são gravados
-// baixos. 0 → +5dB, 0.5 → +20dB, 1 → +35dB. Usar sempre com um Tone.Limiter na
-// cadeia para evitar clipping nos ganhos altos.
+// baixos. 0 → silêncio (-Infinity), 0.5 → +20dB, 1 → +35dB. Usar sempre com um
+// Tone.Limiter na cadeia para evitar clipping nos ganhos altos.
 export function volumeToDb(volume: number): number {
+  if (volume <= 0) return -Infinity
   return (volume * 30) + 5;
 }

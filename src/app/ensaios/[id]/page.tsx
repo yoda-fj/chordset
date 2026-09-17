@@ -198,7 +198,7 @@ export default function EnsaioDetailPage() {
 
       <div className="grid lg:grid-cols-3 gap-6">
         {/* Main Content - Cifra */}
-        <div className="lg:col-span-2">
+        <div className="lg:col-span-2 min-w-0">
           <CifraViewer
             cifra={musicas?.cifra}
             titulo={musicas?.titulo || ''}
@@ -206,12 +206,11 @@ export default function EnsaioDetailPage() {
             tomOriginal={musicas?.tom_original}
             bpm={drumPad.bpm}
             showMetronome={true}
-            compact={true}
           />
         </div>
 
         {/* Sidebar - Practice Tools */}
-        <div className="space-y-4">
+        <div className="space-y-4 min-w-0">
           {/* Timer */}
           <div className="bg-surface-raised rounded-xl p-4 border border-ink/10 shadow-sm">
             <h2 className="text-lg font-semibold text-ink mb-3 flex items-center gap-2">

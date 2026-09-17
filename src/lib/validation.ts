@@ -1,4 +1,6 @@
 import { z } from 'zod'
+import { BPM_MIN, BPM_MAX } from './constants'
+import type { PracticeStatus, DifficultyLevel } from '@/types/practice'
 
 // =====================================
 // LIMITES
@@ -113,7 +115,7 @@ export const musicaUpdateSchema = z
     observacao: z.string().max(10 * 1024).nullish(),
     groove: z.string().max(10 * 1024).nullish(),
     drum_pattern_id: z.number().int().positive().nullish(),
-    bpm: z.number().int().min(20).max(400).optional(),
+    bpm: z.number().int().min(BPM_MIN).max(BPM_MAX).optional(),
     volume: z.number().min(0).max(1).optional(),
   })
 
@@ -131,3 +133,38 @@ export function isAudioSizeExceeded(sizeBytes: number | null | undefined): boole
   if (sizeBytes === null || sizeBytes === undefined || Number.isNaN(sizeBytes)) return false
   return sizeBytes > MAX_AUDIO_SIZE_BYTES
 }
+
+// =====================================
+// PRACTICE SESSIONS (/api/practice-sessions, /api/practice-sessions/[id])
+// =====================================
+
+const PRACTICE_STATUSES: [PracticeStatus, ...PracticeStatus[]] = ['needs_practice', 'practiced', 'mastered']
+const DIFFICULTY_LEVELS: [DifficultyLevel, ...DifficultyLevel[]] = ['easy', 'medium', 'hard']
+
+const practiceSessionFields = {
+  status: z.enum(PRACTICE_STATUSES),
+  difficulty: z.enum(DIFFICULTY_LEVELS),
+  total_practice_time_seconds: z.number().int('Tempo de prática deve ser inteiro').min(0, 'Tempo de prática não pode ser negativo'),
+  last_practiced_at: z.string().datetime('last_practiced_at deve ser uma data ISO válida').nullish(),
+  notes: z.string().nullish(),
+}
+
+export const practiceSessionSchema = z.object({
+  musica_id: z.number().int('musica_id deve ser inteiro').positive('musica_id deve ser positivo'),
+  status: practiceSessionFields.status.optional(),
+  difficulty: practiceSessionFields.difficulty.optional(),
+  total_practice_time_seconds: practiceSessionFields.total_practice_time_seconds.optional(),
+  last_practiced_at: practiceSessionFields.last_practiced_at,
+  notes: practiceSessionFields.notes,
+})
+
+export const practiceSessionUpdateSchema = z.object({
+  status: practiceSessionFields.status.optional(),
+  difficulty: practiceSessionFields.difficulty.optional(),
+  total_practice_time_seconds: practiceSessionFields.total_practice_time_seconds.optional(),
+  last_practiced_at: practiceSessionFields.last_practiced_at,
+  notes: practiceSessionFields.notes,
+})
+
+export type PracticeSessionInput = z.infer<typeof practiceSessionSchema>
+export type PracticeSessionUpdateInput = z.infer<typeof practiceSessionUpdateSchema>
