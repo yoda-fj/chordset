@@ -225,6 +225,7 @@ export default function EnsaioDetailPage() {
             tom={musicas?.tom_atual ?? musicas?.tom_original}
             onTomChange={handleTomChange}
             bpm={drumPad.bpm}
+            onBpmChange={drumPad.onBpmChange}
             groove={drumPad.groove}
             volume={drumPad.volume}
             showMetronome={true}

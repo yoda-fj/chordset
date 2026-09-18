@@ -219,6 +219,7 @@ export default function CifraPage() {
             tom={musica.tom_atual ?? musica.tom_original}
             onTomChange={handleTomChange}
             bpm={drumPad.bpm}
+            onBpmChange={drumPad.onBpmChange}
             groove={drumPad.groove}
             volume={drumPad.volume}
             showMetronome={true}

@@ -119,6 +119,18 @@ describe('Metronome', () => {
     expect(mocks.triggerAttackRelease.mock.calls.length).toBeGreaterThan(pulsesOnStop);
   });
 
+  it('± chama onBpmChange (pai persiste o andamento da música)', async () => {
+    const user = userEvent.setup();
+    const onBpmChange = vi.fn();
+    render(<Metronome defaultBpm={120} onBpmChange={onBpmChange} />);
+
+    await user.click(screen.getByRole('button', { name: 'Aumentar BPM' }));
+    expect(onBpmChange).toHaveBeenCalledWith(125); // passo de ±5
+
+    await user.click(screen.getByRole('button', { name: 'Diminuir BPM' }));
+    expect(onBpmChange).toHaveBeenCalledWith(120);
+  });
+
   it('faz dispose do synth no unmount', () => {
     const { unmount } = render(<Metronome />);
     unmount();

@@ -118,6 +118,27 @@ describe('useDrumPadSettings', () => {
     });
   });
 
+  describe('onBpmChange (metrônomo edita o andamento da música)', () => {
+    it('atualiza ao vivo e persiste com debounce', () => {
+      const { result } = renderHook(() => useDrumPadSettings(mkMusica(7)));
+      act(() => result.current.onBpmChange(140));
+
+      // Ao vivo: ritmo/scroll seguem drumPad.bpm antes mesmo do save
+      expect(result.current.bpm).toBe(140);
+      expect(fetchMock).not.toHaveBeenCalled();
+
+      act(() => vi.advanceTimersByTime(1000));
+      expect(putBodies()).toContainEqual({ bpm: 140 });
+    });
+
+    it('NaN é ignorado', () => {
+      const { result } = renderHook(() => useDrumPadSettings(mkMusica(7)));
+      act(() => result.current.onBpmChange(NaN));
+      expect(result.current.bpm).toBe(120);
+      expect(fetchMock).not.toHaveBeenCalled();
+    });
+  });
+
   describe('troca de música', () => {
     it('rerender com outra música usa os valores dela', () => {
       const musicaA = mkMusica(1, { groove: 'funk-1', bpm: 110 });
