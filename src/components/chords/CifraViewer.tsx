@@ -37,6 +37,7 @@ interface CifraViewerProps {
   tom?: string | null; // tom efetivo salvo (evento/atual) — precede tomOriginal na exibição
   onTomChange?: (tom: string) => void; // persiste a transposição (pai salva)
   bpm?: number;
+  onBpmChange?: (bpm: number) => void; // metrônomo edita o andamento da música (pai persiste)
   groove?: string;  // ritmo salvo da música ('preset' ou 'db-<id>') pro RhythmPlayer
   volume?: number;
   showMetronome?: boolean;
@@ -65,6 +66,7 @@ export function CifraViewer({
   tom,
   onTomChange,
   bpm,
+  onBpmChange,
   groove,
   volume,
   showMetronome = false,
@@ -226,7 +228,7 @@ export function CifraViewer({
             bpm={bpm && bpm > 0 ? bpm : 120}
             volume={volume ?? 0.7}
           />
-          <Metronome defaultBpm={bpm && bpm > 0 ? bpm : 100} />
+          <Metronome defaultBpm={bpm && bpm > 0 ? bpm : 100} onBpmChange={onBpmChange} />
         </div>
       )}
 

@@ -413,6 +413,7 @@ export default function SetlistPage() {
                 tom={selectedMusica?.tom_evento || selectedMusica?.musicas?.tom_atual || selectedMusica?.musicas?.tom_original || null}
                 onTomChange={handleTomChange}
                 bpm={drumPad.bpm}
+                onBpmChange={drumPad.onBpmChange}
                 groove={drumPad.groove}
                 volume={drumPad.volume}
                 showMetronome={true}

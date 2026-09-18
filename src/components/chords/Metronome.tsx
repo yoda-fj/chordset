@@ -7,6 +7,9 @@ import { BPM_MIN, BPM_MAX } from '@/lib/constants';
 
 interface MetronomeProps {
   defaultBpm?: number;
+  // Chamado quando o usuário edita o andamento (± ou tap-tempo).
+  // O pai persiste na música — ritmo e scroll acompanham ao vivo.
+  onBpmChange?: (bpm: number) => void;
 }
 
 const TAP_RESET_MS = 2000; // gap maior que isso zera a sequência de taps
@@ -19,7 +22,7 @@ const TAP_RESET_MS = 2000; // gap maior que isso zera a sequência de taps
  * metrônomo precisa continuar tocando independente dele. Inclui tap-tempo.
  * Pulso visível mesmo sem áudio.
  */
-export const Metronome = ({ defaultBpm = 100 }: MetronomeProps) => {
+export const Metronome = ({ defaultBpm = 100, onBpmChange }: MetronomeProps) => {
   const [bpm, setBpm] = useState(defaultBpm);
   const [isPlaying, setIsPlaying] = useState(false);
 
@@ -77,7 +80,9 @@ export const Metronome = ({ defaultBpm = 100 }: MetronomeProps) => {
   };
 
   const adjustBpm = (delta: number) => {
-    setBpm(prev => Math.max(BPM_MIN, Math.min(BPM_MAX, prev + delta)));
+    const newBpm = Math.max(BPM_MIN, Math.min(BPM_MAX, bpm + delta));
+    setBpm(newBpm);
+    onBpmChange?.(newBpm);
   };
 
   // Tap-tempo: média dos últimos intervalos entre toques
@@ -97,11 +102,12 @@ export const Metronome = ({ defaultBpm = 100 }: MetronomeProps) => {
         intervals.push(taps[i] - taps[i - 1]);
       }
       const avg = intervals.reduce((a, b) => a + b, 0) / intervals.length;
-      const newBpm = Math.round(60000 / avg);
-      setBpm(Math.max(BPM_MIN, Math.min(BPM_MAX, newBpm)));
+      const newBpm = Math.max(BPM_MIN, Math.min(BPM_MAX, Math.round(60000 / avg)));
+      setBpm(newBpm);
+      onBpmChange?.(newBpm);
     }
     setBeat((b) => b + 1); // feedback visual do tap mesmo parado
-  }, []);
+  }, [onBpmChange]);
 
   return (
     <div className="flex items-center gap-2 bg-surface-raised rounded-lg border border-ink/10 p-2">

@@ -13,7 +13,7 @@ interface DrumPadValues {
   volume: number
 }
 
-type SaveKind = 'groove' | 'volume'
+type SaveKind = 'groove' | 'bpm' | 'volume'
 interface PendingSave {
   musicaId: number
   body: Record<string, string | number | null>
@@ -61,7 +61,7 @@ export function useDrumPadSettings(musica: DrumPadMusica | null) {
   }, [])
 
   const flushAll = useCallback(() => {
-    for (const kind of ['groove', 'volume'] as SaveKind[]) {
+    for (const kind of ['groove', 'bpm', 'volume'] as SaveKind[]) {
       const timer = timersRef.current[kind]
       if (timer) clearTimeout(timer)
       flushKind(kind)
@@ -101,12 +101,19 @@ export function useDrumPadSettings(musica: DrumPadMusica | null) {
     scheduleSave('groove', { groove: grooveId.startsWith('db-') ? null : grooveId, drum_pattern_id: drumPatternId })
   }
 
+  // BPM é da música — mas editado pelo metrônomo da cifra (±/tap-tempo), não
+  // pelo painel. Atualiza ao vivo (ritmo/scroll seguem drumPad.bpm) e persiste
+  // com debounce. Não existe "BPM original": o valor salvo É o andamento.
+  const onBpmChange = (newBpm: number) => {
+    if (!Number.isFinite(newBpm)) return
+    setOverride({ bpm: newBpm })
+    scheduleSave('bpm', { bpm: newBpm })
+  }
+
   const onVolumeChange = (newVolume: number) => {
     setOverride({ volume: newVolume })
     scheduleSave('volume', { volume: newVolume })
   }
 
-  // Sem onBpmChange de propósito: o BPM é da música (editado no card de
-  // /musicas/[id]) — o painel não altera andamento (review 2026-09-17)
-  return { ...values, onGrooveChange, onVolumeChange }
+  return { ...values, onGrooveChange, onBpmChange, onVolumeChange }
 }
