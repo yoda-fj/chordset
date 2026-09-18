@@ -2,23 +2,17 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import * as Tone from 'tone';
-import { getSamplerUrls, volumeToDb } from '@/lib/drum-samples';
+import { getSamplerUrls, volumeToDb, stepsToHits } from '@/lib/drum-samples';
+import type { DrumHit } from '@/lib/drum-samples';
 import { Play, Pause, Square, Volume2, VolumeX, Music } from 'lucide-react';
 
 interface DrumPadProps {
-  readOnly?: boolean;
   initialGroove?: string;
   initialBpm?: number;
   initialVolume?: number;
   onGrooveChange?: (grooveId: string, drumPatternId: number | null) => void;
-  onBpmChange?: (bpm: number) => void;
-  onVolumeChange?: (volume: number) => void;
-}
 
-interface DrumHit {
-  time: number; // in 16ths
-  note: string;
-  velocity?: number;
+  onVolumeChange?: (volume: number) => void;
 }
 
 interface GroovePattern {
@@ -143,10 +137,22 @@ const DRUM_PADS = [
   { note: 'G2', label: 'Tom H', key: 'G', color: 'bg-rose-500' },
 ];
 
-export function DrumPad({ initialGroove, initialBpm, initialVolume, onGrooveChange, onBpmChange, onVolumeChange }: DrumPadProps) {
+// Teclas globais não disparam quando o foco está num campo de texto
+function isEditableTarget(target: EventTarget | null): boolean {
+  if (!(target instanceof HTMLElement)) return false;
+  return (
+    target.tagName === 'INPUT' ||
+    target.tagName === 'TEXTAREA' ||
+    target.tagName === 'SELECT' ||
+    target.isContentEditable
+  );
+}
+
+export function DrumPad({ initialGroove, initialBpm, initialVolume, onGrooveChange, onVolumeChange }: DrumPadProps) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [selectedGroove, setSelectedGroove] = useState<string>(initialGroove || 'rock-8');
-  const [bpm, setBpm] = useState(initialBpm || 120);
+  // BPM é imutável no painel: vem da música (initialBpm) e nunca muda aqui
+  const [bpm] = useState(initialBpm || 120);
   const [volume, setVolume] = useState(initialVolume ?? 0.7);
   const [isMuted, setIsMuted] = useState(false);
   const [sampler, setSampler] = useState<Tone.Sampler | null>(null);
@@ -156,7 +162,7 @@ export function DrumPad({ initialGroove, initialBpm, initialVolume, onGrooveChan
   const [selectedKit, setSelectedKit] = useState<string>('kit1');
   const activePadsTimeoutRef = useRef<Map<string, NodeJS.Timeout>>(new Map());
   const sequenceRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const currentPatternRef = useRef<{ pattern: DrumHit[]; bpm: number } | null>(null);
+  const restartTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Fetch custom patterns from database
   useEffect(() => {
@@ -203,14 +209,6 @@ export function DrumPad({ initialGroove, initialBpm, initialVolume, onGrooveChan
     }
   }, [volume, isMuted, sampler]);
 
-  // Carrega groove salvo (apenas inicializa com BPM padrão)
-  useEffect(() => {
-    if (PRESET_GROOVES[selectedGroove]) {
-      setBpm(PRESET_GROOVES[selectedGroove].bpm);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- roda só na montagem, de propósito
-  }, []);
-
   const playPad = useCallback((note: string) => {
     if (!sampler || !isLoaded) return;
     
@@ -243,76 +241,25 @@ export function DrumPad({ initialGroove, initialBpm, initialVolume, onGrooveChan
     await Tone.start();
 
     let patternToPlay: DrumHit[];
-    let currentBpm = bpm;
-
+    // O ritmo toca SEMPRE no BPM da música (state). O BPM do padrão/preset
+    // só pré-preenche o estado quando o usuário seleciona (handleGrooveChange) —
+    // usar o do padrão aqui faria o ritmo ignorar o andamento da música.
     if (selectedGroove.startsWith('db-')) {
       // Database pattern - convert steps to DrumHit format
       const patternId = parseInt(selectedGroove.replace('db-', ''));
       const dbPattern = customPatterns.find(p => p.id === patternId);
       if (dbPattern) {
-        currentBpm = dbPattern.bpm;
-        // Steps may already be parsed, be a JSON string, or be object format
-        let stepsData: boolean[][] | Record<string, boolean[]>;
-        if (typeof dbPattern.steps === 'string') {
-          stepsData = JSON.parse(dbPattern.steps);
-        } else {
-          stepsData = dbPattern.steps;
-        }
-        patternToPlay = [];
-
-        // Object format: {kick: [16], snare: [16], ...}
-        if (!Array.isArray(stepsData) && typeof stepsData === 'object') {
-          const noteMap: Record<string, string> = {
-            kick: 'C1', snare: 'D1', hihatClosed: 'F#1', hihatOpen: 'A#1',
-            crash: 'C2', ride: 'D2', tomLow: 'E2', tomMid: 'F2', tomHigh: 'G2'
-          };
-          Object.entries(stepsData).forEach(([trackName, steps]) => {
-            if (Array.isArray(steps)) {
-              const note = noteMap[trackName];
-              if (note) {
-                steps.forEach((hit: boolean, stepIndex: number) => {
-                  if (hit) {
-                    patternToPlay.push({
-                      time: stepIndex / 2,
-                      note: note,
-                      velocity: 0.8
-                    });
-                  }
-                });
-              }
-            }
-          });
-        }
-        // Array format: [[16], [16], ...] (9 tracks x 16 steps)
-        else if (Array.isArray(stepsData)) {
-          const trackNotes = ['C1', 'D1', 'F#1', 'A#1', 'C2', 'D2', 'E2', 'F2', 'G2'];
-          stepsData.forEach((track: boolean[], trackIndex: number) => {
-            if (Array.isArray(track)) {
-              track.forEach((hit: boolean, stepIndex: number) => {
-                if (hit) {
-                  patternToPlay.push({
-                    time: stepIndex / 2, // convert step to time in 16ths
-                    note: trackNotes[trackIndex],
-                    velocity: 0.8
-                  });
-                }
-              });
-            }
-          });
-        } else {
-          console.error('[DrumPad] Invalid steps format:', stepsData);
-        }
+        patternToPlay = stepsToHits(dbPattern.steps);
       } else {
         patternToPlay = PRESET_GROOVES['rock-8'].pattern;
       }
     } else {
       patternToPlay = PRESET_GROOVES[selectedGroove]?.pattern || PRESET_GROOVES['rock-8'].pattern;
-      currentBpm = PRESET_GROOVES[selectedGroove]?.bpm || bpm;
     }
 
     // Use setInterval instead of Tone.Transport
     let step = 0;
-    const intervalMs = (60 / currentBpm) * 1000 / 4; // 16th notes
+    const intervalMs = (60 / bpm) * 1000 / 4; // 16th notes
 
     const timerId = setInterval(() => {
       patternToPlay.forEach(hit => {
@@ -335,7 +282,6 @@ export function DrumPad({ initialGroove, initialBpm, initialVolume, onGrooveChan
 
     Tone.Transport.start();
     sequenceRef.current = timerId;
-    currentPatternRef.current = { pattern: patternToPlay, bpm: currentBpm };
     setIsPlaying(true);
   }, [sampler, isLoaded, selectedGroove, bpm, customPatterns]);
 
@@ -356,6 +302,10 @@ export function DrumPad({ initialGroove, initialBpm, initialVolume, onGrooveChan
         clearInterval(sequenceRef.current);
         sequenceRef.current = null;
       }
+      if (restartTimeoutRef.current) {
+        clearTimeout(restartTimeoutRef.current);
+        restartTimeoutRef.current = null;
+      }
       Tone.Transport.stop();
     };
   }, []);
@@ -365,44 +315,16 @@ export function DrumPad({ initialGroove, initialBpm, initialVolume, onGrooveChan
     if (isPlaying && isLoaded) {
       stopPlayback();
       // Small delay to ensure cleanup before starting new playback
-      setTimeout(() => startPlayback(), 50);
+      restartTimeoutRef.current = setTimeout(() => startPlayback(), 50);
     }
+    return () => {
+      if (restartTimeoutRef.current) {
+        clearTimeout(restartTimeoutRef.current);
+        restartTimeoutRef.current = null;
+      }
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps -- reinicia só ao trocar groove/kit, de propósito
   }, [selectedGroove, selectedKit]);
-
-  // Restart playback when BPM changes during playback
-  useEffect(() => {
-    if (isPlaying && currentPatternRef.current && sequenceRef.current) {
-      // Stop current playback
-      clearInterval(sequenceRef.current);
-      sequenceRef.current = null;
-
-      const { pattern: patternToPlay } = currentPatternRef.current;
-      const intervalMs = (60 / bpm) * 1000 / 4; // 16th notes
-
-      let step = 0;
-      const timerId = setInterval(() => {
-        patternToPlay.forEach(hit => {
-          const hitStep = Math.floor(hit.time * 2) % 16;
-          if (hitStep === step) {
-            sampler!.triggerAttackRelease(hit.note, '16n');
-            setActivePads(prev => new Set(prev).add(hit.note));
-            setTimeout(() => {
-              setActivePads(prev => {
-                const next = new Set(prev);
-                next.delete(hit.note);
-                return next;
-              });
-            }, 150);
-          }
-        });
-        step = (step + 1) % 16;
-      }, intervalMs);
-
-      sequenceRef.current = timerId;
-      currentPatternRef.current = { pattern: patternToPlay, bpm };
-    }
-  }, [bpm, isPlaying, sampler]);
 
   const togglePlayback = useCallback(() => {
     if (isPlaying) {
@@ -415,6 +337,8 @@ export function DrumPad({ initialGroove, initialBpm, initialVolume, onGrooveChan
   // Keyboard controls
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      if (isEditableTarget(e.target)) return;
+
       const pad = DRUM_PADS.find(p => p.key.toLowerCase() === e.key.toLowerCase());
       if (pad) {
         e.preventDefault();
@@ -432,13 +356,13 @@ export function DrumPad({ initialGroove, initialBpm, initialVolume, onGrooveChan
 
   const handleGrooveChange = (grooveId: string) => {
     setSelectedGroove(grooveId);
+    // O BPM quem define é a música (state inicial = BPM salvo). Selecionar um
+    // ritmo NÃO mexe no andamento — o mesmo padrão serve pra várias músicas.
     if (grooveId.startsWith('db-')) {
       // Database pattern
       const patternId = parseInt(grooveId.replace('db-', ''));
       const pattern = customPatterns.find(p => p.id === patternId);
       if (pattern) {
-        setBpm(pattern.bpm);
-        onBpmChange?.(pattern.bpm);
         onGrooveChange?.(grooveId, pattern.id);
         if (pattern.kit && pattern.kit !== selectedKit) {
           setSelectedKit(pattern.kit);
@@ -446,9 +370,6 @@ export function DrumPad({ initialGroove, initialBpm, initialVolume, onGrooveChan
       }
     } else {
       // Preset groove
-      const newBpm = PRESET_GROOVES[grooveId]?.bpm || 120;
-      setBpm(newBpm);
-      onBpmChange?.(newBpm);
       onGrooveChange?.(grooveId, null);
       // Presets use kit1
       if (selectedKit !== 'kit1') {
@@ -457,38 +378,28 @@ export function DrumPad({ initialGroove, initialBpm, initialVolume, onGrooveChan
     }
   };
 
-  const handleBpmChange = (newBpm: number) => {
-    setBpm(newBpm);
-    Tone.Transport.bpm.value = newBpm;
-    // Persistência (com debounce) fica no useDrumPadSettings da página
-    onBpmChange?.(newBpm);
-  };
-
   const handleVolumeChange = (newVolume: number) => {
     setVolume(newVolume);
     // Persistência (com debounce) fica no useDrumPadSettings da página
     onVolumeChange?.(newVolume);
   };
 
-  if (!isLoaded) {
-    return (
-      <div className="bg-surface-raised rounded-xl border p-4">
-        <div className="flex items-center gap-2 text-ink-muted">
-          <Music className="w-4 h-4 animate-pulse" />
-          <span className="text-sm">Carregando samples...</span>
-        </div>
-      </div>
-    );
-  }
-
+  // Painel sempre visível: enquanto os samples carregam, os controles ficam
+  // desabilitados (esconder tudo atrás de um "Carregando..." confundia —
+  // parecia que o ritmo tinha sumido)
   return (
     <div className="bg-surface-raised rounded-xl border p-4 space-y-4">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <h3 className="font-semibold text-ink flex items-center gap-2">
-          <Music className="w-4 h-4 text-brand" />
-          Drum Pad
-        </h3>
+        <div className="flex items-center gap-2">
+          <h3 className="font-semibold text-ink flex items-center gap-2">
+            <Music className="w-4 h-4 text-brand" />
+            Drum Pad
+          </h3>
+          {!isLoaded && (
+            <span className="text-xs text-ink-muted animate-pulse">Carregando samples...</span>
+          )}
+        </div>
         
         <div className="flex items-center gap-2">
           {/* Volume */}
@@ -504,7 +415,8 @@ export function DrumPad({ initialGroove, initialBpm, initialVolume, onGrooveChan
           {/* Play/Stop */}
           <button
             onClick={togglePlayback}
-            className={`flex h-12 w-12 items-center justify-center rounded-lg transition-colors ${isPlaying ? 'bg-success text-zinc-950' : 'bg-surface-overlay text-ink hover:bg-surface-overlay/70'}`}
+            disabled={!isLoaded}
+            className={`flex h-12 w-12 items-center justify-center rounded-lg transition-colors ${isPlaying ? 'bg-success text-zinc-950' : 'bg-surface-overlay text-ink hover:bg-surface-overlay/70'} disabled:opacity-40 disabled:cursor-not-allowed`}
             aria-label={isPlaying ? 'Pausar ritmo' : 'Tocar ritmo'}
             aria-pressed={isPlaying}
           >
@@ -513,7 +425,8 @@ export function DrumPad({ initialGroove, initialBpm, initialVolume, onGrooveChan
 
           <button
             onClick={stopPlayback}
-            className="flex h-12 w-12 items-center justify-center bg-surface-overlay text-ink hover:bg-surface-overlay/70 rounded-lg transition-colors"
+            disabled={!isLoaded}
+            className="flex h-12 w-12 items-center justify-center bg-surface-overlay text-ink hover:bg-surface-overlay/70 rounded-lg transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
             aria-label="Parar ritmo"
           >
             <Square className="w-5 h-5" aria-hidden />
@@ -526,8 +439,9 @@ export function DrumPad({ initialGroove, initialBpm, initialVolume, onGrooveChan
         <select
           value={selectedGroove}
           onChange={(e) => handleGrooveChange(e.target.value)}
+          disabled={!isLoaded}
           aria-label="Selecionar ritmo"
-          className="px-3 min-h-12 bg-surface-overlay border rounded-lg text-sm text-ink min-w-[120px]"
+          className="px-3 min-h-12 bg-surface-overlay border rounded-lg text-sm text-ink min-w-[120px] disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <optgroup label="Presets">
             {Object.entries(PRESET_GROOVES).map(([id, groove]) => (
@@ -542,19 +456,6 @@ export function DrumPad({ initialGroove, initialBpm, initialVolume, onGrooveChan
             </optgroup>
           )}
         </select>
-
-        <div className="flex items-center gap-1">
-          <span className="text-xs text-ink-muted">BPM</span>
-          <input
-            type="number"
-            value={bpm}
-            onChange={(e) => handleBpmChange(Number(e.target.value))}
-            min={40}
-            max={200}
-            aria-label="BPM do ritmo"
-            className="w-16 px-1 min-h-12 bg-surface-overlay border rounded text-sm text-center text-ink"
-          />
-        </div>
 
         <div className="flex items-center gap-1">
           <button
@@ -584,8 +485,9 @@ export function DrumPad({ initialGroove, initialBpm, initialVolume, onGrooveChan
           <button
             key={pad.note}
             onClick={() => playPad(pad.note)}
+            disabled={!isLoaded}
             aria-label={`Tocar ${pad.label} (tecla ${pad.key})`}
-            className={`relative p-4 min-h-16 rounded-xl font-medium text-white transition-all transform active:scale-95 ${
+            className={`relative p-4 min-h-16 rounded-xl font-medium text-white transition-all transform active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed ${
               activePads.has(pad.note) ? 'scale-95 brightness-110' : ''
             } ${pad.color} hover:brightness-110`}
           >

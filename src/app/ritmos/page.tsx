@@ -14,7 +14,7 @@ const NOTE_MAP: Record<string, string> = {
   crash: 'C2', ride: 'D2', tomLow: 'E2', tomMid: 'F2', tomHigh: 'G2'
 }
 
-import { getSamplePaths } from '@/lib/drum-samples'
+import { getSamplerUrls } from '@/lib/drum-samples'
 
 export default function DrumPatternsPage() {
   const [patterns, setPatterns] = useState<DrumPattern[]>([])
@@ -66,7 +66,7 @@ export default function DrumPatternsPage() {
     await Tone.start()
 
     // Get sample URLs for the pattern's kit (returns { 'C1': '/path/to/kick.wav', ... })
-    const sampleUrls = getSamplePaths(pattern.kit || 'kit1')
+    const sampleUrls = getSamplerUrls(pattern.kit || 'kit1')
 
     // Create one Tone.Player per note key (C1, D1, F#1, etc.)
     const players: Tone.Player[] = []

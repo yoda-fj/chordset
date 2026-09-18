@@ -13,7 +13,7 @@ interface DrumPadValues {
   volume: number
 }
 
-type SaveKind = 'groove' | 'bpm' | 'volume'
+type SaveKind = 'groove' | 'volume'
 interface PendingSave {
   musicaId: number
   body: Record<string, string | number | null>
@@ -61,7 +61,7 @@ export function useDrumPadSettings(musica: DrumPadMusica | null) {
   }, [])
 
   const flushAll = useCallback(() => {
-    for (const kind of ['groove', 'bpm', 'volume'] as SaveKind[]) {
+    for (const kind of ['groove', 'volume'] as SaveKind[]) {
       const timer = timersRef.current[kind]
       if (timer) clearTimeout(timer)
       flushKind(kind)
@@ -90,7 +90,9 @@ export function useDrumPadSettings(musica: DrumPadMusica | null) {
     if (musicaId === null) return
     setOverrides(prev => ({
       ...prev,
-      [musicaId]: { ...values, ...partial },
+      // Espalha sobre prev para não perder updates encadeados no mesmo tick
+      // (ex.: trocar de groove chama onVolumeChange + onGrooveChange seguidos)
+      [musicaId]: { ...(prev[musicaId] ?? values), ...partial },
     }))
   }
 
@@ -99,16 +101,12 @@ export function useDrumPadSettings(musica: DrumPadMusica | null) {
     scheduleSave('groove', { groove: grooveId.startsWith('db-') ? null : grooveId, drum_pattern_id: drumPatternId })
   }
 
-  const onBpmChange = (newBpm: number) => {
-    if (newBpm == null) return
-    setOverride({ bpm: newBpm })
-    scheduleSave('bpm', { bpm: newBpm })
-  }
-
   const onVolumeChange = (newVolume: number) => {
     setOverride({ volume: newVolume })
     scheduleSave('volume', { volume: newVolume })
   }
 
-  return { ...values, onGrooveChange, onBpmChange, onVolumeChange }
+  // Sem onBpmChange de propósito: o BPM é da música (editado no card de
+  // /musicas/[id]) — o painel não altera andamento (review 2026-09-17)
+  return { ...values, onGrooveChange, onVolumeChange }
 }

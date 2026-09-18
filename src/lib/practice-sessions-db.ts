@@ -7,6 +7,7 @@ type PracticeSessionRow = PracticeSession & {
   titulo: string
   artista: string
   tom_original: string | null
+  tom_atual: string | null
   cifra: string | null
   groove: string | null
   drum_pattern_id: number | null
@@ -25,6 +26,7 @@ export const practiceSessionsDb = {
         m.titulo,
         m.artista,
         m.tom_original,
+        m.tom_atual,
         m.cifra,
         m.groove,
         m.drum_pattern_id,
@@ -57,6 +59,7 @@ export const practiceSessionsDb = {
         titulo: row.titulo,
         artista: row.artista,
         tom_original: row.tom_original,
+        tom_atual: row.tom_atual,
         cifra: row.cifra,
         groove: row.groove,
         drum_pattern_id: row.drum_pattern_id,
@@ -76,6 +79,7 @@ export const practiceSessionsDb = {
         m.titulo,
         m.artista,
         m.tom_original,
+        m.tom_atual,
         m.cifra,
         m.groove,
         m.drum_pattern_id,
@@ -104,6 +108,7 @@ export const practiceSessionsDb = {
         titulo: row.titulo,
         artista: row.artista,
         tom_original: row.tom_original,
+        tom_atual: row.tom_atual,
         cifra: row.cifra,
         groove: row.groove,
         drum_pattern_id: row.drum_pattern_id,

@@ -49,6 +49,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
     if (data.titulo !== undefined) updateData.titulo = data.titulo
     if (data.artista !== undefined) updateData.artista = data.artista
     if (data.tom_original !== undefined) updateData.tom_original = data.tom_original
+    if (data.tom_atual !== undefined) updateData.tom_atual = data.tom_atual
     if (data.cifra !== undefined) updateData.cifra = data.cifra
     if (data.tags !== undefined) updateData.tags = data.tags
     if (data.observacao !== undefined) updateData.observacao = data.observacao

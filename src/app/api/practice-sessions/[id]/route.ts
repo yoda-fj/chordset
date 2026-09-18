@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { practiceSessionsDb } from '@/lib/practice-sessions-db'
 import { jsonError, parseId } from '@/lib/api-helpers'
+import { practiceSessionUpdateSchema } from '@/lib/validation'
 
 interface RouteParams {
   params: Promise<{ id: string }>
@@ -36,13 +37,18 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
       return jsonError('ID inválido', 400)
     }
     const body = await request.json()
-    
+
+    const parsedBody = practiceSessionUpdateSchema.safeParse(body)
+    if (!parsedBody.success) {
+      return jsonError('Payload inválido', 400, parsedBody.error.issues)
+    }
+
     const session = practiceSessionsDb.update(sessionId, {
-      status: body.status,
-      difficulty: body.difficulty,
-      total_practice_time_seconds: body.total_practice_time_seconds,
-      last_practiced_at: body.last_practiced_at,
-      notes: body.notes,
+      status: parsedBody.data.status,
+      difficulty: parsedBody.data.difficulty,
+      total_practice_time_seconds: parsedBody.data.total_practice_time_seconds,
+      last_practiced_at: parsedBody.data.last_practiced_at,
+      notes: parsedBody.data.notes,
     })
     
     if (!session) {

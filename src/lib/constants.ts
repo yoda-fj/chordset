@@ -12,3 +12,7 @@ export const TAG_SUGGESTIONS_MUSICA = ['louvor', 'adoracao', 'hino', 'clássico'
 export const TAG_SUGGESTIONS_EVENTO = ['culto', 'evento', 'casamento', 'formatura', 'natal', 'páscoa', 'especial', 'estudo']
 
 export const TAG_SUGGESTIONS_TEMPLATE = ['culto', 'domingo', 'quarta', 'sabado', 'evento', 'especial', 'louvor', 'adoracao', 'jovens', 'criancas']
+
+// Limites de BPM unificados: card de ritmo (página da música), DrumPad e Metronome
+export const BPM_MIN = 40
+export const BPM_MAX = 220

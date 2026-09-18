@@ -75,9 +75,23 @@ function migration002(db: Database.Database) {
   `)
 }
 
+// Migration 003: musicas.tom_atual — último tom selecionado na cifra
+// (null = tom original). A transposição deixa de ser só de sessão.
+function migration003(db: Database.Database) {
+  const hasColumn = (table: string, column: string) =>
+    (db.prepare(`PRAGMA table_info(${table})`).all() as { name: string }[])
+      .some(col => col.name === column)
+
+  if (!hasColumn('musicas', 'tom_atual')) {
+    console.log('[Migration 003] Adding tom_atual column to musicas...')
+    db.exec('ALTER TABLE musicas ADD COLUMN tom_atual TEXT')
+  }
+}
+
 export const migrations: Migration[] = [
   { version: 1, name: 'schema-base', up: migration001 },
   { version: 2, name: 'evento-musicas-unique-ordem', up: migration002 },
+  { version: 3, name: 'musicas-tom-atual', up: migration003 },
 ]
 
 export function applyMigrations(db: Database.Database): void {

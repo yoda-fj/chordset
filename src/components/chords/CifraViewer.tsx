@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef } from 'react';
 import dynamic from 'next/dynamic';
 import { ChordViewer } from './ChordViewer';
 import { Autoscroll } from './Autoscroll';
@@ -23,17 +23,26 @@ const Metronome = dynamic(() => import('./Metronome').then((m) => m.Metronome), 
   loading: () => <div className="h-16 w-64 rounded-lg bg-surface-overlay animate-pulse" />,
 });
 
+// Ritmo da música na toolbar (play/stop compacto) — também lazy, traz o Tone junto
+const RhythmPlayer = dynamic(() => import('./RhythmPlayer').then((m) => m.RhythmPlayer), {
+  ssr: false,
+  loading: () => <div className="h-12 w-12 rounded-lg bg-surface-overlay animate-pulse" />,
+});
+
 interface CifraViewerProps {
   cifra: string | null;
   titulo: string;
   artista: string;
   tomOriginal?: string | null;
+  tom?: string | null; // tom efetivo salvo (evento/atual) — precede tomOriginal na exibição
+  onTomChange?: (tom: string) => void; // persiste a transposição (pai salva)
+  bpm?: number;
+  groove?: string;  // ritmo salvo da música ('preset' ou 'db-<id>') pro RhythmPlayer
+  volume?: number;
   showMetronome?: boolean;
   showControls?: boolean;
-  compact?: boolean;
   className?: string;
   isFullscreen?: boolean;
-  onFullscreenChange?: (isFullscreen: boolean) => void;
   onToggleSidebar?: () => void;
   sidebarOpen?: boolean;
 }
@@ -53,6 +62,11 @@ export function CifraViewer({
   titulo,
   artista,
   tomOriginal,
+  tom,
+  onTomChange,
+  bpm,
+  groove,
+  volume,
   showMetronome = false,
   showControls = true,
   className = '',
@@ -62,19 +76,20 @@ export function CifraViewer({
 }: CifraViewerProps) {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
-  // Transpose state - derived from props with useEffect sync
-  const [currentTom, setCurrentTom] = useState(tomOriginal || 'C');
-  const [originalTom] = useState(tomOriginal || null);
-  const [currentCifra, setCurrentCifra] = useState(cifra);
+  // Transposição: o tom efetivo (salvo no evento/na música) precede o original.
+  // originalTom é derivado da prop (não state) — senão trocar de música no
+  // setlist mantinha o tom original da música anterior como base do cálculo.
+  // Trocar de música deve remontar o componente (key no pai) — sem effects de
+  // sync: estado nasce das props e a transposição é local até o pai persistir.
+  const originalTom = tomOriginal || null;
+  const effectiveTom = tom ?? originalTom ?? 'C';
 
-  // Sync state when props change
-  useEffect(() => {
-    setCurrentTom(tomOriginal || 'C');
-  }, [tomOriginal]);
-
-  useEffect(() => {
-    setCurrentCifra(cifra);
-  }, [cifra]);
+  const [currentTom, setCurrentTom] = useState(effectiveTom);
+  const [currentCifra, setCurrentCifra] = useState(() =>
+    cifra && originalTom && effectiveTom !== originalTom
+      ? transposeCifra(cifra, originalTom, effectiveTom)
+      : cifra
+  );
 
   // Display settings
   const [fontSize, setFontSize] = useState(FONT_DEFAULT);
@@ -82,9 +97,11 @@ export function CifraViewer({
 
   const handleTranspose = (newTom: string) => {
     if (!originalTom || !cifra) return;
-    const transposed = transposeCifra(cifra, originalTom, newTom);
     setCurrentTom(newTom);
-    setCurrentCifra(transposed);
+    setCurrentCifra(transposeCifra(cifra, originalTom, newTom));
+    // Persiste a transposição (o pai salva com debounce no lugar certo:
+    // tom_evento no setlist, tom_atual na música)
+    onTomChange?.(newTom);
   };
 
   const toggleFullscreen = async () => {
@@ -108,10 +125,10 @@ export function CifraViewer({
   }
 
   return (
-    <div className={`flex flex-col h-full ${className}`}>
+    <div className={`flex flex-col h-full min-w-0 ${className}`}>
       {/* Controls Bar */}
       {showControls && (
-        <div className={`bg-surface-raised rounded-xl p-2 border border-ink/10 shadow-sm mb-2 flex flex-wrap items-center gap-2 shrink-0 ${isFullscreen ? 'fixed top-4 left-4 right-4 z-50' : ''}`}>
+        <div className={`min-w-0 bg-surface-raised rounded-xl p-2 border border-ink/10 shadow-sm mb-2 flex flex-wrap items-center gap-2 shrink-0 ${isFullscreen ? 'fixed top-4 left-4 right-4 z-50' : ''}`}>
         {/* Sidebar toggle */}
         {onToggleSidebar && (
           <button
@@ -180,8 +197,8 @@ export function CifraViewer({
           )}
         </button>
 
-        {/* Autoscroll - always visible */}
-        <Autoscroll targetRef={scrollContainerRef} />
+        {/* Autoscroll - sempre visível; com bpm, velocidade segue a música */}
+        <Autoscroll targetRef={scrollContainerRef} bpm={bpm} />
 
         {/* Fullscreen */}
         <button
@@ -200,8 +217,16 @@ export function CifraViewer({
 
       {/* Metrônomo visual (Fase 2.4) — fora do bundle inicial via next/dynamic */}
       {showMetronome && (
-        <div className="mb-2 shrink-0">
-          <Metronome defaultBpm={100} compact />
+        <div className="mb-2 shrink-0 flex flex-wrap items-center gap-2">
+          {/* key por groove: trocar de música no setlist remonta o player e
+              para o ritmo da música anterior (cleanup no unmount) */}
+          <RhythmPlayer
+            key={groove ?? 'rock-8'}
+            groove={groove ?? 'rock-8'}
+            bpm={bpm && bpm > 0 ? bpm : 120}
+            volume={volume ?? 0.7}
+          />
+          <Metronome defaultBpm={bpm && bpm > 0 ? bpm : 100} />
         </div>
       )}
 

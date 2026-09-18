@@ -2,7 +2,7 @@
 
 import { AnimatePresence, motion } from 'framer-motion';
 import { Minus, Plus } from 'lucide-react';
-import { getAllKeys } from '@/utils/chord-transposer';
+import { getAllKeys, normalizeNote } from '@/utils/chord-transposer';
 
 interface KeyStepperProps {
   value: string;
@@ -13,7 +13,9 @@ interface KeyStepperProps {
 const KEYS = getAllKeys();
 
 function step(value: string, delta: number): string {
-  const idx = KEYS.indexOf(value);
+  // Tons em bemol (Bb, Eb...) não estão em KEYS: normaliza pro enarmônico
+  // em sustenido antes de achar o índice, senão indexOf retorna -1
+  const idx = KEYS.indexOf(normalizeNote(value));
   const base = idx === -1 ? 0 : idx;
   return KEYS[(((base + delta) % KEYS.length) + KEYS.length) % KEYS.length];
 }
