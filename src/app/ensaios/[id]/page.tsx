@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import { PracticeTimer } from '@/components/practice/PracticeTimer';
@@ -55,6 +55,23 @@ export default function EnsaioDetailPage() {
 
   // Drum pad da música da sessão (estado + persistência no hook compartilhado)
   const drumPad = useDrumPadSettings(session?.musicas ?? null);
+
+  // Persiste o tom transposto na música (tom_atual) com debounce
+  const tomTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  useEffect(() => {
+    return () => { if (tomTimeoutRef.current) clearTimeout(tomTimeoutRef.current); };
+  }, []);
+  const handleTomChange = (novoTom: string) => {
+    if (!session) return;
+    if (tomTimeoutRef.current) clearTimeout(tomTimeoutRef.current);
+    tomTimeoutRef.current = setTimeout(() => {
+      fetch(`/api/musicas/${session.musica_id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ tom_atual: novoTom })
+      }).catch(e => console.error('Error saving tom_atual:', e));
+    }, 1000);
+  };
 
   useEffect(() => {
     async function fetchSession() {
@@ -200,10 +217,13 @@ export default function EnsaioDetailPage() {
         {/* Main Content - Cifra */}
         <div className="lg:col-span-2 min-w-0">
           <CifraViewer
+            key={session.musica_id}
             cifra={musicas?.cifra}
             titulo={musicas?.titulo || ''}
             artista={musicas?.artista || ''}
             tomOriginal={musicas?.tom_original}
+            tom={musicas?.tom_atual ?? musicas?.tom_original}
+            onTomChange={handleTomChange}
             bpm={drumPad.bpm}
             groove={drumPad.groove}
             volume={drumPad.volume}

@@ -105,6 +105,22 @@ export default function CifraPage() {
     obsTimeoutRef.current = setTimeout(saveObservacao, 1500)
   }
 
+  // Persiste o tom transposto na música (tom_atual) com debounce
+  const tomTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+  useEffect(() => {
+    return () => { if (tomTimeoutRef.current) clearTimeout(tomTimeoutRef.current) }
+  }, [])
+  const handleTomChange = (novoTom: string) => {
+    if (tomTimeoutRef.current) clearTimeout(tomTimeoutRef.current)
+    tomTimeoutRef.current = setTimeout(() => {
+      fetch(`/api/musicas/${musicaId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ tom_atual: novoTom })
+      }).catch(e => console.error('Error saving tom_atual:', e))
+    }, 1000)
+  }
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -195,10 +211,13 @@ export default function CifraPage() {
         <div className="flex flex-col h-full flex-1 min-w-0">
           {/* CifraViewer - reusa o mesmo componente */}
           <CifraViewer
+            key={musica.id}
             cifra={musica.cifra}
             titulo={musica.titulo}
             artista={musica.artista}
             tomOriginal={musica.tom_original}
+            tom={musica.tom_atual ?? musica.tom_original}
+            onTomChange={handleTomChange}
             bpm={drumPad.bpm}
             groove={drumPad.groove}
             volume={drumPad.volume}

@@ -17,6 +17,7 @@ CREATE TABLE IF NOT EXISTS musicas (
   titulo TEXT NOT NULL,
   artista TEXT NOT NULL,
   tom_original TEXT,
+  tom_atual TEXT, -- último tom selecionado na cifra (null = tom original)
   cifra TEXT,
   tags TEXT DEFAULT '[]', -- JSON array de tags
   observacao TEXT, -- Observação livre do usuário

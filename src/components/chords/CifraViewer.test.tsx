@@ -4,7 +4,7 @@
  * Cobre: transposição via stepper (2.3), zoom com travas (2.2),
  * aria-labels nos controles (2.5), empty state.
  */
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { CifraViewer } from './CifraViewer';
@@ -93,5 +93,33 @@ describe('CifraViewer', () => {
     // Display estático do tom (span com font-chord, fora de botão)
     const display = container.querySelector('span.font-chord.text-brand');
     expect(display?.textContent).toBe('C');
+  });
+});
+
+describe('CifraViewer — persistência de tom', () => {
+  it('transpor chama onTomChange com o novo tom (pai persiste)', async () => {
+    const user = userEvent.setup();
+    const onTomChange = vi.fn();
+    render(<CifraViewer {...PROPS} onTomChange={onTomChange} />);
+
+    await user.click(screen.getByRole('button', { name: 'Subir meio tom' }));
+
+    expect(onTomChange).toHaveBeenCalledWith('C#');
+  });
+
+  it('usa o tom salvo (prop tom) como tom inicial, sobre o original', () => {
+    render(<CifraViewer {...PROPS} tom="D" />);
+    expect(screen.getByRole('group')).toHaveAttribute('aria-label', 'Tom atual: D');
+  });
+
+  it('troca de música (key) remonta com o tom salvo da nova música', () => {
+    const { rerender } = render(
+      <CifraViewer {...PROPS} key="1" cifra="[G]Song one" tomOriginal="G" tom="G" />
+    );
+    expect(screen.getByRole('group')).toHaveAttribute('aria-label', 'Tom atual: G');
+
+    // O pai remonta com key nova quando a música muda (setlist)
+    rerender(<CifraViewer {...PROPS} key="2" cifra="[A]Song two" tomOriginal="A" tom="B" />);
+    expect(screen.getByRole('group')).toHaveAttribute('aria-label', 'Tom atual: B');
   });
 });

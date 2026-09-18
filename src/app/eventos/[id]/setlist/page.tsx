@@ -53,6 +53,31 @@ export default function SetlistPage() {
   // Drum pad da música selecionada (estado + persistência no hook compartilhado)
   const drumPad = useDrumPadSettings(musicas[selectedIndex]?.musicas ?? null)
 
+  // Persiste o tom transposto no repertório do evento (tom_evento) com debounce
+  const tomTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+  useEffect(() => {
+    return () => { if (tomTimeoutRef.current) clearTimeout(tomTimeoutRef.current) }
+  }, [])
+  const handleTomChange = (novoTom: string) => {
+    const item = musicas[selectedIndex]
+    if (!item) return
+    if (tomTimeoutRef.current) clearTimeout(tomTimeoutRef.current)
+    tomTimeoutRef.current = setTimeout(async () => {
+      try {
+        const res = await fetch(`/api/eventos/${eventoId}/musicas/${item.id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ tom_evento: novoTom })
+        })
+        if (res.ok) {
+          setMusicas(prev => prev.map(m => m.id === item.id ? { ...m, tom_evento: novoTom } : m))
+        }
+      } catch (e) {
+        console.error('Error saving tom_evento:', e)
+      }
+    }, 1000)
+  }
+
   // Load data
   useEffect(() => {
     async function loadData() {
@@ -380,10 +405,13 @@ export default function SetlistPage() {
           ) : (
             <div className="h-full p-4 md:p-6 pb-8">
               <CifraViewer
+                key={selectedMusica?.musica_id}
                 cifra={cifra}
                 titulo={selectedMusica?.musicas?.titulo || ''}
                 artista={selectedMusica?.musicas?.artista || ''}
                 tomOriginal={selectedMusica?.musicas?.tom_original || null}
+                tom={selectedMusica?.tom_evento || selectedMusica?.musicas?.tom_atual || selectedMusica?.musicas?.tom_original || null}
+                onTomChange={handleTomChange}
                 bpm={drumPad.bpm}
                 groove={drumPad.groove}
                 volume={drumPad.volume}

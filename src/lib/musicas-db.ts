@@ -11,6 +11,7 @@ function rowToMusica(row: MusicaRow): Musica {
     tags: parseTags(row.tags),
     observacao: row.observacao || null,
     audio_url: row.audio_url || null,
+    tom_atual: row.tom_atual || null,
     groove: row.groove || null,
     drum_pattern_id: row.drum_pattern_id || null,
     bpm: row.bpm || 120,
@@ -100,6 +101,10 @@ export const musicasDb = {
     if (input.audio_url !== undefined) {
       sets.push('audio_url = ?')
       values.push(input.audio_url)
+    }
+    if (input.tom_atual !== undefined) {
+      sets.push('tom_atual = ?')
+      values.push(input.tom_atual)
     }
     if (input.groove !== undefined) {
       sets.push('groove = ?')

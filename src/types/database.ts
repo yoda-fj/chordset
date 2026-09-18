@@ -17,6 +17,7 @@ export interface Musica {
   titulo: string;
   artista: string;
   tom_original: string | null;
+  tom_atual: string | null;
   cifra: string | null;
   tags: string[];
   observacao: string | null;
@@ -41,6 +42,7 @@ export interface UpdateMusicaInput {
   titulo?: string;
   artista?: string;
   tom_original?: string | null;
+  tom_atual?: string | null;
   cifra?: string | null;
   tags?: string[];
   observacao?: string | null;
@@ -52,7 +54,7 @@ export interface UpdateMusicaInput {
 }
 
 // Subconjunto de Musica retornado pelos JOINs de setlist/practice
-export type MusicaJoin = Pick<Musica, 'id' | 'titulo' | 'artista' | 'tom_original' | 'cifra' | 'groove' | 'drum_pattern_id' | 'bpm' | 'volume'>;
+export type MusicaJoin = Pick<Musica, 'id' | 'titulo' | 'artista' | 'tom_original' | 'tom_atual' | 'cifra' | 'groove' | 'drum_pattern_id' | 'bpm' | 'volume'>;
 
 // =====================================
 // TABELA: templates

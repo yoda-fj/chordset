@@ -29,20 +29,24 @@ describe('migrations', () => {
   it('aplica todas as migrations e registra em schema_migrations', () => {
     applyMigrations(db)
     const rows = db.prepare('SELECT version FROM schema_migrations ORDER BY version').all() as { version: number }[]
-    expect(rows.map(r => r.version)).toEqual([1, 2])
+    expect(rows.map(r => r.version)).toEqual([1, 2, 3])
 
     const tables = (db.prepare("SELECT name FROM sqlite_master WHERE type='table'").all() as { name: string }[])
       .map(t => t.name)
     for (const t of ['musicas', 'templates', 'template_musicas', 'eventos', 'evento_musicas', 'practice_sessions', 'drum_patterns']) {
       expect(tables).toContain(t)
     }
+
+    // Migration 003: musicas.tom_atual existe
+    const cols = db.prepare("PRAGMA table_info(musicas)").all() as { name: string }[]
+    expect(cols.some(c => c.name === 'tom_atual')).toBe(true)
   })
 
   it('é idempotente: rodar 2x não falha e não duplica registros', () => {
     applyMigrations(db)
     applyMigrations(db)
     const rows = db.prepare('SELECT version FROM schema_migrations').all() as { version: number }[]
-    expect(rows).toHaveLength(2)
+    expect(rows).toHaveLength(3)
   })
 
   it('cria índice UNIQUE em evento_musicas(evento_id, ordem) quando não há duplicatas', () => {
@@ -75,7 +79,7 @@ describe('migrations', () => {
     expect(indexes).toHaveLength(0)
     // Migration ainda é registrada (não bloqueia boot)
     const rows = db.prepare('SELECT version FROM schema_migrations').all()
-    expect(rows).toHaveLength(2)
+    expect(rows).toHaveLength(3)
   })
 })
 

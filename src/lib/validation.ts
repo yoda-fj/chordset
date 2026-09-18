@@ -99,6 +99,10 @@ const musicaFields = {
     .string()
     .max(MAX_TOM_CHARS, `Tom deve ter no máximo ${MAX_TOM_CHARS} caracteres`)
     .nullish(),
+  tom_atual: z
+    .string()
+    .max(MAX_TOM_CHARS, `Tom deve ter no máximo ${MAX_TOM_CHARS} caracteres`)
+    .nullish(),
   cifra: z
     .string()
     .max(MAX_CIFRA_CHARS, `Cifra deve ter no máximo 200KB`)

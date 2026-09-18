@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef } from 'react';
 import dynamic from 'next/dynamic';
 import { ChordViewer } from './ChordViewer';
 import { Autoscroll } from './Autoscroll';
@@ -34,6 +34,8 @@ interface CifraViewerProps {
   titulo: string;
   artista: string;
   tomOriginal?: string | null;
+  tom?: string | null; // tom efetivo salvo (evento/atual) — precede tomOriginal na exibição
+  onTomChange?: (tom: string) => void; // persiste a transposição (pai salva)
   bpm?: number;
   groove?: string;  // ritmo salvo da música ('preset' ou 'db-<id>') pro RhythmPlayer
   volume?: number;
@@ -60,6 +62,8 @@ export function CifraViewer({
   titulo,
   artista,
   tomOriginal,
+  tom,
+  onTomChange,
   bpm,
   groove,
   volume,
@@ -72,19 +76,20 @@ export function CifraViewer({
 }: CifraViewerProps) {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
-  // Transpose state - derived from props with useEffect sync
-  const [currentTom, setCurrentTom] = useState(tomOriginal || 'C');
-  const [originalTom] = useState(tomOriginal || null);
-  const [currentCifra, setCurrentCifra] = useState(cifra);
+  // Transposição: o tom efetivo (salvo no evento/na música) precede o original.
+  // originalTom é derivado da prop (não state) — senão trocar de música no
+  // setlist mantinha o tom original da música anterior como base do cálculo.
+  // Trocar de música deve remontar o componente (key no pai) — sem effects de
+  // sync: estado nasce das props e a transposição é local até o pai persistir.
+  const originalTom = tomOriginal || null;
+  const effectiveTom = tom ?? originalTom ?? 'C';
 
-  // Sync state when props change
-  useEffect(() => {
-    setCurrentTom(tomOriginal || 'C');
-  }, [tomOriginal]);
-
-  useEffect(() => {
-    setCurrentCifra(cifra);
-  }, [cifra]);
+  const [currentTom, setCurrentTom] = useState(effectiveTom);
+  const [currentCifra, setCurrentCifra] = useState(() =>
+    cifra && originalTom && effectiveTom !== originalTom
+      ? transposeCifra(cifra, originalTom, effectiveTom)
+      : cifra
+  );
 
   // Display settings
   const [fontSize, setFontSize] = useState(FONT_DEFAULT);
@@ -92,9 +97,11 @@ export function CifraViewer({
 
   const handleTranspose = (newTom: string) => {
     if (!originalTom || !cifra) return;
-    const transposed = transposeCifra(cifra, originalTom, newTom);
     setCurrentTom(newTom);
-    setCurrentCifra(transposed);
+    setCurrentCifra(transposeCifra(cifra, originalTom, newTom));
+    // Persiste a transposição (o pai salva com debounce no lugar certo:
+    // tom_evento no setlist, tom_atual na música)
+    onTomChange?.(newTom);
   };
 
   const toggleFullscreen = async () => {
