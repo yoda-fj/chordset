@@ -236,7 +236,6 @@ export default function SetlistPage() {
           initialBpm={drumPad.bpm}
           initialVolume={drumPad.volume}
           onGrooveChange={drumPad.onGrooveChange}
-          onBpmChange={drumPad.onBpmChange}
           onVolumeChange={drumPad.onVolumeChange}
         />
       )}

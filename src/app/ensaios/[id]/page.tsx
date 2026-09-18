@@ -288,7 +288,6 @@ export default function EnsaioDetailPage() {
             initialBpm={drumPad.bpm}
             initialVolume={drumPad.volume}
             onGrooveChange={drumPad.onGrooveChange}
-            onBpmChange={drumPad.onBpmChange}
             onVolumeChange={drumPad.onVolumeChange}
           />
         </div>

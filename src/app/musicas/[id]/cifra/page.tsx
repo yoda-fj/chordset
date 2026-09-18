@@ -274,7 +274,6 @@ export default function CifraPage() {
               initialBpm={drumPad.bpm}
               initialVolume={drumPad.volume}
               onGrooveChange={drumPad.onGrooveChange}
-              onBpmChange={drumPad.onBpmChange}
               onVolumeChange={drumPad.onVolumeChange}
             />
           </div>

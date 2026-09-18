@@ -3,7 +3,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import * as Tone from 'tone';
 import { getSamplerUrls, volumeToDb } from '@/lib/drum-samples';
-import { BPM_MIN, BPM_MAX } from '@/lib/constants';
 import { Play, Pause, Square, Volume2, VolumeX, Music } from 'lucide-react';
 
 interface DrumPadProps {
@@ -11,7 +10,7 @@ interface DrumPadProps {
   initialBpm?: number;
   initialVolume?: number;
   onGrooveChange?: (grooveId: string, drumPatternId: number | null) => void;
-  onBpmChange?: (bpm: number) => void;
+
   onVolumeChange?: (volume: number) => void;
 }
 
@@ -154,10 +153,11 @@ function isEditableTarget(target: EventTarget | null): boolean {
   );
 }
 
-export function DrumPad({ initialGroove, initialBpm, initialVolume, onGrooveChange, onBpmChange, onVolumeChange }: DrumPadProps) {
+export function DrumPad({ initialGroove, initialBpm, initialVolume, onGrooveChange, onVolumeChange }: DrumPadProps) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [selectedGroove, setSelectedGroove] = useState<string>(initialGroove || 'rock-8');
-  const [bpm, setBpm] = useState(initialBpm || 120);
+  // BPM é imutável no painel: vem da música (initialBpm) e nunca muda aqui
+  const [bpm] = useState(initialBpm || 120);
   const [volume, setVolume] = useState(initialVolume ?? 0.7);
   const [isMuted, setIsMuted] = useState(false);
   const [sampler, setSampler] = useState<Tone.Sampler | null>(null);
@@ -214,10 +214,6 @@ export function DrumPad({ initialGroove, initialBpm, initialVolume, onGrooveChan
       sampler.volume.value = isMuted ? -Infinity : volumeToDb(volume);
     }
   }, [volume, isMuted, sampler]);
-
-  // BPM inicial vem de initialBpm (BPM salvo da música). O BPM do preset só
-  // é aplicado quando o usuário troca o groove (em handleGrooveChange) —
-  // sobrescrever aqui na montagem apagaria o andamento salvo.
 
   const playPad = useCallback((note: string) => {
     if (!sampler || !isLoaded) return;
@@ -451,13 +447,13 @@ export function DrumPad({ initialGroove, initialBpm, initialVolume, onGrooveChan
 
   const handleGrooveChange = (grooveId: string) => {
     setSelectedGroove(grooveId);
+    // O BPM quem define é a música (state inicial = BPM salvo). Selecionar um
+    // ritmo NÃO mexe no andamento — o mesmo padrão serve pra várias músicas.
     if (grooveId.startsWith('db-')) {
       // Database pattern
       const patternId = parseInt(grooveId.replace('db-', ''));
       const pattern = customPatterns.find(p => p.id === patternId);
       if (pattern) {
-        setBpm(pattern.bpm);
-        onBpmChange?.(pattern.bpm);
         onGrooveChange?.(grooveId, pattern.id);
         if (pattern.kit && pattern.kit !== selectedKit) {
           setSelectedKit(pattern.kit);
@@ -465,25 +461,12 @@ export function DrumPad({ initialGroove, initialBpm, initialVolume, onGrooveChan
       }
     } else {
       // Preset groove
-      const newBpm = PRESET_GROOVES[grooveId]?.bpm || 120;
-      setBpm(newBpm);
-      onBpmChange?.(newBpm);
       onGrooveChange?.(grooveId, null);
       // Presets use kit1
       if (selectedKit !== 'kit1') {
         setSelectedKit('kit1');
       }
     }
-  };
-
-  const handleBpmChange = (newBpm: number) => {
-    // Input limpo/inválido gera NaN: ignora pra não quebrar o Tone.Transport
-    if (!Number.isFinite(newBpm)) return;
-    const clamped = Math.min(BPM_MAX, Math.max(BPM_MIN, Math.round(newBpm)));
-    setBpm(clamped);
-    Tone.Transport.bpm.value = clamped;
-    // Persistência (com debounce) fica no useDrumPadSettings da página
-    onBpmChange?.(clamped);
   };
 
   const handleVolumeChange = (newVolume: number) => {
@@ -564,19 +547,6 @@ export function DrumPad({ initialGroove, initialBpm, initialVolume, onGrooveChan
             </optgroup>
           )}
         </select>
-
-        <div className="flex items-center gap-1">
-          <span className="text-xs text-ink-muted">BPM</span>
-          <input
-            type="number"
-            value={bpm}
-            onChange={(e) => handleBpmChange(Number(e.target.value))}
-            min={BPM_MIN}
-            max={BPM_MAX}
-            aria-label="BPM do ritmo"
-            className="w-16 px-1 min-h-12 bg-surface-overlay border rounded text-sm text-center text-ink"
-          />
-        </div>
 
         <div className="flex items-center gap-1">
           <button
