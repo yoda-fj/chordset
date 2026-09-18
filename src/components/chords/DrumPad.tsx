@@ -251,14 +251,14 @@ export function DrumPad({ initialGroove, initialBpm, initialVolume, onGrooveChan
     await Tone.start();
 
     let patternToPlay: DrumHit[];
-    let currentBpm = bpm;
-
+    // O ritmo toca SEMPRE no BPM da música (state). O BPM do padrão/preset
+    // só pré-preenche o estado quando o usuário seleciona (handleGrooveChange) —
+    // usar o do padrão aqui faria o ritmo ignorar o andamento da música.
     if (selectedGroove.startsWith('db-')) {
       // Database pattern - convert steps to DrumHit format
       const patternId = parseInt(selectedGroove.replace('db-', ''));
       const dbPattern = customPatterns.find(p => p.id === patternId);
       if (dbPattern) {
-        currentBpm = dbPattern.bpm;
         // Steps may already be parsed, be a JSON string, or be object format
         let stepsData: boolean[][] | Record<string, boolean[]>;
         if (typeof dbPattern.steps === 'string') {
@@ -315,12 +315,11 @@ export function DrumPad({ initialGroove, initialBpm, initialVolume, onGrooveChan
       }
     } else {
       patternToPlay = PRESET_GROOVES[selectedGroove]?.pattern || PRESET_GROOVES['rock-8'].pattern;
-      currentBpm = PRESET_GROOVES[selectedGroove]?.bpm || bpm;
     }
 
     // Use setInterval instead of Tone.Transport
     let step = 0;
-    const intervalMs = (60 / currentBpm) * 1000 / 4; // 16th notes
+    const intervalMs = (60 / bpm) * 1000 / 4; // 16th notes
 
     const timerId = setInterval(() => {
       patternToPlay.forEach(hit => {
@@ -343,7 +342,7 @@ export function DrumPad({ initialGroove, initialBpm, initialVolume, onGrooveChan
 
     Tone.Transport.start();
     sequenceRef.current = timerId;
-    currentPatternRef.current = { pattern: patternToPlay, bpm: currentBpm };
+    currentPatternRef.current = { pattern: patternToPlay, bpm };
     setIsPlaying(true);
   }, [sampler, isLoaded, selectedGroove, bpm, customPatterns]);
 
