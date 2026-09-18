@@ -151,8 +151,9 @@ function isEditableTarget(target: EventTarget | null): boolean {
 export function DrumPad({ initialGroove, initialBpm, initialVolume, onGrooveChange, onVolumeChange }: DrumPadProps) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [selectedGroove, setSelectedGroove] = useState<string>(initialGroove || 'rock-8');
-  // BPM é imutável no painel: vem da música (initialBpm) e nunca muda aqui
-  const [bpm] = useState(initialBpm || 120);
+  // BPM derivado da prop: vem da música e segue o hook ao vivo — inclusive
+  // DURANTE o play (o efeito abaixo recria o intervalo quando ele muda)
+  const bpm = initialBpm && initialBpm > 0 ? initialBpm : 120;
   const [volume, setVolume] = useState(initialVolume ?? 0.7);
   const [isMuted, setIsMuted] = useState(false);
   const [sampler, setSampler] = useState<Tone.Sampler | null>(null);
@@ -162,6 +163,7 @@ export function DrumPad({ initialGroove, initialBpm, initialVolume, onGrooveChan
   const [selectedKit, setSelectedKit] = useState<string>('kit1');
   const activePadsTimeoutRef = useRef<Map<string, NodeJS.Timeout>>(new Map());
   const sequenceRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const patternRef = useRef<DrumHit[]>([]);
   const restartTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Fetch custom patterns from database
@@ -282,8 +284,42 @@ export function DrumPad({ initialGroove, initialBpm, initialVolume, onGrooveChan
 
     Tone.Transport.start();
     sequenceRef.current = timerId;
+    patternRef.current = patternToPlay;
     setIsPlaying(true);
   }, [sampler, isLoaded, selectedGroove, bpm, customPatterns]);
+
+  // BPM ao vivo: quando o andamento da música muda durante o play
+  // (metrônomo ±/tap), recria o intervalo com o novo tempo, mesmo padrão
+  const prevBpmRef = useRef(bpm);
+  useEffect(() => {
+    if (prevBpmRef.current === bpm) return;
+    prevBpmRef.current = bpm;
+    if (!isPlaying || !sampler) return;
+    const patternToPlay = patternRef.current;
+    if (patternToPlay.length === 0) return;
+    if (sequenceRef.current) clearInterval(sequenceRef.current);
+
+    let step = 0;
+    const intervalMs = (60 / bpm) * 1000 / 4; // 16th notes
+    const timerId = setInterval(() => {
+      patternToPlay.forEach(hit => {
+        const hitStep = Math.floor(hit.time * 2) % 16;
+        if (hitStep === step) {
+          sampler.triggerAttackRelease(hit.note, '16n');
+          setActivePads(prev => new Set(prev).add(hit.note));
+          setTimeout(() => {
+            setActivePads(prev => {
+              const next = new Set(prev);
+              next.delete(hit.note);
+              return next;
+            });
+          }, 150);
+        }
+      });
+      step = (step + 1) % 16;
+    }, intervalMs);
+    sequenceRef.current = timerId;
+  }, [bpm, isPlaying, sampler]);
 
   const stopPlayback = useCallback(() => {
     if (sequenceRef.current) {

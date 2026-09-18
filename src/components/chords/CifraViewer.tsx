@@ -78,6 +78,10 @@ export function CifraViewer({
 }: CifraViewerProps) {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
+  // Play compartilhado: ritmo e metrônomo tocam/juntos e param juntos.
+  // Troca de música remonta o CifraViewer (key no pai) → para tudo.
+  const [tocando, setTocando] = useState(false);
+
   // Transposição: o tom efetivo (salvo no evento/na música) precede o original.
   // originalTom é derivado da prop (não state) — senão trocar de música no
   // setlist mantinha o tom original da música anterior como base do cálculo.
@@ -227,8 +231,15 @@ export function CifraViewer({
             groove={groove ?? 'rock-8'}
             bpm={bpm && bpm > 0 ? bpm : 120}
             volume={volume ?? 0.7}
+            playing={tocando}
+            onPlayingChange={setTocando}
           />
-          <Metronome defaultBpm={bpm && bpm > 0 ? bpm : 100} onBpmChange={onBpmChange} />
+          <Metronome
+            defaultBpm={bpm && bpm > 0 ? bpm : 100}
+            onBpmChange={onBpmChange}
+            playing={tocando}
+            onPlayingChange={setTocando}
+          />
         </div>
       )}
 

@@ -12,6 +12,11 @@ interface RhythmPlayerProps {
   groove: string; // 'rock-8' (preset) ou 'db-<id>' (padrão do banco)
   bpm: number;    // andamento da música — quem define é ela
   volume: number;
+  // Modo controlado (usado pelo CifraViewer): o play/stop fica no pai,
+  // o que sincroniza o ritmo com o metrônomo. Sem as props, gerencia o
+  // próprio estado (uso standalone/testes).
+  playing?: boolean;
+  onPlayingChange?: (playing: boolean) => void;
 }
 
 /**
@@ -19,8 +24,14 @@ interface RhythmPlayerProps {
  * sem abrir o painel do DrumPad. Mesmo motor (sampler → limiter →
  * intervalo de 16ths), tocando SEMPRE no BPM da música.
  */
-export function RhythmPlayer({ groove, bpm, volume }: RhythmPlayerProps) {
-  const [isPlaying, setIsPlaying] = useState(false)
+export function RhythmPlayer({ groove, bpm, volume, playing: playingProp, onPlayingChange }: RhythmPlayerProps) {
+  const [internalPlaying, setInternalPlaying] = useState(false)
+  const playing = playingProp ?? internalPlaying
+  const setPlaying = (v: boolean) => {
+    if (playingProp === undefined) setInternalPlaying(v)
+    onPlayingChange?.(v)
+  }
+
   const [isLoading, setIsLoading] = useState(false)
   const samplerRef = useRef<Tone.Sampler | null>(null)
   const limiterRef = useRef<Tone.Limiter | null>(null)
@@ -55,8 +66,15 @@ export function RhythmPlayer({ groove, bpm, volume }: RhythmPlayerProps) {
     }
   }, [volume])
 
+  const clearIntervalRef = () => {
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current)
+      intervalRef.current = null
+    }
+  }
+
   const startInterval = useCallback((currentBpm: number) => {
-    if (intervalRef.current) clearInterval(intervalRef.current)
+    clearIntervalRef()
     const intervalMs = (60 / currentBpm) * 1000 / 4; // 16ths
     intervalRef.current = setInterval(() => {
       const sampler = samplerRef.current
@@ -70,18 +88,18 @@ export function RhythmPlayer({ groove, bpm, volume }: RhythmPlayerProps) {
     }, intervalMs)
   }, [])
 
-  // BPM ao vivo (o andamento vem da música): recria o intervalo no novo tempo
-  useEffect(() => {
-    if (isPlaying) startInterval(bpm)
-  }, [bpm, isPlaying, startInterval])
-
-  const stop = useCallback(() => {
-    if (intervalRef.current) {
-      clearInterval(intervalRef.current)
-      intervalRef.current = null
+  const findPattern = async (id: number): Promise<DrumPattern | undefined> => {
+    let pattern = customPatternsRef.current.find(p => p.id === id)
+    if (!pattern) {
+      // Lista ainda não carregou — busca fresca antes de desistir
+      try {
+        const list: DrumPattern[] = await (await fetch('/api/drum-patterns')).json()
+        customPatternsRef.current = list
+        pattern = list.find(p => p.id === id)
+      } catch { /* mantém undefined */ }
     }
-    setIsPlaying(false)
-  }, [])
+    return pattern
+  }
 
   const ensureSampler = useCallback(async (kit: string) => {
     if (samplerRef.current && kitRef.current === kit) return
@@ -104,72 +122,77 @@ export function RhythmPlayer({ groove, bpm, volume }: RhythmPlayerProps) {
     })
   }, [])
 
-  const findPattern = async (id: number): Promise<DrumPattern | undefined> => {
-    let pattern = customPatternsRef.current.find(p => p.id === id)
-    if (!pattern) {
-      // Lista ainda não carregou — busca fresca antes de desistir
-      try {
-        const list: DrumPattern[] = await (await fetch('/api/drum-patterns')).json()
-        customPatternsRef.current = list
-        pattern = list.find(p => p.id === id)
-      } catch { /* mantém undefined */ }
-    }
-    return pattern
-  }
-
-  const toggle = async () => {
-    if (isPlaying) {
-      stop()
+  // Play/stop: o start de verdade acontece aqui (controlado ou standalone)
+  useEffect(() => {
+    if (!playing) {
+      clearIntervalRef()
       return
     }
-    if (isLoading) return // clique duplo rápido durante o carregamento
+    let cancelled = false
     setIsLoading(true)
-    try {
-      // Resolve o ritmo: padrão do banco (com kit) ou preset (kit1)
-      let hits: DrumHit[]
-      let kit = 'kit1'
-      if (groove.startsWith('db-')) {
-        const pattern = await findPattern(parseInt(groove.replace('db-', '')))
-        if (!pattern) {
-          console.error(`[RhythmPlayer] Padrão não encontrado: ${groove}`)
-          return
+    ;(async () => {
+      try {
+        // Resolve o ritmo: padrão do banco (com kit) ou preset (kit1)
+        let hits: DrumHit[]
+        let kit = 'kit1'
+        if (groove.startsWith('db-')) {
+          const pattern = await findPattern(parseInt(groove.replace('db-', '')))
+          if (!pattern) {
+            console.error(`[RhythmPlayer] Padrão não encontrado: ${groove}`)
+            return
+          }
+          hits = stepsToHits(pattern.steps)
+          kit = pattern.kit || 'kit1'
+        } else {
+          hits = PRESET_GROOVES[groove]?.pattern || PRESET_GROOVES['rock-8'].pattern
         }
-        hits = stepsToHits(pattern.steps)
-        kit = pattern.kit || 'kit1'
-      } else {
-        hits = PRESET_GROOVES[groove]?.pattern || PRESET_GROOVES['rock-8'].pattern
-      }
-      if (hits.length === 0 || !mountedRef.current) return
+        if (hits.length === 0 || cancelled || !mountedRef.current) return
 
-      await Tone.start()
-      await ensureSampler(kit)
-      if (!mountedRef.current || !samplerRef.current) return
-      patternRef.current = hits
-      stepRef.current = 0
-      startInterval(bpm)
-      Tone.Transport.start()
-      setIsPlaying(true)
-    } finally {
+        await Tone.start()
+        await ensureSampler(kit)
+        if (cancelled || !mountedRef.current || !samplerRef.current) return
+
+        patternRef.current = hits
+        stepRef.current = 0
+        startInterval(bpm)
+        Tone.Transport.start()
+      } finally {
+        // Sempre libera o botão, inclusive nos early returns de erro
+        if (!cancelled && mountedRef.current) setIsLoading(false)
+      }
+    })()
+    return () => {
+      cancelled = true
       if (mountedRef.current) setIsLoading(false)
     }
-  }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- start/stop reage só a `playing`; bpm tem efeito próprio
+  }, [playing])
+
+  // BPM ao vivo: recria o intervalo no novo tempo quando muda DURANTE o play
+  const prevBpmRef = useRef(bpm)
+  useEffect(() => {
+    if (prevBpmRef.current === bpm) return
+    prevBpmRef.current = bpm
+    if (!playing || intervalRef.current === null) return
+    startInterval(bpm)
+  }, [bpm, playing, startInterval])
 
   return (
     <button
-      onClick={toggle}
+      onClick={() => { if (!isLoading) setPlaying(!playing) }}
       disabled={isLoading}
       className={`flex h-12 w-12 items-center justify-center rounded-lg transition-colors ${
-        isPlaying
+        playing
           ? 'bg-success text-zinc-950'
           : 'text-ink-muted hover:bg-surface-overlay hover:text-ink'
       } disabled:opacity-40`}
-      aria-label={isPlaying ? 'Parar ritmo da música' : 'Tocar ritmo da música'}
-      aria-pressed={isPlaying}
-      title={isPlaying ? 'Parar ritmo' : 'Tocar ritmo da música'}
+      aria-label={playing ? 'Parar ritmo da música' : 'Tocar ritmo da música'}
+      aria-pressed={playing}
+      title={playing ? 'Parar ritmo e metrônomo' : 'Tocar ritmo e metrônomo juntos'}
     >
       {isLoading ? (
         <Loader2 className="w-5 h-5 animate-spin" aria-hidden />
-      ) : isPlaying ? (
+      ) : playing ? (
         <Pause className="w-5 h-5" aria-hidden />
       ) : (
         <Play className="w-5 h-5" aria-hidden />

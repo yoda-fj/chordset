@@ -7,6 +7,36 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+// Metronome e RhythmPlayer carregam Tone.js — mock compartilhado dos testes
+// de sincronização (showMetronome); os demais testes não tocam em Tone.
+vi.mock('tone', () => {
+  class MockLimiter {
+    toDestination() { return this; }
+    dispose = vi.fn();
+  }
+  class MockSampler {
+    volume = { value: 0 };
+    constructor(opts: { onload?: () => void }) { opts.onload?.(); }
+    connect() { return this; }
+    triggerAttackRelease = vi.fn();
+    dispose = vi.fn();
+  }
+  class MockMembraneSynth {
+    toDestination() { return this; }
+    triggerAttackRelease = vi.fn();
+    dispose = vi.fn();
+  }
+  return {
+    Limiter: MockLimiter,
+    Sampler: MockSampler,
+    MembraneSynth: MockMembraneSynth,
+    Draw: { schedule: vi.fn() },
+    Transport: { start: vi.fn(), stop: vi.fn(), bpm: { value: 0 } },
+    now: () => 0,
+    start: vi.fn().mockResolvedValue(undefined),
+  };
+});
+
 import { CifraViewer } from './CifraViewer';
 
 const CIFRA = `[C]Twinkle twinkle [G]little star
@@ -121,5 +151,35 @@ describe('CifraViewer — persistência de tom', () => {
     // O pai remonta com key nova quando a música muda (setlist)
     rerender(<CifraViewer {...PROPS} key="2" cifra="[A]Song two" tomOriginal="A" tom="B" />);
     expect(screen.getByRole('group')).toHaveAttribute('aria-label', 'Tom atual: B');
+  });
+});
+
+describe('CifraViewer — ritmo e metrônomo sincronizados', () => {
+  it('play no ritmo liga o metrônomo junto; parar um para os dois', async () => {
+    const user = userEvent.setup();
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({ ok: true, json: async () => [] })
+    );
+    render(<CifraViewer {...PROPS} showMetronome />);
+
+    const ritmo = await screen.findByRole('button', { name: 'Tocar ritmo da música' }, { timeout: 3000 });
+    await screen.findByRole('button', { name: 'Iniciar metrônomo' }, { timeout: 3000 });
+
+    await user.click(ritmo);
+
+    expect(await screen.findByRole('button', { name: 'Parar ritmo da música' }))
+      .toHaveAttribute('aria-pressed', 'true');
+    expect(await screen.findByRole('button', { name: 'Parar metrônomo' }))
+      .toHaveAttribute('aria-pressed', 'true');
+
+    // Parar pelo metrônomo para os dois
+    await user.click(screen.getByRole('button', { name: 'Parar metrônomo' }));
+    expect(await screen.findByRole('button', { name: 'Tocar ritmo da música' }))
+      .toHaveAttribute('aria-pressed', 'false');
+    expect(await screen.findByRole('button', { name: 'Iniciar metrônomo' }))
+      .toHaveAttribute('aria-pressed', 'false');
+
+    vi.unstubAllGlobals();
   });
 });

@@ -131,6 +131,22 @@ describe('Metronome', () => {
     expect(onBpmChange).toHaveBeenCalledWith(120);
   });
 
+  it('modo controlado: o pai liga/desliga e o toggle avisa o pai', async () => {
+    const user = userEvent.setup();
+    const onPlayingChange = vi.fn();
+    const { rerender } = render(
+      <Metronome defaultBpm={120} playing={false} onPlayingChange={onPlayingChange} />
+    );
+
+    // Pai liga → pulso agendado sem clique no componente
+    rerender(<Metronome defaultBpm={120} playing={true} onPlayingChange={onPlayingChange} />);
+    await screen.findByRole('button', { name: 'Parar metrônomo' });
+
+    // Clique não gerencia sozinho: avisa o pai
+    await user.click(screen.getByRole('button', { name: 'Parar metrônomo' }));
+    expect(onPlayingChange).toHaveBeenCalledWith(false);
+  });
+
   it('faz dispose do synth no unmount', () => {
     const { unmount } = render(<Metronome />);
     unmount();
