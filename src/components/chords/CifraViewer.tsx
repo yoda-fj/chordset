@@ -46,6 +46,10 @@ interface CifraViewerProps {
   isFullscreen?: boolean;
   onToggleSidebar?: () => void;
   sidebarOpen?: boolean;
+  // Play compartilhado com o painel (páginas): ritmo, metrônomo e DrumPad
+  // espelham o mesmo estado. Sem as props, gerencia o próprio estado.
+  playing?: boolean;
+  onPlayingChange?: (playing: boolean) => void;
 }
 
 // Escala tipográfica de palco (Fase 2.2): mín 20px, default 24px, teto 64px
@@ -75,12 +79,20 @@ export function CifraViewer({
   isFullscreen = false,
   onToggleSidebar,
   sidebarOpen = false,
+  playing: playingProp,
+  onPlayingChange,
 }: CifraViewerProps) {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
-  // Play compartilhado: ritmo e metrônomo tocam/juntos e param juntos.
-  // Troca de música remonta o CifraViewer (key no pai) → para tudo.
-  const [tocando, setTocando] = useState(false);
+  // Play compartilhado: ritmo e metrônomo tocam e param juntos. Controlado
+  // pelas páginas (que também sincronizam o DrumPad do painel); sem as
+  // props, gerencia o próprio estado.
+  const [internalTocando, setInternalTocando] = useState(false);
+  const tocando = playingProp ?? internalTocando;
+  const setTocando = (v: boolean) => {
+    if (playingProp === undefined) setInternalTocando(v);
+    onPlayingChange?.(v);
+  };
 
   // Transposição: o tom efetivo (salvo no evento/na música) precede o original.
   // originalTom é derivado da prop (não state) — senão trocar de música no

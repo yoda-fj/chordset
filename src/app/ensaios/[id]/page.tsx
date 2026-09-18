@@ -56,6 +56,9 @@ export default function EnsaioDetailPage() {
   // Drum pad da música da sessão (estado + persistência no hook compartilhado)
   const drumPad = useDrumPadSettings(session?.musicas ?? null);
 
+  // Play compartilhado entre a toolbar (ritmo + metrônomo) e o painel DrumPad
+  const [tocando, setTocando] = useState(false);
+
   // Persiste o tom transposto na música (tom_atual) com debounce
   const tomTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   useEffect(() => {
@@ -228,6 +231,8 @@ export default function EnsaioDetailPage() {
             onBpmChange={drumPad.onBpmChange}
             groove={drumPad.groove}
             volume={drumPad.volume}
+            playing={tocando}
+            onPlayingChange={setTocando}
             showMetronome={true}
           />
         </div>
@@ -312,6 +317,8 @@ export default function EnsaioDetailPage() {
             initialVolume={drumPad.volume}
             onGrooveChange={drumPad.onGrooveChange}
             onVolumeChange={drumPad.onVolumeChange}
+            playing={tocando}
+            onPlayingChange={setTocando}
           />
         </div>
       </div>

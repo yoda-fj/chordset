@@ -45,6 +45,9 @@ export default function CifraPage() {
   // Drum pad settings (estado + persistência no hook compartilhado)
   const drumPad = useDrumPadSettings(musica)
 
+  // Play compartilhado entre a toolbar (ritmo + metrônomo) e o painel DrumPad
+  const [tocando, setTocando] = useState(false)
+
   // Listen to fullscreen changes at page level
   useEffect(() => {
     const handleFullscreenChange = () => {
@@ -222,6 +225,8 @@ export default function CifraPage() {
             onBpmChange={drumPad.onBpmChange}
             groove={drumPad.groove}
             volume={drumPad.volume}
+            playing={tocando}
+            onPlayingChange={setTocando}
             showMetronome={true}
             showControls={true}
             isFullscreen={isFullscreen}
@@ -297,6 +302,8 @@ export default function CifraPage() {
               initialVolume={drumPad.volume}
               onGrooveChange={drumPad.onGrooveChange}
               onVolumeChange={drumPad.onVolumeChange}
+              playing={tocando}
+              onPlayingChange={setTocando}
             />
           </div>
         </aside>

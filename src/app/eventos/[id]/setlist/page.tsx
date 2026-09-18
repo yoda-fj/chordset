@@ -53,6 +53,12 @@ export default function SetlistPage() {
   // Drum pad da música selecionada (estado + persistência no hook compartilhado)
   const drumPad = useDrumPadSettings(musicas[selectedIndex]?.musicas ?? null)
 
+  // Play compartilhado entre a toolbar (ritmo + metrônomo) e o painel DrumPad
+  const [tocando, setTocando] = useState(false)
+  const selectedMusicaId = musicas[selectedIndex]?.musica_id
+  // Troca de música para tudo (o estado mora na página, que não remonta)
+  useEffect(() => { setTocando(false) }, [selectedMusicaId])
+
   // Persiste o tom transposto no repertório do evento (tom_evento) com debounce
   const tomTimeoutRef = useRef<NodeJS.Timeout | null>(null)
   useEffect(() => {
@@ -261,6 +267,8 @@ export default function SetlistPage() {
           initialBpm={drumPad.bpm}
           initialVolume={drumPad.volume}
           onGrooveChange={drumPad.onGrooveChange}
+          playing={tocando}
+          onPlayingChange={setTocando}
           onVolumeChange={drumPad.onVolumeChange}
         />
       )}
@@ -416,6 +424,8 @@ export default function SetlistPage() {
                 onBpmChange={drumPad.onBpmChange}
                 groove={drumPad.groove}
                 volume={drumPad.volume}
+                playing={tocando}
+                onPlayingChange={setTocando}
                 showMetronome={true}
                 showControls={true}
                 isFullscreen={isFullscreen}

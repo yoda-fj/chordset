@@ -13,6 +13,11 @@ interface DrumPadProps {
   onGrooveChange?: (grooveId: string, drumPatternId: number | null) => void;
 
   onVolumeChange?: (volume: number) => void;
+  // Modo controlado (páginas): o play/stop fica no pai, sincronizado com o
+  // RhythmPlayer da toolbar e o metrônomo — um play só, um motor só (o do
+  // RhythmPlayer). Sem as props, o painel toca sozinho (standalone).
+  playing?: boolean;
+  onPlayingChange?: (playing: boolean) => void;
 }
 
 interface GroovePattern {
@@ -148,8 +153,16 @@ function isEditableTarget(target: EventTarget | null): boolean {
   );
 }
 
-export function DrumPad({ initialGroove, initialBpm, initialVolume, onGrooveChange, onVolumeChange }: DrumPadProps) {
-  const [isPlaying, setIsPlaying] = useState(false);
+export function DrumPad({ initialGroove, initialBpm, initialVolume, onGrooveChange, onVolumeChange, playing: playingProp, onPlayingChange }: DrumPadProps) {
+  const [internalPlaying, setInternalPlaying] = useState(false);
+  // Modo controlado: o motor de sequência fica desligado (o som do padrão sai
+  // do RhythmPlayer da toolbar); os botões espelham/emitem o estado do pai.
+  const controlled = playingProp !== undefined;
+  const isPlaying = playingProp ?? internalPlaying;
+  const setIsPlaying = useCallback((v: boolean) => {
+    if (!controlled) setInternalPlaying(v);
+    onPlayingChange?.(v);
+  }, [controlled, onPlayingChange]);
   const [selectedGroove, setSelectedGroove] = useState<string>(initialGroove || 'rock-8');
   // BPM derivado da prop: vem da música e segue o hook ao vivo — inclusive
   // DURANTE o play (o efeito abaixo recria o intervalo quando ele muda)
@@ -238,6 +251,7 @@ export function DrumPad({ initialGroove, initialBpm, initialVolume, onGrooveChan
   }, [sampler, isLoaded]);
 
   const startPlayback = useCallback(async () => {
+    if (controlled) return; // modo sincronizado: o motor é o RhythmPlayer
     if (!sampler || !isLoaded) return;
 
     await Tone.start();
@@ -286,7 +300,7 @@ export function DrumPad({ initialGroove, initialBpm, initialVolume, onGrooveChan
     sequenceRef.current = timerId;
     patternRef.current = patternToPlay;
     setIsPlaying(true);
-  }, [sampler, isLoaded, selectedGroove, bpm, customPatterns]);
+  }, [sampler, isLoaded, selectedGroove, bpm, customPatterns, controlled, setIsPlaying]);
 
   // BPM ao vivo: quando o andamento da música muda durante o play
   // (metrônomo ±/tap), recria o intervalo com o novo tempo, mesmo padrão
@@ -294,6 +308,7 @@ export function DrumPad({ initialGroove, initialBpm, initialVolume, onGrooveChan
   useEffect(() => {
     if (prevBpmRef.current === bpm) return;
     prevBpmRef.current = bpm;
+    if (controlled) return;
     if (!isPlaying || !sampler) return;
     const patternToPlay = patternRef.current;
     if (patternToPlay.length === 0) return;
@@ -319,7 +334,7 @@ export function DrumPad({ initialGroove, initialBpm, initialVolume, onGrooveChan
       step = (step + 1) % 16;
     }, intervalMs);
     sequenceRef.current = timerId;
-  }, [bpm, isPlaying, sampler]);
+  }, [bpm, isPlaying, sampler, controlled]);
 
   const stopPlayback = useCallback(() => {
     if (sequenceRef.current) {
@@ -329,7 +344,7 @@ export function DrumPad({ initialGroove, initialBpm, initialVolume, onGrooveChan
     Tone.Transport.stop();
     setIsPlaying(false);
     setActivePads(new Set());
-  }, []);
+  }, [setIsPlaying]);
 
   // Para o playback ao desmontar (troca de música no setlist remonta o componente via key)
   useEffect(() => {
@@ -348,6 +363,7 @@ export function DrumPad({ initialGroove, initialBpm, initialVolume, onGrooveChan
 
   // Auto-restart playback when groove selection or kit changes
   useEffect(() => {
+    if (controlled) return;
     if (isPlaying && isLoaded) {
       stopPlayback();
       // Small delay to ensure cleanup before starting new playback
@@ -363,12 +379,17 @@ export function DrumPad({ initialGroove, initialBpm, initialVolume, onGrooveChan
   }, [selectedGroove, selectedKit]);
 
   const togglePlayback = useCallback(() => {
+    if (controlled) {
+      // Sincronizado com o RhythmPlayer da toolbar: espelha/emite o estado
+      setIsPlaying(!isPlaying);
+      return;
+    }
     if (isPlaying) {
       stopPlayback();
     } else {
       startPlayback();
     }
-  }, [isPlaying, startPlayback, stopPlayback]);
+  }, [controlled, isPlaying, startPlayback, stopPlayback, setIsPlaying]);
 
   // Keyboard controls
   useEffect(() => {
