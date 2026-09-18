@@ -475,25 +475,22 @@ export function DrumPad({ initialGroove, initialBpm, initialVolume, onGrooveChan
     onVolumeChange?.(newVolume);
   };
 
-  if (!isLoaded) {
-    return (
-      <div className="bg-surface-raised rounded-xl border p-4">
-        <div className="flex items-center gap-2 text-ink-muted">
-          <Music className="w-4 h-4 animate-pulse" />
-          <span className="text-sm">Carregando samples...</span>
-        </div>
-      </div>
-    );
-  }
-
+  // Painel sempre visível: enquanto os samples carregam, os controles ficam
+  // desabilitados (esconder tudo atrás de um "Carregando..." confundia —
+  // parecia que o ritmo tinha sumido)
   return (
     <div className="bg-surface-raised rounded-xl border p-4 space-y-4">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <h3 className="font-semibold text-ink flex items-center gap-2">
-          <Music className="w-4 h-4 text-brand" />
-          Drum Pad
-        </h3>
+        <div className="flex items-center gap-2">
+          <h3 className="font-semibold text-ink flex items-center gap-2">
+            <Music className="w-4 h-4 text-brand" />
+            Drum Pad
+          </h3>
+          {!isLoaded && (
+            <span className="text-xs text-ink-muted animate-pulse">Carregando samples...</span>
+          )}
+        </div>
         
         <div className="flex items-center gap-2">
           {/* Volume */}
@@ -509,7 +506,8 @@ export function DrumPad({ initialGroove, initialBpm, initialVolume, onGrooveChan
           {/* Play/Stop */}
           <button
             onClick={togglePlayback}
-            className={`flex h-12 w-12 items-center justify-center rounded-lg transition-colors ${isPlaying ? 'bg-success text-zinc-950' : 'bg-surface-overlay text-ink hover:bg-surface-overlay/70'}`}
+            disabled={!isLoaded}
+            className={`flex h-12 w-12 items-center justify-center rounded-lg transition-colors ${isPlaying ? 'bg-success text-zinc-950' : 'bg-surface-overlay text-ink hover:bg-surface-overlay/70'} disabled:opacity-40 disabled:cursor-not-allowed`}
             aria-label={isPlaying ? 'Pausar ritmo' : 'Tocar ritmo'}
             aria-pressed={isPlaying}
           >
@@ -518,7 +516,8 @@ export function DrumPad({ initialGroove, initialBpm, initialVolume, onGrooveChan
 
           <button
             onClick={stopPlayback}
-            className="flex h-12 w-12 items-center justify-center bg-surface-overlay text-ink hover:bg-surface-overlay/70 rounded-lg transition-colors"
+            disabled={!isLoaded}
+            className="flex h-12 w-12 items-center justify-center bg-surface-overlay text-ink hover:bg-surface-overlay/70 rounded-lg transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
             aria-label="Parar ritmo"
           >
             <Square className="w-5 h-5" aria-hidden />
@@ -531,8 +530,9 @@ export function DrumPad({ initialGroove, initialBpm, initialVolume, onGrooveChan
         <select
           value={selectedGroove}
           onChange={(e) => handleGrooveChange(e.target.value)}
+          disabled={!isLoaded}
           aria-label="Selecionar ritmo"
-          className="px-3 min-h-12 bg-surface-overlay border rounded-lg text-sm text-ink min-w-[120px]"
+          className="px-3 min-h-12 bg-surface-overlay border rounded-lg text-sm text-ink min-w-[120px] disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <optgroup label="Presets">
             {Object.entries(PRESET_GROOVES).map(([id, groove]) => (
@@ -576,8 +576,9 @@ export function DrumPad({ initialGroove, initialBpm, initialVolume, onGrooveChan
           <button
             key={pad.note}
             onClick={() => playPad(pad.note)}
+            disabled={!isLoaded}
             aria-label={`Tocar ${pad.label} (tecla ${pad.key})`}
-            className={`relative p-4 min-h-16 rounded-xl font-medium text-white transition-all transform active:scale-95 ${
+            className={`relative p-4 min-h-16 rounded-xl font-medium text-white transition-all transform active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed ${
               activePads.has(pad.note) ? 'scale-95 brightness-110' : ''
             } ${pad.color} hover:brightness-110`}
           >
