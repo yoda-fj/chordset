@@ -2,7 +2,8 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import * as Tone from 'tone';
-import { getSamplerUrls, volumeToDb } from '@/lib/drum-samples';
+import { getSamplerUrls, volumeToDb, stepsToHits } from '@/lib/drum-samples';
+import type { DrumHit } from '@/lib/drum-samples';
 import { Play, Pause, Square, Volume2, VolumeX, Music } from 'lucide-react';
 
 interface DrumPadProps {
@@ -12,12 +13,6 @@ interface DrumPadProps {
   onGrooveChange?: (grooveId: string, drumPatternId: number | null) => void;
 
   onVolumeChange?: (volume: number) => void;
-}
-
-interface DrumHit {
-  time: number; // in 16ths
-  note: string;
-  velocity?: number;
 }
 
 interface GroovePattern {
@@ -255,57 +250,7 @@ export function DrumPad({ initialGroove, initialBpm, initialVolume, onGrooveChan
       const patternId = parseInt(selectedGroove.replace('db-', ''));
       const dbPattern = customPatterns.find(p => p.id === patternId);
       if (dbPattern) {
-        // Steps may already be parsed, be a JSON string, or be object format
-        let stepsData: boolean[][] | Record<string, boolean[]>;
-        if (typeof dbPattern.steps === 'string') {
-          stepsData = JSON.parse(dbPattern.steps);
-        } else {
-          stepsData = dbPattern.steps;
-        }
-        patternToPlay = [];
-
-        // Object format: {kick: [16], snare: [16], ...}
-        if (!Array.isArray(stepsData) && typeof stepsData === 'object') {
-          const noteMap: Record<string, string> = {
-            kick: 'C1', snare: 'D1', hihatClosed: 'F#1', hihatOpen: 'A#1',
-            crash: 'C2', ride: 'D2', tomLow: 'E2', tomMid: 'F2', tomHigh: 'G2'
-          };
-          Object.entries(stepsData).forEach(([trackName, steps]) => {
-            if (Array.isArray(steps)) {
-              const note = noteMap[trackName];
-              if (note) {
-                steps.forEach((hit: boolean, stepIndex: number) => {
-                  if (hit) {
-                    patternToPlay.push({
-                      time: stepIndex / 2,
-                      note: note,
-                      velocity: 0.8
-                    });
-                  }
-                });
-              }
-            }
-          });
-        }
-        // Array format: [[16], [16], ...] (9 tracks x 16 steps)
-        else if (Array.isArray(stepsData)) {
-          const trackNotes = ['C1', 'D1', 'F#1', 'A#1', 'C2', 'D2', 'E2', 'F2', 'G2'];
-          stepsData.forEach((track: boolean[], trackIndex: number) => {
-            if (Array.isArray(track)) {
-              track.forEach((hit: boolean, stepIndex: number) => {
-                if (hit) {
-                  patternToPlay.push({
-                    time: stepIndex / 2, // convert step to time in 16ths
-                    note: trackNotes[trackIndex],
-                    velocity: 0.8
-                  });
-                }
-              });
-            }
-          });
-        } else {
-          console.error('[DrumPad] Invalid steps format:', stepsData);
-        }
+        patternToPlay = stepsToHits(dbPattern.steps);
       } else {
         patternToPlay = PRESET_GROOVES['rock-8'].pattern;
       }

@@ -205,6 +205,8 @@ export default function EnsaioDetailPage() {
             artista={musicas?.artista || ''}
             tomOriginal={musicas?.tom_original}
             bpm={drumPad.bpm}
+            groove={drumPad.groove}
+            volume={drumPad.volume}
             showMetronome={true}
           />
         </div>

@@ -61,3 +61,54 @@ export function volumeToDb(volume: number): number {
   if (volume <= 0) return -Infinity
   return (volume * 30) + 5;
 }
+
+// Tipo de um "hit" de bateria (um acerto de um instrumento num passo)
+export interface DrumHit {
+  time: number; // em semicolcheias (16ths)
+  note: string;
+  velocity?: number;
+}
+
+// Notas por trilha (ordem do array de 9 trilhas do banco)
+const TRACK_NOTES = ['C1', 'D1', 'F#1', 'A#1', 'C2', 'D2', 'E2', 'F2', 'G2'];
+const TRACK_NOTE_MAP: Record<string, string> = {
+  kick: 'C1', snare: 'D1', hihatClosed: 'F#1', hihatOpen: 'A#1',
+  crash: 'C2', ride: 'D2', tomLow: 'E2', tomMid: 'F2', tomHigh: 'G2',
+};
+
+/**
+ * Converte os steps de um padrão de bateria (formato do banco) para a lista
+ * de hits tocáveis. Aceita JSON string, array de trilhas (9 × 16 passos) ou
+ * objeto { trilha: passos }. Compartilhado pelo DrumPad e pelo RhythmPlayer.
+ */
+export function stepsToHits(steps: string | boolean[][] | Record<string, boolean[]>): DrumHit[] {
+  const hits: DrumHit[] = [];
+  let stepsData: boolean[][] | Record<string, boolean[]>;
+  try {
+    stepsData = typeof steps === 'string' ? JSON.parse(steps) : steps;
+  } catch {
+    console.error('[drum-samples] steps inválidos (JSON parse falhou)');
+    return hits;
+  }
+
+  if (Array.isArray(stepsData)) {
+    stepsData.forEach((track, trackIndex) => {
+      const note = TRACK_NOTES[trackIndex];
+      if (!note || !Array.isArray(track)) return;
+      track.forEach((hit, stepIndex) => {
+        if (hit) hits.push({ time: stepIndex / 2, note, velocity: 0.8 });
+      });
+    });
+  } else if (stepsData && typeof stepsData === 'object') {
+    Object.entries(stepsData).forEach(([trackName, track]) => {
+      const note = TRACK_NOTE_MAP[trackName];
+      if (!note || !Array.isArray(track)) return;
+      track.forEach((hit, stepIndex) => {
+        if (hit) hits.push({ time: stepIndex / 2, note, velocity: 0.8 });
+      });
+    });
+  } else {
+    console.error('[drum-samples] formato de steps inválido:', stepsData);
+  }
+  return hits;
+}

@@ -23,12 +23,20 @@ const Metronome = dynamic(() => import('./Metronome').then((m) => m.Metronome), 
   loading: () => <div className="h-16 w-64 rounded-lg bg-surface-overlay animate-pulse" />,
 });
 
+// Ritmo da música na toolbar (play/stop compacto) — também lazy, traz o Tone junto
+const RhythmPlayer = dynamic(() => import('./RhythmPlayer').then((m) => m.RhythmPlayer), {
+  ssr: false,
+  loading: () => <div className="h-12 w-12 rounded-lg bg-surface-overlay animate-pulse" />,
+});
+
 interface CifraViewerProps {
   cifra: string | null;
   titulo: string;
   artista: string;
   tomOriginal?: string | null;
   bpm?: number;
+  groove?: string;  // ritmo salvo da música ('preset' ou 'db-<id>') pro RhythmPlayer
+  volume?: number;
   showMetronome?: boolean;
   showControls?: boolean;
   className?: string;
@@ -53,6 +61,8 @@ export function CifraViewer({
   artista,
   tomOriginal,
   bpm,
+  groove,
+  volume,
   showMetronome = false,
   showControls = true,
   className = '',
@@ -200,7 +210,12 @@ export function CifraViewer({
 
       {/* Metrônomo visual (Fase 2.4) — fora do bundle inicial via next/dynamic */}
       {showMetronome && (
-        <div className="mb-2 shrink-0">
+        <div className="mb-2 shrink-0 flex items-center gap-2">
+          <RhythmPlayer
+            groove={groove ?? 'rock-8'}
+            bpm={bpm && bpm > 0 ? bpm : 120}
+            volume={volume ?? 0.7}
+          />
           <Metronome defaultBpm={bpm && bpm > 0 ? bpm : 100} />
         </div>
       )}

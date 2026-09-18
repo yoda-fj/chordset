@@ -385,6 +385,8 @@ export default function SetlistPage() {
                 artista={selectedMusica?.musicas?.artista || ''}
                 tomOriginal={selectedMusica?.musicas?.tom_original || null}
                 bpm={drumPad.bpm}
+                groove={drumPad.groove}
+                volume={drumPad.volume}
                 showMetronome={true}
                 showControls={true}
                 isFullscreen={isFullscreen}

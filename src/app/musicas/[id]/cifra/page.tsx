@@ -200,6 +200,8 @@ export default function CifraPage() {
             artista={musica.artista}
             tomOriginal={musica.tom_original}
             bpm={drumPad.bpm}
+            groove={drumPad.groove}
+            volume={drumPad.volume}
             showMetronome={true}
             showControls={true}
             isFullscreen={isFullscreen}
