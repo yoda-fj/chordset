@@ -162,7 +162,6 @@ export function DrumPad({ initialGroove, initialBpm, initialVolume, onGrooveChan
   const [selectedKit, setSelectedKit] = useState<string>('kit1');
   const activePadsTimeoutRef = useRef<Map<string, NodeJS.Timeout>>(new Map());
   const sequenceRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const currentPatternRef = useRef<{ pattern: DrumHit[]; bpm: number } | null>(null);
   const restartTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Fetch custom patterns from database
@@ -283,7 +282,6 @@ export function DrumPad({ initialGroove, initialBpm, initialVolume, onGrooveChan
 
     Tone.Transport.start();
     sequenceRef.current = timerId;
-    currentPatternRef.current = { pattern: patternToPlay, bpm };
     setIsPlaying(true);
   }, [sampler, isLoaded, selectedGroove, bpm, customPatterns]);
 
@@ -327,40 +325,6 @@ export function DrumPad({ initialGroove, initialBpm, initialVolume, onGrooveChan
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps -- reinicia só ao trocar groove/kit, de propósito
   }, [selectedGroove, selectedKit]);
-
-  // Restart playback when BPM changes during playback
-  useEffect(() => {
-    if (isPlaying && currentPatternRef.current && sequenceRef.current) {
-      // Stop current playback
-      clearInterval(sequenceRef.current);
-      sequenceRef.current = null;
-
-      const { pattern: patternToPlay } = currentPatternRef.current;
-      const intervalMs = (60 / bpm) * 1000 / 4; // 16th notes
-
-      let step = 0;
-      const timerId = setInterval(() => {
-        patternToPlay.forEach(hit => {
-          const hitStep = Math.floor(hit.time * 2) % 16;
-          if (hitStep === step) {
-            sampler!.triggerAttackRelease(hit.note, '16n');
-            setActivePads(prev => new Set(prev).add(hit.note));
-            setTimeout(() => {
-              setActivePads(prev => {
-                const next = new Set(prev);
-                next.delete(hit.note);
-                return next;
-              });
-            }, 150);
-          }
-        });
-        step = (step + 1) % 16;
-      }, intervalMs);
-
-      sequenceRef.current = timerId;
-      currentPatternRef.current = { pattern: patternToPlay, bpm };
-    }
-  }, [bpm, isPlaying, sampler]);
 
   const togglePlayback = useCallback(() => {
     if (isPlaying) {

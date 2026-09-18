@@ -8,6 +8,9 @@
  * (e) troca de música usa os valores da nova música
  * (f) flush no unmount salva o que estiver pendente
  * (g) save pendente carrega o id da música-alvo (não da atual)
+ *
+ * Modelo atual: NÃO há onBpmChange — o BPM é da música (editado no card de
+ * /musicas/[id]). O painel só persiste groove e volume.
  */
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
@@ -88,29 +91,29 @@ describe('useDrumPadSettings', () => {
 
     it('save NÃO dispara antes de 1s e dispara após o debounce', () => {
       const { result } = renderHook(() => useDrumPadSettings(mkMusica(7)));
-      act(() => result.current.onBpmChange(110));
+      act(() => result.current.onVolumeChange(0.4));
 
       act(() => vi.advanceTimersByTime(999));
       expect(fetchMock).not.toHaveBeenCalled();
 
       act(() => vi.advanceTimersByTime(1));
       expect(fetchMock).toHaveBeenCalledTimes(1);
-      expect(putBodies()).toContainEqual({ bpm: 110 });
+      expect(putBodies()).toContainEqual({ volume: 0.4 });
     });
 
-    it('override encadeado mantém bpm E groove (regressão: 2º update não apaga o 1º)', () => {
+    it('override encadeado mantém volume E groove (regressão: 2º update não apaga o 1º)', () => {
       const { result } = renderHook(() => useDrumPadSettings(mkMusica(7)));
-      // Troca de groove no DrumPad chama onBpmChange + onGrooveChange seguidos
+      // Interações rápidas no painel chamam onVolumeChange + onGrooveChange seguidos
       act(() => {
-        result.current.onBpmChange(110);
+        result.current.onVolumeChange(0.3);
         result.current.onGrooveChange('db-2', 2);
       });
 
-      expect(result.current.bpm).toBe(110);
+      expect(result.current.volume).toBe(0.3);
       expect(result.current.groove).toBe('db-2');
 
       act(() => vi.advanceTimersByTime(1000));
-      expect(putBodies()).toContainEqual({ bpm: 110 });
+      expect(putBodies()).toContainEqual({ volume: 0.3 });
       expect(putBodies()).toContainEqual({ groove: null, drum_pattern_id: 2 });
     });
   });
@@ -130,17 +133,17 @@ describe('useDrumPadSettings', () => {
       expect(result.current.groove).toBe('db-3');
       expect(result.current.bpm).toBe(90);
 
-      // De volta pra A: override da sessão é mantido
-      act(() => result.current.onBpmChange(140));
+      // Override da sessão é por música: mexer em B não vaza pra A
+      act(() => result.current.onVolumeChange(0.2));
       rerender({ musica: musicaA });
-      expect(result.current.bpm).toBe(110);
+      expect(result.current.volume).toBe(0.7);
     });
   });
 
   describe('flush de saves pendentes', () => {
     it('desmontar antes do debounce ainda salva, com o id da música certo', () => {
       const { result, unmount } = renderHook(() => useDrumPadSettings(mkMusica(7)));
-      act(() => result.current.onBpmChange(90));
+      act(() => result.current.onVolumeChange(0.3));
 
       expect(fetchMock).not.toHaveBeenCalled();
       unmount();
@@ -149,7 +152,7 @@ describe('useDrumPadSettings', () => {
         '/api/musicas/7',
         expect.objectContaining({ method: 'PUT' })
       );
-      expect(putBodies()).toContainEqual({ bpm: 90 });
+      expect(putBodies()).toContainEqual({ volume: 0.3 });
     });
 
     it('save pendente carrega o id da música-alvo (iniciado em A, dispara depois de trocar pra B)', () => {
@@ -160,13 +163,13 @@ describe('useDrumPadSettings', () => {
         { initialProps: { musica: musicaA } }
       );
 
-      act(() => result.current.onBpmChange(133));
+      act(() => result.current.onVolumeChange(0.9));
       rerender({ musica: musicaB });
       act(() => vi.advanceTimersByTime(1000));
 
       const urls = fetchMock.mock.calls.map(([url]) => url);
       expect(urls).toEqual(['/api/musicas/1']);
-      expect(putBodies()).toContainEqual({ bpm: 133 });
+      expect(putBodies()).toContainEqual({ volume: 0.9 });
     });
   });
 });

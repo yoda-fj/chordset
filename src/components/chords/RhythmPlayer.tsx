@@ -122,32 +122,36 @@ export function RhythmPlayer({ groove, bpm, volume }: RhythmPlayerProps) {
       stop()
       return
     }
-    // Resolve o ritmo: padrão do banco (com kit) ou preset (kit1)
-    let hits: DrumHit[]
-    let kit = 'kit1'
-    if (groove.startsWith('db-')) {
-      const pattern = await findPattern(parseInt(groove.replace('db-', '')))
-      if (!pattern) return
-      hits = stepsToHits(pattern.steps)
-      kit = pattern.kit || 'kit1'
-    } else {
-      hits = PRESET_GROOVES[groove]?.pattern || PRESET_GROOVES['rock-8'].pattern
-    }
-    if (hits.length === 0 || !mountedRef.current) return
-
+    if (isLoading) return // clique duplo rápido durante o carregamento
     setIsLoading(true)
-    await Tone.start()
-    await ensureSampler(kit)
-    if (!mountedRef.current || !samplerRef.current) {
-      setIsLoading(false)
-      return
+    try {
+      // Resolve o ritmo: padrão do banco (com kit) ou preset (kit1)
+      let hits: DrumHit[]
+      let kit = 'kit1'
+      if (groove.startsWith('db-')) {
+        const pattern = await findPattern(parseInt(groove.replace('db-', '')))
+        if (!pattern) {
+          console.error(`[RhythmPlayer] Padrão não encontrado: ${groove}`)
+          return
+        }
+        hits = stepsToHits(pattern.steps)
+        kit = pattern.kit || 'kit1'
+      } else {
+        hits = PRESET_GROOVES[groove]?.pattern || PRESET_GROOVES['rock-8'].pattern
+      }
+      if (hits.length === 0 || !mountedRef.current) return
+
+      await Tone.start()
+      await ensureSampler(kit)
+      if (!mountedRef.current || !samplerRef.current) return
+      patternRef.current = hits
+      stepRef.current = 0
+      startInterval(bpm)
+      Tone.Transport.start()
+      setIsPlaying(true)
+    } finally {
+      if (mountedRef.current) setIsLoading(false)
     }
-    patternRef.current = hits
-    stepRef.current = 0
-    startInterval(bpm)
-    Tone.Transport.start()
-    setIsPlaying(true)
-    setIsLoading(false)
   }
 
   return (

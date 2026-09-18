@@ -210,8 +210,11 @@ export function CifraViewer({
 
       {/* Metrônomo visual (Fase 2.4) — fora do bundle inicial via next/dynamic */}
       {showMetronome && (
-        <div className="mb-2 shrink-0 flex items-center gap-2">
+        <div className="mb-2 shrink-0 flex flex-wrap items-center gap-2">
+          {/* key por groove: trocar de música no setlist remonta o player e
+              para o ritmo da música anterior (cleanup no unmount) */}
           <RhythmPlayer
+            key={groove ?? 'rock-8'}
             groove={groove ?? 'rock-8'}
             bpm={bpm && bpm > 0 ? bpm : 120}
             volume={volume ?? 0.7}
