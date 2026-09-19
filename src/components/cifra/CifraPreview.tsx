@@ -80,7 +80,7 @@ export function CifraPreview({ cifra, className = '' }: CifraPreviewProps) {
   const visualLines = chordProToVisualLines(cifra)
   
   return (
-    <div className={`bg-gray-900 text-gray-100 p-4 rounded-lg overflow-x-auto ${className}`}>
+    <div className={`bg-surface-overlay text-ink p-4 rounded-lg overflow-x-auto ${className}`}>
       <pre className="font-mono text-sm leading-relaxed whitespace-pre">
         {visualLines.join('\n')}
       </pre>

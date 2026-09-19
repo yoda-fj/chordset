@@ -362,7 +362,7 @@ export default function SetlistPage() {
             <button
               onClick={goPrev}
               disabled={selectedIndex === 0}
-              className="p-2 rounded-lg hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed"
+              className="p-2 rounded-lg hover:bg-surface-overlay disabled:opacity-30 disabled:cursor-not-allowed"
             >
               <ChevronLeft size={20} />
             </button>
@@ -375,7 +375,7 @@ export default function SetlistPage() {
             <button
               onClick={goNext}
               disabled={selectedIndex === musicas.length - 1}
-              className="p-2 rounded-lg hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed"
+              className="p-2 rounded-lg hover:bg-surface-overlay disabled:opacity-30 disabled:cursor-not-allowed"
             >
               <ChevronRight size={20} />
             </button>

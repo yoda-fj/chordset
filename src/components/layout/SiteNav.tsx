@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation'
 import { motion } from 'framer-motion'
 import { Music, Calendar, LayoutTemplate, Drum, Guitar } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { ThemeToggle } from '@/components/ui/ThemeToggle'
 
 const NAV_ITEMS = [
   { href: '/ritmos', label: 'Ritmos', icon: Drum },
@@ -59,6 +60,7 @@ export function SiteNav() {
                   </Link>
                 )
               })}
+              <ThemeToggle className="ml-2" />
             </div>
           </div>
         </div>
