@@ -26,10 +26,14 @@ export default function SetlistPage() {
   const [evento, setEvento] = useState<EventoWithTemplate | null>(null)
   const [musicas, setMusicas] = useState<EventoMusicaWithMusica[]>([])
   const [selectedIndex, setSelectedIndex] = useState(0)
-  // Sidebar de repertório: aberta por padrão só no desktop (lg);
-  // no mobile começa fechada pra não cobrir a cifra com o backdrop
+  // Sidebar de repertório: aberta por padrão só no desktop em paisagem (lg);
+  // em retrato (celular/tablet vertical, monitor girado) começa fechada
+  // pra cifra usar toda a largura — dá pra reabrir pelo botão Menu
   const [showSidebar, setShowSidebar] = useState(
-    () => typeof window !== 'undefined' && window.innerWidth >= 1024
+    () =>
+      typeof window !== 'undefined' &&
+      window.innerWidth >= 1024 &&
+      window.innerWidth > window.innerHeight
   )
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
