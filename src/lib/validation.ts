@@ -36,6 +36,19 @@ function isCifraClubUrl(value: string): boolean {
   }
 }
 
+function isMusicasParaMissaUrl(value: string): boolean {
+  try {
+    const parsed = new URL(value)
+    return (
+      (parsed.protocol === 'https:' || parsed.protocol === 'http:') &&
+      (parsed.hostname === 'musicasparamissa.com.br' || parsed.hostname.endsWith('.musicasparamissa.com.br')) &&
+      parsed.pathname.startsWith('/musica/')
+    )
+  } catch {
+    return false
+  }
+}
+
 // =====================================
 // OCR (/api/ocr/cifra)
 // =====================================
@@ -81,6 +94,19 @@ export const importSongSchema = z
   })
 
 export type ImportSongRequest = z.infer<typeof importSongSchema>
+
+// =====================================
+// IMPORT-MUSICASPARAMISSA (/api/import-musicasparamissa)
+// =====================================
+
+export const importMpmSchema = z.object({
+  url: z
+    .string()
+    .refine(isMusicasParaMissaUrl, 'URL deve ser uma página /musica/ do musicasparamissa.com.br'),
+  save: z.boolean().optional(),
+})
+
+export type ImportMpmRequest = z.infer<typeof importMpmSchema>
 
 // =====================================
 // MUSICAS (/api/musicas, /api/musicas/[id])

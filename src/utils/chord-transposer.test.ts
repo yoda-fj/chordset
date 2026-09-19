@@ -61,6 +61,30 @@ describe('transposeCifra', () => {
     // +2 semitons: linha de acordes do riff e a tab ficam intactas
     expect(transposeCifra(cifra, 'A', 'B')).toBe('A D/A\ne|--0--2--|')
   })
+
+  it('não transpõe letras em formato ChordPro (regressão: Deus→Eeus)', () => {
+    const cifra = '[Am]Deus todo poderoso\nA Ti cantamos\n[C]Gloria a Deus'
+    expect(transposeCifra(cifra, 'A', 'B')).toBe(
+      '[Bm]Deus todo poderoso\nA Ti cantamos\n[D]Gloria a Deus'
+    )
+  })
+
+  it('não transpõe linhas de letra em formato texto', () => {
+    const cifra = 'D       A\nDeus é fiel\nComeça com C'
+    expect(transposeCifra(cifra, 'D', 'E')).toBe('E       B\nDeus é fiel\nComeça com C')
+  })
+
+  it('transpõe baixo invertido em ChordPro', () => {
+    expect(transposeCifra('[D/F#]olá', 'D', 'E')).toBe('[E/G#]olá')
+  })
+
+  it('transpõe linha rotulada de acordes (INTRO: ...)', () => {
+    expect(transposeCifra('INTRO: Eb G# Bb', 'Eb', 'E')).toBe('INTRO: E A B')
+  })
+
+  it('não confunde letra com dois-pontos por linha rotulada', () => {
+    expect(transposeCifra('ELE DISSE: AMOR', 'A', 'B')).toBe('ELE DISSE: AMOR')
+  })
 })
 
 describe('getSemitoneDifference', () => {

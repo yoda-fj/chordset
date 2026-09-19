@@ -2,6 +2,8 @@
 // UTILITÁRIO DE TRANSPOSIÇÃO DE ACORDES
 // =====================================
 
+import { CHORD_CORE, CHORD_ONLY_LINE_REGEX } from './chord-pattern'
+
 // Notas cromáticas em ordem
 const NOTAS = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
 const NOTAS_BEMOL = ['C', 'Db', 'D', 'Eb', 'E', 'F', 'Gb', 'G', 'Ab', 'A', 'Bb', 'B'];
@@ -90,11 +92,7 @@ export const isStrummingLine = (line: string): boolean => {
 
 // Pula linha se for só acorde(s) na mesma linha (sem letra)
 const isChordOnlyLine = (line: string): boolean => {
-  const trimmed = line.trim();
-  // Se a linha só contém acordes separados por espaços (sem letras minúsculas que seriam letra)
-  // Ex: "A D/A", "Am G Dm"
-  const chordOnlyPattern = /^(?:[A-G][#b]?(?:m|maj|min|dim|aug|sus|add|7|9|11|13|Maj|min|m)*\d*(?:\/[A-G][#b]?)?\s+)*[A-G][#b]?(?:m|maj|min|dim|aug|sus|add|7|9|11|13|Maj|min|m)*\d*(?:\/[A-G][#b]?)?$/;
-  return chordOnlyPattern.test(trimmed);
+  return CHORD_ONLY_LINE_REGEX.test(line.trim());
 };
 
 /**
@@ -115,10 +113,22 @@ export function transposeLine(line: string, semitons: number): string {
   // Padrão pra encontrar acordes na linha
   // Um acorde pode estar no início da linha ou depois de espaços
   // Exemplos: "Am G F", "        Am", "Am                   G"
-  const chordPattern = /([A-G][#b]?(?:m|maj|min|dim|aug|sus|add|7|9|11|13|Maj|min|m)*\d*)/g;
+  // CHORD_CORE (sem baixo invertido): o baixo casa como token separado
+  // depois da "/", o que faz ele ser transposto também
+  const chordPattern = new RegExp(`(${CHORD_CORE})`, 'g');
 
   return line.replace(chordPattern, (match) => {
     return transposeChord(match, semitons);
+  });
+}
+
+/**
+ * Transpõe apenas os acordes entre colchetes de uma linha (formato ChordPro).
+ * Texto fora de colchetes é letra — nunca é transposto.
+ */
+function transposeBracketedChords(line: string, semitons: number): string {
+  return line.replace(/\[([^\]]+)\]/g, (_match, inner: string) => {
+    return '[' + transposeLine(inner, semitons) + ']';
   });
 }
 
@@ -140,12 +150,25 @@ export function transposeCifra(cifra: string, fromKey: string, toKey: string): s
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
     const nextLine = i + 1 < lines.length ? lines[i + 1] : '';
-    
-    // Se a linha atual é só acorde E a próxima é tablatura, não transpõe
-    if (isChordOnlyLine(line) && nextLine && isTabLine(nextLine)) {
-      result.push(line); // mantém como está
-    } else {
+
+    if (isTabLine(line)) {
+      // Tablatura nunca transpõe
+      result.push(line);
+    } else if (isChordOnlyLine(line) && nextLine && isTabLine(nextLine)) {
+      // Linha de acordes que precede tablatura = riff em notação de acordes: mantém
+      result.push(line);
+    } else if (isChordOnlyLine(line)) {
+      // Linha só de acordes (formato texto, acordes acima da letra)
       result.push(transposeLine(line, semitons));
+    } else {
+      // Linha com rótulo seguido só de acordes: "INTRO: Eb G# Bb"
+      const labeled = line.match(/^(\s*\S[^:]{0,24}:\s+)(\S.*)$/);
+      if (labeled && isChordOnlyLine(labeled[2])) {
+        result.push(labeled[1] + transposeLine(labeled[2], semitons));
+      } else {
+        // ChordPro ou letra pura: transpõe só o que está entre colchetes
+        result.push(transposeBracketedChords(line, semitons));
+      }
     }
   }
   
