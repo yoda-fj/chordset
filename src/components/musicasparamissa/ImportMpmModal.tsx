@@ -118,7 +118,7 @@ export function ImportMpmModal({ isOpen, onClose, onImport }: ImportMpmModalProp
             <button
               type="submit"
               disabled={!url.trim() || loading}
-              className="flex-1 px-4 py-2 bg-brand text-zinc-950 rounded-lg hover:bg-brand-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 transition-colors"
+              className="flex-1 px-4 py-2 bg-brand text-on-accent rounded-lg hover:bg-brand-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 transition-colors"
             >
               {loading ? (
                 <>

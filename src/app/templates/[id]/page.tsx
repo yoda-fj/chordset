@@ -217,7 +217,7 @@ export default function EditTemplatePage() {
           <button
             type="submit"
             disabled={saving || !nome.trim()}
-            className="inline-flex items-center gap-2 px-4 py-2 bg-brand text-zinc-950 rounded-lg hover:bg-brand-600 disabled:opacity-50 transition-colors"
+            className="inline-flex items-center gap-2 px-4 py-2 bg-brand text-on-accent rounded-lg hover:bg-brand-600 disabled:opacity-50 transition-colors"
           >
             {saving ? <Loader2 size={18} className="animate-spin" /> : <Save size={18} />}
             {saving ? 'Salvando...' : 'Salvar Alterações'}

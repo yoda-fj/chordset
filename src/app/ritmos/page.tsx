@@ -160,7 +160,7 @@ export default function DrumPatternsPage() {
         <h1 className="text-2xl font-bold">Ritmos de Bateria</h1>
         <Link
           href="/ritmos/new"
-          className="flex items-center gap-2 px-4 py-2 bg-brand text-zinc-950 rounded-lg hover:bg-brand-600"
+          className="flex items-center gap-2 px-4 py-2 bg-brand text-on-accent rounded-lg hover:bg-brand-600"
         >
           <Plus size={18} />
           Novo Ritmo
@@ -172,7 +172,7 @@ export default function DrumPatternsPage() {
           <p className="text-ink-muted mb-4">Nenhum ritmo criado ainda</p>
           <Link
             href="/ritmos/new"
-            className="inline-flex items-center gap-2 px-4 py-2 bg-brand text-zinc-950 rounded-lg hover:bg-brand-600"
+            className="inline-flex items-center gap-2 px-4 py-2 bg-brand text-on-accent rounded-lg hover:bg-brand-600"
           >
             <Plus size={18} />
             Criar primeiro ritmo
@@ -190,7 +190,7 @@ export default function DrumPatternsPage() {
                   onClick={() => playPattern(pattern)}
                   className={`w-10 h-10 rounded-full flex items-center justify-center transition ${
                     playingId === pattern.id
-                      ? 'bg-danger text-zinc-950 hover:bg-danger'
+                      ? 'bg-danger text-on-accent hover:bg-danger'
                       : 'bg-brand/15 text-brand hover:bg-brand/20'
                   }`}
                 >

@@ -129,7 +129,7 @@ export default function EventoPage() {
           {musicas.length > 0 && (
             <Link
               href={`/eventos/${eventoId}/setlist`}
-              className="inline-flex items-center gap-2 px-4 py-2 bg-success text-zinc-950 rounded-lg hover:bg-success/80 transition-colors"
+              className="inline-flex items-center gap-2 px-4 py-2 bg-success text-on-accent rounded-lg hover:bg-success/80 transition-colors"
             >
               <Play size={18} />
               <span className="hidden sm:inline">Ao Vivo</span>
@@ -137,7 +137,7 @@ export default function EventoPage() {
           )}
           <Link
             href={`/eventos/${eventoId}/editar`}
-            className="inline-flex items-center gap-2 px-4 py-2 bg-brand text-zinc-950 rounded-lg hover:bg-brand-600 transition-colors"
+            className="inline-flex items-center gap-2 px-4 py-2 bg-brand text-on-accent rounded-lg hover:bg-brand-600 transition-colors"
           >
             <Edit size={18} />
             Editar
@@ -270,7 +270,7 @@ export default function EventoPage() {
               <button
                 onClick={handleClone}
                 disabled={!cloneNome.trim() || cloneLoading}
-                className="px-4 py-2 bg-brand text-zinc-950 rounded-lg hover:bg-brand-600 disabled:opacity-50"
+                className="px-4 py-2 bg-brand text-on-accent rounded-lg hover:bg-brand-600 disabled:opacity-50"
               >
                 {cloneLoading ? 'Clonando...' : 'Clonar'}
               </button>

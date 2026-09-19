@@ -384,7 +384,7 @@ export default function MusicaPage() {
           {selectedRitmo ? (
             <button
               onClick={playRitmo}
-              className="flex items-center gap-2 px-4 py-2 bg-brand text-zinc-950 rounded-lg hover:bg-brand-600"
+              className="flex items-center gap-2 px-4 py-2 bg-brand text-on-accent rounded-lg hover:bg-brand-600"
             >
               <Play size={18} />
               Tocar

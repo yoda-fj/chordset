@@ -61,7 +61,7 @@ export default function Home() {
                   <p className="text-sm text-ink-muted">{showDeHoje.local}</p>
                 )}
               </div>
-              <span className="inline-flex items-center gap-2 rounded-xl2 bg-brand px-6 py-4 text-stage-sm font-semibold text-zinc-950 transition-transform group-hover:scale-105">
+              <span className="inline-flex items-center gap-2 rounded-xl2 bg-brand px-6 py-4 text-stage-sm font-semibold text-on-accent transition-transform group-hover:scale-105">
                 <Play size={22} />
                 Começar show
               </span>
@@ -96,7 +96,7 @@ export default function Home() {
           <p className="text-ink-muted mb-4">Nenhum evento por aqui ainda.</p>
           <Link
             href="/eventos/new"
-            className="inline-flex items-center gap-2 rounded-xl2 bg-brand px-6 py-3 font-medium text-zinc-950 hover:bg-brand-600 transition-colors"
+            className="inline-flex items-center gap-2 rounded-xl2 bg-brand px-6 py-3 font-medium text-on-accent hover:bg-brand-600 transition-colors"
           >
             Criar primeiro evento
             <ArrowRight size={18} />

@@ -174,7 +174,7 @@ export const Autoscroll = ({ targetRef, bpm }: AutoscrollProps) => {
   return (
     <div className="flex items-center gap-2">
       <button
-        className={`flex h-12 w-12 items-center justify-center rounded-lg transition-colors ${speed > 0 ? 'bg-success text-zinc-950' : 'text-ink-muted hover:bg-surface-overlay hover:text-ink'}`}
+        className={`flex h-12 w-12 items-center justify-center rounded-lg transition-colors ${speed > 0 ? 'bg-success text-on-accent' : 'text-ink-muted hover:bg-surface-overlay hover:text-ink'}`}
         onClick={cycleSpeed}
         aria-label={`Auto-scroll: ${SPEED_LABELS[speed]}. Toque para mudar a velocidade.`}
         aria-pressed={speed > 0}

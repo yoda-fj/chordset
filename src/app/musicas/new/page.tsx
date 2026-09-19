@@ -374,7 +374,7 @@ export default function NewMusicaPage() {
           <button
             type="submit"
             disabled={saving || !isValid}
-            className="inline-flex items-center gap-2 px-4 py-2 bg-brand text-zinc-950 rounded-lg hover:bg-brand-600 disabled:opacity-50 transition-colors"
+            className="inline-flex items-center gap-2 px-4 py-2 bg-brand text-on-accent rounded-lg hover:bg-brand-600 disabled:opacity-50 transition-colors"
           >
             {saving ? (
               <>
@@ -426,7 +426,7 @@ export default function NewMusicaPage() {
                 <button
                   type="submit"
                   disabled={importLoading || !importQuery.trim()}
-                  className="px-4 py-2 bg-brand text-zinc-950 rounded-lg hover:bg-brand-600 disabled:opacity-50"
+                  className="px-4 py-2 bg-brand text-on-accent rounded-lg hover:bg-brand-600 disabled:opacity-50"
                 >
                   {importLoading ? <Loader2 size={18} className="animate-spin" /> : 'Buscar'}
                 </button>

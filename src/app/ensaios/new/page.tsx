@@ -210,7 +210,7 @@ export default function NewEnsaioPage() {
         <button
           onClick={handleCreate}
           disabled={!selectedMusica || saving}
-          className="inline-flex items-center gap-2 px-4 py-2 bg-brand text-zinc-950 rounded-lg hover:bg-brand-600 disabled:opacity-50 transition-colors"
+          className="inline-flex items-center gap-2 px-4 py-2 bg-brand text-on-accent rounded-lg hover:bg-brand-600 disabled:opacity-50 transition-colors"
         >
           {saving ? (
             <>

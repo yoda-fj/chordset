@@ -170,7 +170,7 @@ export function ImportPhotoModal({ isOpen, onClose, onImport }: ImportPhotoModal
                         setImagePreview(null);
                         setImageBase64(null);
                       }}
-                      className="absolute top-2 right-2 p-2 bg-danger text-zinc-950 rounded-lg hover:bg-danger"
+                      className="absolute top-2 right-2 p-2 bg-danger text-on-accent rounded-lg hover:bg-danger"
                     >
                       <X size={16} />
                     </button>
@@ -282,7 +282,7 @@ export function ImportPhotoModal({ isOpen, onClose, onImport }: ImportPhotoModal
               <button
                 onClick={handleExtract}
                 disabled={!imageBase64 || loading}
-                className="flex-1 px-4 py-2 bg-brand text-zinc-950 rounded-lg hover:bg-brand-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 transition-colors"
+                className="flex-1 px-4 py-2 bg-brand text-on-accent rounded-lg hover:bg-brand-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 transition-colors"
               >
                 {loading ? (
                   <>
@@ -309,7 +309,7 @@ export function ImportPhotoModal({ isOpen, onClose, onImport }: ImportPhotoModal
               </button>
               <button
                 onClick={handleConfirm}
-                className="flex-1 px-4 py-2 bg-success text-zinc-950 rounded-lg hover:bg-success/80 transition-colors"
+                className="flex-1 px-4 py-2 bg-success text-on-accent rounded-lg hover:bg-success/80 transition-colors"
               >
                 Salvar Música
               </button>

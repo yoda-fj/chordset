@@ -37,7 +37,7 @@ export function AudioRecorderPanel({
         <div className="flex items-center gap-3 p-3 bg-surface rounded-lg mb-3">
           <button
             onClick={togglePlayback}
-            className="flex h-12 w-12 items-center justify-center bg-brand text-zinc-950 rounded-full hover:bg-brand-600 transition-colors"
+            className="flex h-12 w-12 items-center justify-center bg-brand text-on-accent rounded-full hover:bg-brand-600 transition-colors"
             aria-label={isPlaying ? 'Pausar áudio' : 'Ouvir gravação'}
           >
             {isPlaying ? <Pause size={18} aria-hidden /> : <Play size={18} aria-hidden />}
@@ -73,7 +73,7 @@ export function AudioRecorderPanel({
           <button
             onClick={uploadAudio}
             disabled={isUploading}
-            className="px-3 min-h-12 bg-success text-zinc-950 rounded-lg hover:bg-success/80 disabled:opacity-50 flex items-center gap-1 text-sm"
+            className="px-3 min-h-12 bg-success text-on-accent rounded-lg hover:bg-success/80 disabled:opacity-50 flex items-center gap-1 text-sm"
           >
             {isUploading ? <Loader2 size={14} className="animate-spin" aria-hidden /> : <Upload size={14} aria-hidden />}
             Salvar
@@ -113,7 +113,7 @@ export function AudioRecorderPanel({
             {isRecording ? (
               <button
                 onClick={stopRecording}
-                className="flex items-center gap-1 px-3 min-h-12 bg-danger text-zinc-950 rounded-lg hover:bg-danger/80 text-sm"
+                className="flex items-center gap-1 px-3 min-h-12 bg-danger text-on-accent rounded-lg hover:bg-danger/80 text-sm"
               >
                 <div className="w-2 h-2 bg-surface-raised rounded-full animate-pulse" aria-hidden />
                 Parar ({formatTime(recordingTime)})
@@ -121,7 +121,7 @@ export function AudioRecorderPanel({
             ) : (
               <button
                 onClick={startRecording}
-                className="flex items-center gap-1 px-3 min-h-12 bg-brand text-zinc-950 rounded-lg hover:bg-brand-600 text-sm"
+                className="flex items-center gap-1 px-3 min-h-12 bg-brand text-on-accent rounded-lg hover:bg-brand-600 text-sm"
               >
                 <Mic size={14} aria-hidden />
                 Gravar

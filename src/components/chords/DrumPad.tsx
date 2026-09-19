@@ -473,7 +473,7 @@ export function DrumPad({ initialGroove, initialBpm, initialVolume, onGrooveChan
           <button
             onClick={togglePlayback}
             disabled={!isLoaded}
-            className={`flex h-12 w-12 items-center justify-center rounded-lg transition-colors ${isPlaying ? 'bg-success text-zinc-950' : 'bg-surface-overlay text-ink hover:bg-surface-overlay/70'} disabled:opacity-40 disabled:cursor-not-allowed`}
+            className={`flex h-12 w-12 items-center justify-center rounded-lg transition-colors ${isPlaying ? 'bg-success text-on-accent' : 'bg-surface-overlay text-ink hover:bg-surface-overlay/70'} disabled:opacity-40 disabled:cursor-not-allowed`}
             aria-label={isPlaying ? 'Pausar ritmo' : 'Tocar ritmo'}
             aria-pressed={isPlaying}
           >

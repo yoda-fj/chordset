@@ -181,7 +181,7 @@ export function RhythmPlayer({ groove, bpm, volume, playing: playingProp, onPlay
       disabled={isLoading}
       className={`flex h-12 w-12 items-center justify-center rounded-lg transition-colors ${
         playing
-          ? 'bg-success text-zinc-950'
+          ? 'bg-success text-on-accent'
           : 'text-ink-muted hover:bg-surface-overlay hover:text-ink'
       } disabled:opacity-40`}
       aria-label={playing ? 'Parar ritmo da música' : 'Tocar ritmo da música'}

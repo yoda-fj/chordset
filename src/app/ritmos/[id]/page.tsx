@@ -251,8 +251,8 @@ export default function DrumPatternEditorPage() {
             disabled={!isLoaded}
             className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium ${
               isPlaying
-                ? 'bg-danger text-zinc-950 hover:bg-danger'
-                : 'bg-success text-zinc-950 hover:bg-success'
+                ? 'bg-danger text-on-accent hover:bg-danger'
+                : 'bg-success text-on-accent hover:bg-success'
             } disabled:opacity-50`}
           >
             {isPlaying ? <><Square size={18} /> Parar</> : <><Play size={18} /> Tocar</>}
@@ -260,7 +260,7 @@ export default function DrumPatternEditorPage() {
           <button
             onClick={savePattern}
             disabled={saving || !nome}
-            className="flex items-center gap-2 px-4 py-2 bg-brand text-zinc-950 rounded-lg hover:bg-brand-600 disabled:opacity-50"
+            className="flex items-center gap-2 px-4 py-2 bg-brand text-on-accent rounded-lg hover:bg-brand-600 disabled:opacity-50"
           >
             <Save size={18} />
             {saving ? 'Salvando...' : 'Salvar'}

@@ -25,6 +25,8 @@
   --danger: 248 113 113; /* #F87171 */
   --success: 52 211 153; /* #34D399 */
 
+  --on-accent: 24 24 27; /* zinc-950 sobre acentos claros */
+
   color-scheme: dark;
 }
 
@@ -41,6 +43,9 @@
   --brand-600: 180 83 9; /* #B45309 amber-700 (hover) */
   --danger: 220 38 38; /* #DC2626 red-600 */
   --success: 4 120 87; /* #047857 emerald-700 */
+
+  /* Acentos escuros no claro: texto branco sobre eles */
+  --on-accent: 255 255 255; /* white */
 
   color-scheme: light;
 }

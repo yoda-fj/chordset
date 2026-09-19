@@ -200,7 +200,7 @@ export default function CifraPage() {
             </Link>
             <button
               onClick={handlePrint}
-              className="inline-flex items-center gap-2 px-4 min-h-12 bg-brand text-zinc-950 rounded-lg hover:bg-brand-600 transition-colors"
+              className="inline-flex items-center gap-2 px-4 min-h-12 bg-brand text-on-accent rounded-lg hover:bg-brand-600 transition-colors"
             >
               <Printer size={18} />
               Imprimir

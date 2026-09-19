@@ -66,8 +66,8 @@ export function PracticeTimer({ onTimeUpdate, initialTime = 0, autoStart = false
           onClick={toggleTimer}
           className={`flex items-center justify-center w-14 h-14 rounded-full transition-all hover:scale-105 ${
             isRunning 
-              ? 'bg-brand hover:bg-brand-600 text-zinc-950'
-              : 'bg-success hover:bg-success text-zinc-950'
+              ? 'bg-brand hover:bg-brand-600 text-on-accent'
+              : 'bg-success hover:bg-success text-on-accent'
           }`}
         >
           {isRunning ? <Pause size={28} /> : <Play size={28} className="ml-1" />}

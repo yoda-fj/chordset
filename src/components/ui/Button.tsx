@@ -7,11 +7,11 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        primary: 'bg-brand text-zinc-950 hover:bg-brand-600',
+        primary: 'bg-brand text-on-accent hover:bg-brand-600',
         secondary:
           'bg-surface-raised text-ink border border-ink/20 hover:bg-surface-overlay',
         ghost: 'text-ink-muted hover:text-ink hover:bg-surface-overlay',
-        danger: 'bg-danger text-zinc-950 hover:bg-danger/80',
+        danger: 'bg-danger text-on-accent hover:bg-danger/80',
       },
       size: {
         sm: 'px-3 py-1.5 text-sm',

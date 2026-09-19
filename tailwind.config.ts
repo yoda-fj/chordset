@@ -35,6 +35,8 @@ const config: Config = {
         tab: 'rgb(var(--tab) / <alpha-value>)', // tablatura
         danger: 'rgb(var(--danger) / <alpha-value>)',
         success: 'rgb(var(--success) / <alpha-value>)',
+        // Texto sobre fundos de acento (zinc-950 no dark, branco no light)
+        'on-accent': 'rgb(var(--on-accent) / <alpha-value>)',
       },
       fontFamily: {
         sans: ['var(--font-sans)', 'system-ui', 'sans-serif'],
