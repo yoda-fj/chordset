@@ -13,6 +13,8 @@
 // And [D]now the [F#m/C#]end is near
 // =====================================
 
+import { CHORDPRO_BRACKETED, chordTokenRegex } from './chord-pattern'
+
 interface ChordInLine {
   chord: string;
   position: number; // posição (coluna) onde o acorde começa
@@ -23,7 +25,7 @@ interface ChordInLine {
  */
 function extractChordsFromLine(line: string): ChordInLine[] {
   const chords: ChordInLine[] = [];
-  const chordRegex = /[A-G][#b]?(?:m|maj|min|dim|aug|sus|add|7|9|11|13|4|5|6|M|°|ø|\+)*(?:\/[A-G][#b]?)?/g;
+  const chordRegex = chordTokenRegex();
   
   let match;
   while ((match = chordRegex.exec(line)) !== null) {
@@ -42,19 +44,19 @@ function extractChordsFromLine(line: string): ChordInLine[] {
 /**
  * Verifica se uma linha é uma linha de acordes (só contém acordes e espaços)
  */
-function isChordLine(line: string): boolean {
+export function isChordLine(line: string): boolean {
   const trimmed = line.trim();
   if (!trimmed) return false;
   
-  // Se tem letras minúsculas comuns (excluindo 'm' que é parte de acordes), é letra
-  if (/[a-ce-gi-ln-oq-sux-z]/.test(line)) return false;
+  // Se tem letras minúsculas comuns (excluindo 'm' de menor e 'b' de bemol), é letra
+  if (/[ace-gi-ln-oq-sux-z]/.test(line)) return false;
   
   // Se é uma seção tipo [Intro], não é chord line
   if (/^\[.+\]$/.test(trimmed)) return false;
   
   // Se tem pelo menos um acorde válido e só caracteres permitidos
-  const hasChord = /[A-G][#b]?(?:m|maj|min|dim|aug|sus|add|7|9|11|13|4|5|6|M|°|ø|\+)*(?:\/[A-G][#b]?)?/.test(line);
-  const onlyChordsAndSpaces = /^[\sA-G#b\/mjsuadgi1791134560°ø+M-]*$/.test(line);
+  const hasChord = chordTokenRegex('').test(line);
+  const onlyChordsAndSpaces = /^[\sA-G#b\/mjsuadgi1791134560°ºø+M-]*$/.test(line);
   
   return hasChord && onlyChordsAndSpaces;
 }
@@ -66,7 +68,10 @@ function isLyricsLine(line: string): boolean {
   const trimmed = line.trim();
   if (!trimmed) return false;
   // Se tem letras minúsculas ou é texto normal
-  return /[a-z]/.test(line) || /^[A-Z][a-z]/.test(line);
+  if (/[a-z]/.test(line) || /^[A-Z][a-z]/.test(line)) return true;
+  // Letras em CAIXA ALTA (ex.: cifras do Músicas para Missa): contém
+  // letras fora do vocabulário de acordes (A-G) e não é linha de acordes
+  return /[H-Z]/.test(line) && !isChordLine(line);
 }
 
 /**
@@ -77,48 +82,24 @@ function isSectionLine(line: string): boolean {
 }
 
 /**
- * Insere acordes entre colchetes em uma linha de letras.
- * Distribui os acordes entre as palavras da linha de letras.
+ * Insere acordes entre colchetes em uma linha de letras, na coluna em
+ * que cada acorde aparece na linha de acordes (alinhamento original).
  */
 function insertChordsIntoLyrics(lyricsLine: string, chords: ChordInLine[]): string {
   if (chords.length === 0) return lyricsLine;
-  
-  // Remove espaços iniciais para calcular posições relativas
-  const leadingSpaces = lyricsLine.match(/^(\s*)/)?.[1] || '';
-  const trimmedLyrics = lyricsLine.trimStart();
-  
-  // Divide em palavras preservando espaços
-  const words = trimmedLyrics.split(/(\s+)/);
-  const nonSpaceWords = words.filter(w => w.trim());
-  
-  if (nonSpaceWords.length === 0) {
-    // Se não tem palavras, junta todos os acordes no início
-    return leadingSpaces + chords.map(c => `[${c.chord}]`).join(' ') + trimmedLyrics;
+
+  let result = '';
+  let lastIndex = 0;
+
+  for (const { chord, position } of chords) {
+    // Acordes além do fim da letra são anexados ao final, em ordem
+    const pos = Math.max(lastIndex, Math.min(position, lyricsLine.length));
+    result += lyricsLine.slice(lastIndex, pos) + `[${chord}]`;
+    lastIndex = pos;
   }
-  
-  // Se tem mais acordes que palavras, distribui o máximo possível
-  // e os extras vão no final
-  const resultWords: string[] = [];
-  let chordIdx = 0;
-  
-  for (let i = 0; i < words.length; i++) {
-    const word = words[i];
-    resultWords.push(word);
-    
-    // Se é uma palavra (não espaço), adiciona acorde antes dela
-    if (word.trim() && chordIdx < chords.length) {
-      resultWords.push(`[${chords[chordIdx].chord}]`);
-      chordIdx++;
-    }
-  }
-  
-  // Acordes restantes vão no final
-  while (chordIdx < chords.length) {
-    resultWords.push(`[${chords[chordIdx].chord}]`);
-    chordIdx++;
-  }
-  
-  return leadingSpaces + resultWords.join('');
+  result += lyricsLine.slice(lastIndex);
+
+  return result;
 }
 
 /**
@@ -160,7 +141,7 @@ export function convertTextToChordPro(cifraText: string): string {
     if (isChordLine(currentLine) && (!nextLine || !isLyricsLine(nextLine))) {
       // Converte acordes soltos para formato [Acorde]
       const chordProLine = currentLine.replace(
-        /[A-G][#b]?(?:m|maj|min|dim|aug|sus|add|7|9|11|13|4|5|6|M|°|ø|\+)*(?:\/[A-G][#b]?)?/g,
+        chordTokenRegex(),
         (match) => {
           if (!match.trim()) return match;
           return `[${match.trim()}]`;
@@ -202,7 +183,7 @@ export function isTextChordFormat(cifraText: string): boolean {
  */
 export function ensureChordProFormat(cifraText: string): string {
   // Se já tem colchetes de ChordPro, assume que está no formato correto
-  if (/\[[A-G][#b]?(?:m|maj|min|dim|aug|sus|add|7|9|11|13|4|5|6|M|°|ø|\+)*(?:\/[A-G][#b]?)?\]/.test(cifraText)) {
+  if (new RegExp(CHORDPRO_BRACKETED).test(cifraText)) {
     // Mas verifica se também tem formato texto misturado
     if (isTextChordFormat(cifraText)) {
       return convertTextToChordPro(cifraText);
