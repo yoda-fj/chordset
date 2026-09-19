@@ -84,15 +84,18 @@ export function CifraViewer({
 }: CifraViewerProps) {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
-  // Play compartilhado: ritmo e metrônomo tocam e param juntos. Controlado
-  // pelas páginas (que também sincronizam o DrumPad do painel); sem as
-  // props, gerencia o próprio estado.
+  // Play do ritmo: controlado pelas páginas (que também sincronizam o
+  // DrumPad do painel); sem as props, gerencia o próprio estado.
   const [internalTocando, setInternalTocando] = useState(false);
   const tocando = playingProp ?? internalTocando;
   const setTocando = (v: boolean) => {
     if (playingProp === undefined) setInternalTocando(v);
     onPlayingChange?.(v);
   };
+
+  // Metrônomo é independente: liga/desliga sozinho e toca junto com o
+  // ritmo apenas se já estiver ligado.
+  const [metronomoTocando, setMetronomoTocando] = useState(false);
 
   // Transposição: o tom efetivo (salvo no evento/na música) precede o original.
   // originalTom é derivado da prop (não state) — senão trocar de música no
@@ -249,8 +252,8 @@ export function CifraViewer({
           <Metronome
             defaultBpm={bpm && bpm > 0 ? bpm : 100}
             onBpmChange={onBpmChange}
-            playing={tocando}
-            onPlayingChange={setTocando}
+            playing={metronomoTocando}
+            onPlayingChange={setMetronomoTocando}
           />
         </div>
       )}

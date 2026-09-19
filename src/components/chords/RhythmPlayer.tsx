@@ -13,8 +13,8 @@ interface RhythmPlayerProps {
   bpm: number;    // andamento da música — quem define é ela
   volume: number;
   // Modo controlado (usado pelo CifraViewer): o play/stop fica no pai,
-  // o que sincroniza o ritmo com o metrônomo. Sem as props, gerencia o
-  // próprio estado (uso standalone/testes).
+  // sincronizando o ritmo com o DrumPad das páginas. Sem as props, gerencia
+  // o próprio estado (uso standalone/testes).
   playing?: boolean;
   onPlayingChange?: (playing: boolean) => void;
 }
@@ -54,7 +54,6 @@ export function RhythmPlayer({ groove, bpm, volume, playing: playingProp, onPlay
       if (intervalRef.current) clearInterval(intervalRef.current)
       samplerRef.current?.dispose()
       limiterRef.current?.dispose()
-      Tone.Transport.stop()
     }
   }, [])
 
@@ -155,7 +154,6 @@ export function RhythmPlayer({ groove, bpm, volume, playing: playingProp, onPlay
         patternRef.current = hits
         stepRef.current = 0
         startInterval(bpm)
-        Tone.Transport.start()
       } finally {
         // Sempre libera o botão, inclusive nos early returns de erro
         if (!cancelled && mountedRef.current) setIsLoading(false)
@@ -188,7 +186,7 @@ export function RhythmPlayer({ groove, bpm, volume, playing: playingProp, onPlay
       } disabled:opacity-40`}
       aria-label={playing ? 'Parar ritmo da música' : 'Tocar ritmo da música'}
       aria-pressed={playing}
-      title={playing ? 'Parar ritmo e metrônomo' : 'Tocar ritmo e metrônomo juntos'}
+      title={playing ? 'Parar ritmo' : 'Tocar ritmo'}
     >
       {isLoading ? (
         <Loader2 className="w-5 h-5 animate-spin" aria-hidden />

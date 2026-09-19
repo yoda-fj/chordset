@@ -154,8 +154,8 @@ describe('CifraViewer — persistência de tom', () => {
   });
 });
 
-describe('CifraViewer — ritmo e metrônomo sincronizados', () => {
-  it('play no ritmo liga o metrônomo junto; parar um para os dois', async () => {
+describe('CifraViewer — ritmo e metrônomo independentes', () => {
+  it('play no ritmo NÃO liga o metrônomo', async () => {
     const user = userEvent.setup();
     vi.stubGlobal(
       'fetch',
@@ -170,15 +170,73 @@ describe('CifraViewer — ritmo e metrônomo sincronizados', () => {
 
     expect(await screen.findByRole('button', { name: 'Parar ritmo da música' }))
       .toHaveAttribute('aria-pressed', 'true');
+    // Metrônomo continua parado
+    expect(screen.getByRole('button', { name: 'Iniciar metrônomo' }))
+      .toHaveAttribute('aria-pressed', 'false');
+
+    vi.unstubAllGlobals();
+  });
+
+  it('metrônomo liga/desliga sozinho, sem afetar o ritmo', async () => {
+    const user = userEvent.setup();
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({ ok: true, json: async () => [] })
+    );
+    render(<CifraViewer {...PROPS} showMetronome />);
+
+    await screen.findByRole('button', { name: 'Tocar ritmo da música' }, { timeout: 3000 });
+    const metronomo = await screen.findByRole('button', { name: 'Iniciar metrônomo' }, { timeout: 3000 });
+
+    await user.click(metronomo);
+
     expect(await screen.findByRole('button', { name: 'Parar metrônomo' }))
       .toHaveAttribute('aria-pressed', 'true');
-
-    // Parar pelo metrônomo para os dois
-    await user.click(screen.getByRole('button', { name: 'Parar metrônomo' }));
-    expect(await screen.findByRole('button', { name: 'Tocar ritmo da música' }))
+    // Ritmo continua parado
+    expect(screen.getByRole('button', { name: 'Tocar ritmo da música' }))
       .toHaveAttribute('aria-pressed', 'false');
+
+    // Desligar o metrônomo não liga o ritmo
+    await user.click(screen.getByRole('button', { name: 'Parar metrônomo' }));
     expect(await screen.findByRole('button', { name: 'Iniciar metrônomo' }))
       .toHaveAttribute('aria-pressed', 'false');
+    expect(screen.getByRole('button', { name: 'Tocar ritmo da música' }))
+      .toHaveAttribute('aria-pressed', 'false');
+
+    vi.unstubAllGlobals();
+  });
+
+  it('metrônomo junta ao ritmo já tocando; parar um não para o outro', async () => {
+    const user = userEvent.setup();
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({ ok: true, json: async () => [] })
+    );
+    render(<CifraViewer {...PROPS} showMetronome />);
+
+    const ritmo = await screen.findByRole('button', { name: 'Tocar ritmo da música' }, { timeout: 3000 });
+    const metronomo = await screen.findByRole('button', { name: 'Iniciar metrônomo' }, { timeout: 3000 });
+
+    // Ritmo tocando sozinho
+    await user.click(ritmo);
+    expect(await screen.findByRole('button', { name: 'Parar ritmo da música' }))
+      .toHaveAttribute('aria-pressed', 'true');
+    expect(screen.getByRole('button', { name: 'Iniciar metrônomo' }))
+      .toHaveAttribute('aria-pressed', 'false');
+
+    // Metrônomo junta sem derrubar o ritmo
+    await user.click(metronomo);
+    expect(await screen.findByRole('button', { name: 'Parar metrônomo' }))
+      .toHaveAttribute('aria-pressed', 'true');
+    expect(screen.getByRole('button', { name: 'Parar ritmo da música' }))
+      .toHaveAttribute('aria-pressed', 'true');
+
+    // Parar o ritmo deixa o metrônomo tocando
+    await user.click(screen.getByRole('button', { name: 'Parar ritmo da música' }));
+    expect(await screen.findByRole('button', { name: 'Tocar ritmo da música' }))
+      .toHaveAttribute('aria-pressed', 'false');
+    expect(screen.getByRole('button', { name: 'Parar metrônomo' }))
+      .toHaveAttribute('aria-pressed', 'true');
 
     vi.unstubAllGlobals();
   });
