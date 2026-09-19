@@ -1,9 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { search } from '@/lib/cifraclub-scraper/search'
 import { getScraper } from '@/lib/cifraclub-scraper/cifraclub'
-import { ensureChordProFormat } from '@/utils/chordpro-converter'
-import { cleanChordText, extractKeyFromChord } from '@/utils/chord-transposer'
-import { musicasDb } from '@/lib/musicas-db'
+import { normalizeImportedSong, saveImportedSong } from '@/lib/import-pipeline'
 import { importSongSchema } from '@/lib/validation'
 
 // Força runtime Node.js (não Edge) pra Playwright funcionar
@@ -89,49 +87,35 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      const rawCifra = scrapeResult.cifra.join('\n')
-      const tomOriginal = scrapeResult.key || extractKeyFromChord(rawCifra)
-      const cifraLimpa = cleanChordText(ensureChordProFormat(rawCifra))
-
-      const song = {
+      const song = normalizeImportedSong({
         titulo: scrapeResult.name,
         artista: scrapeResult.artist,
-        tom_original: tomOriginal,
-        cifra: cifraLimpa,
         url,
         provider: 'cifraclub',
-      }
+        cifraLines: scrapeResult.cifra,
+        scrapedKey: scrapeResult.key,
+      })
 
       // Se pediu para salvar no banco também
       if (save !== false) {
         try {
-          // Verifica se já existe (dedup via query parametrizada, sem varrer a tabela)
-          const existing = musicasDb.findByTituloArtista(song.titulo, song.artista);
+          const result = saveImportedSong(song);
 
-          if (existing) {
+          if (result.status === 'exists') {
             return NextResponse.json({
               success: true,
               alreadyExists: true,
-              existingId: existing.id,
+              existingId: result.existingId,
               song,
               provider: 'cifraclub',
               message: 'Música já existe no banco',
             });
           }
 
-          // Salva no banco
-          const saved = musicasDb.create({
-            titulo: song.titulo,
-            artista: song.artista,
-            tom_original: tomOriginal || undefined,
-            cifra: cifraLimpa || undefined,
-            tags: ['cifraclub'], // Marca o provider de origem
-          });
-
           return NextResponse.json({
             success: true,
             saved: true,
-            songId: saved.id,
+            songId: result.songId,
             song,
             provider: 'cifraclub',
           });

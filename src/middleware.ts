@@ -30,7 +30,7 @@ const STATIC_ASSET_EXTENSIONS = new Set([
  * Rotas de API com rate limit por IP (além de Basic Auth).
  * Scraping (cifraclub), importação e OCR são caros/abusáveis.
  */
-const RATE_LIMITED_PREFIXES = ['/api/cifraclub/', '/api/import-song', '/api/ocr/']
+const RATE_LIMITED_PREFIXES = ['/api/cifraclub/', '/api/import-song', '/api/import-musicasparamissa', '/api/ocr/']
 
 /**
  * Exceções públicas explícitas (bypass de autenticação).

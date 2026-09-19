@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest'
 import {
   ocrRequestSchema,
   importSongSchema,
+  importMpmSchema,
   musicaCreateSchema,
   musicaUpdateSchema,
   practiceSessionSchema,
@@ -68,6 +69,32 @@ describe('importSongSchema', () => {
 
   it('rejeita query acima de 200 chars', () => {
     expect(importSongSchema.safeParse({ query: 'x'.repeat(201) }).success).toBe(false)
+  })
+})
+
+describe('importMpmSchema', () => {
+  it('aceita url de /musica/ do musicasparamissa', () => {
+    expect(
+      importMpmSchema.safeParse({
+        url: 'https://musicasparamissa.com.br/musica/ouvi-senhor-as-preces-cantando-antifonas/',
+      }).success
+    ).toBe(true)
+  })
+
+  it('rejeita url fora de /musica/', () => {
+    expect(importMpmSchema.safeParse({ url: 'https://musicasparamissa.com.br/musicas-de/entrada' }).success).toBe(false)
+  })
+
+  it('rejeita url de outro domínio', () => {
+    expect(importMpmSchema.safeParse({ url: 'https://evil.com/musica/a-barca/' }).success).toBe(false)
+  })
+
+  it('rejeita url inválida', () => {
+    expect(importMpmSchema.safeParse({ url: 'nao-e-uma-url' }).success).toBe(false)
+  })
+
+  it('rejeita sem url', () => {
+    expect(importMpmSchema.safeParse({}).success).toBe(false)
   })
 })
 

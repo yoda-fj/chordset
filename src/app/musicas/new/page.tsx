@@ -2,11 +2,12 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { ArrowLeft, Save, Loader2, Download, X, Search, Camera, Music } from 'lucide-react'
+import { ArrowLeft, Save, Loader2, Download, X, Search, Camera, Music, Church } from 'lucide-react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { TagInput } from '@/components/setlist/TagInput'
 import { ImportPhotoModal } from '@/components/ocr/ImportPhotoModal'
+import { ImportMpmModal } from '@/components/musicasparamissa/ImportMpmModal'
 import { VersionSelector } from '@/components/cifraclub/VersionSelector'
 import { CifraPreview } from '@/components/cifra/CifraPreview'
 import { TOM_OPCOES, TAG_SUGGESTIONS_MUSICA } from '@/lib/constants'
@@ -42,6 +43,7 @@ export default function NewMusicaPage() {
   // Import states
   const [showImport, setShowImport] = useState(false)
   const [showPhotoImport, setShowPhotoImport] = useState(false)
+  const [showMpmImport, setShowMpmImport] = useState(false)
   const [importQuery, setImportQuery] = useState('')
   const [importLoading, setImportLoading] = useState(false)
   const [importResults, setImportResults] = useState<SearchResult[]>([])
@@ -122,6 +124,14 @@ export default function NewMusicaPage() {
     setTomOriginal(data.tom || '')
     setCifra(data.cifra)
     setTags(data.observacoes ? [data.observacoes] : [])
+  }
+
+  const handleMpmImport = (song: { titulo: string; artista: string; tom_original: string | null; cifra: string; provider: string }) => {
+    setTitulo(song.titulo)
+    setArtista(song.artista)
+    setTomOriginal(song.tom_original || '')
+    setCifra(song.cifra || '')
+    setTags([song.provider])
   }
 
   const [selectedResult, setSelectedResult] = useState<SearchResult | null>(null)
@@ -347,6 +357,14 @@ export default function NewMusicaPage() {
             <Camera size={18} />
             Importar via Foto
           </button>
+          <button
+            type="button"
+            onClick={() => setShowMpmImport(true)}
+            className="inline-flex items-center gap-2 px-4 py-2 text-brand border border-brand rounded-lg hover:bg-brand/10 transition-colors"
+          >
+            <Church size={18} />
+            Importar do Músicas para Missa
+          </button>
           <Link
             href="/musicas"
             className="px-4 py-2 text-ink-muted hover:text-ink"
@@ -498,6 +516,13 @@ export default function NewMusicaPage() {
         isOpen={showPhotoImport}
         onClose={() => setShowPhotoImport(false)}
         onImport={handlePhotoImport}
+      />
+
+      {/* Músicas para Missa Import Modal */}
+      <ImportMpmModal
+        isOpen={showMpmImport}
+        onClose={() => setShowMpmImport(false)}
+        onImport={handleMpmImport}
       />
     </div>
   )
