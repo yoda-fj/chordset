@@ -18,6 +18,7 @@
   --ink-faint: 113 113 122; /* zinc-500 */
 
   --brand: 255 176 32; /* #FFB020 âmbar de palco */
+  --brand-600: 230 148 0; /* #E69400 hover do acento */
   --chord: 52 211 153; /* #34D399 */
   --section: 167 139 250; /* #A78BFA */
   --tab: 251 191 36; /* #FBBF24 */
@@ -34,6 +35,12 @@
   --ink: 24 24 27; /* zinc-900 */
   --ink-muted: 82 82 91; /* zinc-600 */
   --ink-faint: 161 161 170; /* zinc-400 */
+
+  /* Acentos mais escuros no claro: contraste sobre superfícies brancas */
+  --brand: 217 119 6; /* #D97706 amber-600 */
+  --brand-600: 180 83 9; /* #B45309 amber-700 (hover) */
+  --danger: 220 38 38; /* #DC2626 red-600 */
+  --success: 4 120 87; /* #047857 emerald-700 */
 
   color-scheme: light;
 }

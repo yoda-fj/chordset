@@ -25,19 +25,10 @@ const config: Config = {
           muted: 'rgb(var(--ink-muted) / <alpha-value>)',
           faint: 'rgb(var(--ink-faint) / <alpha-value>)',
         },
-        // Âmbar de palco — acento de marca (#FFB020)
+        // Âmbar de palco — acento de marca (variável por tema; escala estática removida)
         brand: {
           DEFAULT: 'rgb(var(--brand) / <alpha-value>)',
-          50: '#FFF7E0',
-          100: '#FFEDB8',
-          200: '#FFE08A',
-          300: '#FFD57A',
-          400: '#FFC84D',
-          500: '#FFB020',
-          600: '#E69400',
-          700: '#B87700',
-          800: '#8A5A00',
-          900: '#5C3D00',
+          600: 'rgb(var(--brand-600) / <alpha-value>)',
         },
         chord: 'rgb(var(--chord) / <alpha-value>)', // acordes (verde "go")
         section: 'rgb(var(--section) / <alpha-value>)', // cabeçalhos de seção
