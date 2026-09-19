@@ -1,5 +1,4 @@
 import { chromium, Browser, Page } from 'playwright';
-import * as cheerio from 'cheerio';
 import { CifraResponse, CifraResult } from './types';
 
 const BASE_URL = 'https://www.cifraclub.com.br/';
@@ -60,7 +59,7 @@ export class CifraClubScraper {
         page.setDefaultTimeout(15000);
 
         await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 30000 });
-        await page.waitForSelector('.cifra_cnt', { timeout: 15000 });
+        await page.waitForSelector('pre[data-chord-content]', { timeout: 15000 });
 
         const result: Partial<CifraResult> = { cifraclub_url: url };
         await this.getDetails(page, result);
@@ -78,94 +77,81 @@ export class CifraClubScraper {
   }
 
   private async getDetails(page: Page, result: Partial<CifraResult>): Promise<void> {
-    const outerHTML = await page.evaluate(
-      () => document.querySelector('.cifra')?.outerHTML ?? ''
-    );
-    const $ = cheerio.load(outerHTML);
-
-    result.name = $('h1.t1').text().trim();
-    result.artist = $('h2.t3').text().trim();
-
-    const imgSrc = $('div.player-placeholder img').attr('src') ?? '';
-    const videoId = imgSrc.split('/vi/')[1]?.split('/')[0] ?? '';
-    result.youtube_url = videoId ? `https://www.youtube.com/watch?v=${videoId}` : '';
-
-    // Extrair tom/chave da música
-    const keyText = await page.evaluate(() => {
-      const selectors = [
-        '.g-ico.key span',
-        '.g-ico.key',
-        '[class*="key"]',
-        '.cifra-key',
-        '.tom',
-      ];
-      for (const sel of selectors) {
-        const el = document.querySelector(sel);
-        if (el) {
-          const text = el.textContent?.trim() || '';
-          const match = text.match(/([A-G][#b]?m?)/i);
-          if (match) return match[1];
-        }
+    // O Cifra Club usa classes hashed (CSS modules) que mudam a cada build —
+    // os seletores abaixo miram estrutura/atributos estáveis, não classes.
+    const details = await page.evaluate(() => {
+      // Título: h1 da página, removendo ícones (ex.: selo de verificado)
+      let name = '';
+      const h1 = document.querySelector('h1');
+      if (h1) {
+        const clone = h1.cloneNode(true) as HTMLElement;
+        clone.querySelectorAll('.icon, [data-icon]').forEach(el => el.remove());
+        name = clone.textContent?.trim() ?? '';
       }
-      const bodyText = document.body.textContent || '';
-      const tomMatch = bodyText.match(/(?:Tom|Chave|Key):?\s*([A-G][#b]?m?)/i);
-      if (tomMatch) return tomMatch[1];
-      return '';
+
+      // Artista: link para a página do artista (slug vem da URL atual)
+      const artistSlug = location.pathname.split('/').filter(Boolean)[0];
+      let artist = '';
+      if (artistSlug) {
+        const link = document.querySelector(`a[href="/${artistSlug}/"], a[href="/${artistSlug}"]`);
+        artist = link?.textContent?.trim() ?? '';
+      }
+
+      // Tom: span com texto "Tom:" seguido de botão com a nota
+      let key = '';
+      const tomSpan = Array.from(document.querySelectorAll('span'))
+        .find(s => /^Tom:\s*$/.test(s.textContent?.trim() ?? ''));
+      const keyText = tomSpan?.nextElementSibling?.textContent?.trim() ?? '';
+      const keyMatch = keyText.match(/^([A-G][#b]?m?)$/);
+      if (keyMatch) key = keyMatch[1];
+
+      // YouTube: iframe de player embutido, se houver
+      const ytSrc = document.querySelector('iframe[src*="youtube.com/embed/"]')?.getAttribute('src') ?? '';
+      const videoId = ytSrc.split('/embed/')[1]?.split(/[?/]/)[0] ?? '';
+
+      return { name, artist, key, videoId };
     });
-    
-    if (keyText) {
-      result.key = keyText.toUpperCase();
+
+    result.name = details.name;
+    result.artist = details.artist;
+    result.youtube_url = details.videoId ? `https://www.youtube.com/watch?v=${details.videoId}` : '';
+    if (details.key) {
+      result.key = details.key.toUpperCase();
     }
   }
 
   private async getCifra(page: Page, result: Partial<CifraResult>): Promise<void> {
-    // Pega o HTML interno do pre para preservar a formatação dos acordes
-    const cifraHtml = await page.evaluate(() => {
-      const pre = document.querySelector('.cifra_cnt pre');
-      if (!pre) return '';
-      
+    // A cifra está em <pre data-chord-content>; cada linha é um <div> filho
+    // e cada acorde um <b data-chord-name>. Extrai o texto linha a linha,
+    // marcando blocos de tablatura com [Tab]...[/Tab].
+    const lines = await page.evaluate(() => {
+      const pre = document.querySelector('pre[data-chord-content]');
+      if (!pre) return null;
+
       // Clona para não modificar o DOM
       const clone = pre.cloneNode(true) as HTMLElement;
-      
-      // Substitui <span class="tablatura"> por [Tab]...[/Tab]
-      const tabs = clone.querySelectorAll('.tablatura');
-      tabs.forEach(tab => {
-        const tabText = '[Tab]' + tab.textContent + '[/Tab]';
-        const span = document.createElement('span');
-        span.textContent = tabText;
-        tab.replaceWith(span);
+
+      // Substitui blocos de tablatura por marcador de texto
+      clone.querySelectorAll('.tabs').forEach(tab => {
+        tab.replaceWith(document.createTextNode('[Tab]' + (tab.textContent ?? '') + '[/Tab]'));
       });
-      
-      // Pega o texto preservando a estrutura de linhas
-      return clone.innerHTML;
+
+      const lines: string[] = [];
+      clone.childNodes.forEach(node => {
+        lines.push(...(node.textContent ?? '').split('\n'));
+      });
+      return lines;
     });
-    
-    // Processa o HTML mantendo a estrutura de acordes acima da letra
-    const $ = cheerio.load(cifraHtml);
-    
-    // O Cifra Club usa <b> para acordes e texto normal para a letra
-    // Os acordes aparecem em uma linha e a letra na linha abaixo
-    // Precisamos extrair linha por linha, preservando os acordes
-    
-    const lines: string[] = [];
-    
-    // Processa cada nó filho do pre
-    const preContent = $.root().find('body').html() || cifraHtml;
-    
-    // Divide por quebras de linha HTML
-    const rawLines = preContent.split(/\n/);
-    
-    for (const rawLine of rawLines) {
-      // Remove tags HTML mas preserva o conteúdo
-      const lineText = cheerio.load(rawLine).text();
-      
-      // Preserva a linha se tiver conteúdo (acordes ou letra)
-      if (lineText.trim()) {
-        lines.push(lineText);
-      }
+
+    if (!lines) {
+      result.cifra = [];
+      return;
     }
-    
-    // Normaliza espaços em branco
+
+    // Remove linhas vazias só das bordas (as internas separam estrofes)
+    while (lines.length && !lines[0].trim()) lines.shift();
+    while (lines.length && !lines[lines.length - 1].trim()) lines.pop();
+
     result.cifra = lines;
   }
 
