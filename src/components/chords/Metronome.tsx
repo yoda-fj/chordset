@@ -10,6 +10,10 @@ interface MetronomeProps {
   // Chamado quando o usuário edita o andamento (± ou tap-tempo).
   // O pai persiste na música — ritmo e scroll acompanham ao vivo.
   onBpmChange?: (bpm: number) => void;
+  // Modo controlado (CifraViewer): o play/stop fica no pai, sincronizando
+  // metrônomo e ritmo. Sem as props, gerencia o próprio estado.
+  playing?: boolean;
+  onPlayingChange?: (playing: boolean) => void;
 }
 
 const TAP_RESET_MS = 2000; // gap maior que isso zera a sequência de taps
@@ -22,9 +26,14 @@ const TAP_RESET_MS = 2000; // gap maior que isso zera a sequência de taps
  * metrônomo precisa continuar tocando independente dele. Inclui tap-tempo.
  * Pulso visível mesmo sem áudio.
  */
-export const Metronome = ({ defaultBpm = 100, onBpmChange }: MetronomeProps) => {
+export const Metronome = ({ defaultBpm = 100, onBpmChange, playing: playingProp, onPlayingChange }: MetronomeProps) => {
   const [bpm, setBpm] = useState(defaultBpm);
-  const [isPlaying, setIsPlaying] = useState(false);
+  const [internalPlaying, setInternalPlaying] = useState(false);
+  const isPlaying = playingProp ?? internalPlaying;
+  const setPlaying = (v: boolean) => {
+    if (playingProp === undefined) setInternalPlaying(v);
+    onPlayingChange?.(v);
+  };
 
   // Segue o BPM da música quando ele muda (troca de groove no Drum Pad,
   // troca de música no setlist). Ajustes locais de ± não disparam o efeito,
@@ -72,10 +81,10 @@ export const Metronome = ({ defaultBpm = 100, onBpmChange }: MetronomeProps) => 
 
   const togglePlay = async () => {
     if (isPlaying) {
-      setIsPlaying(false);
+      setPlaying(false);
     } else {
       await Tone.start();
-      setIsPlaying(true);
+      setPlaying(true);
     }
   };
 

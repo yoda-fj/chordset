@@ -1,6 +1,8 @@
 // @vitest-environment jsdom
 /**
  * RhythmPlayer — play/stop compacto do ritmo da música na toolbar da cifra.
+ * Modo standalone (gerencia o próprio play) e controlado (pai sincroniza
+ * com o metrônomo). BPM ao vivo: mudar o andamento recria o intervalo.
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
@@ -61,8 +63,8 @@ describe('RhythmPlayer', () => {
     fireEvent.click(screen.getByLabelText('Tocar ritmo da música'));
 
     await waitFor(() => expect(mocks.transportStart).toHaveBeenCalled());
-    // 150 BPM → 16ths = 100ms (waitFor do Testing Library também usa setInterval
-    // internamente, por isso a busca por "alguma" chamada com o delay certo)
+    // 150 BPM → 16ths = 100ms (waitFor do Testing Library também usa
+    // setInterval internamente, por isso a busca por "alguma" chamada certa)
     expect(mocks.setIntervalSpy.mock.calls.some(([, ms]) => ms === 100)).toBe(true);
     expect(screen.getByLabelText('Parar ritmo da música')).toBeInTheDocument();
   });
@@ -77,13 +79,13 @@ describe('RhythmPlayer', () => {
     expect(screen.getByLabelText('Tocar ritmo da música')).toBeInTheDocument();
   });
 
-  it('ritmo do banco usa o kit do padrão e o BPM da música', async () => {
+  it('ritmo do banco usa o BPM da música (não o do padrão)', async () => {
     vi.stubGlobal(
       'fetch',
       vi.fn().mockResolvedValue({
         ok: true,
         json: async () => [
-          { id: 2, nome: 'Funk Groove', bpm: 110, kit: 'kit2', steps: JSON.stringify({ kick: [1, 0] }) },
+          { id: 2, nome: 'Funk Groove', bpm: 110, kit: 'kit2', steps: JSON.stringify({ kick: [true, false] }) },
         ],
       })
     );
@@ -94,5 +96,20 @@ describe('RhythmPlayer', () => {
     // 90 BPM → 16ths = 166.67ms; o padrão tem BPM 110, mas a música manda
     const delays = mocks.setIntervalSpy.mock.calls.map(([, ms]) => ms);
     expect(delays.some(ms => Math.abs(ms - (60 / 90) * 1000 / 4) < 1)).toBe(true);
+  });
+
+  it('modo controlado: BPM ao vivo recria o intervalo durante o play', async () => {
+    const noop = () => {};
+    const { rerender } = render(
+      <RhythmPlayer groove="rock-8" bpm={120} volume={0.7} playing={false} onPlayingChange={noop} />
+    );
+    rerender(<RhythmPlayer groove="rock-8" bpm={120} volume={0.7} playing={true} onPlayingChange={noop} />);
+    await waitFor(() => expect(mocks.transportStart).toHaveBeenCalled());
+
+    const before = mocks.setIntervalSpy.mock.calls.length;
+    rerender(<RhythmPlayer groove="rock-8" bpm={140} volume={0.7} playing={true} onPlayingChange={noop} />);
+    await waitFor(() => expect(mocks.setIntervalSpy.mock.calls.length).toBeGreaterThan(before));
+    // 140 BPM → 16ths ≈ 107ms
+    expect(mocks.setIntervalSpy.mock.calls.some(([, ms]) => Math.abs(ms - (60 / 140) * 1000 / 4) < 1)).toBe(true);
   });
 });

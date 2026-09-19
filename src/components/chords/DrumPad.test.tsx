@@ -89,6 +89,19 @@ describe('DrumPad', () => {
     expect(mocks.bpmParam.value).toBe(0);
   });
 
+  it('modo controlado: play emite onPlayingChange e NÃO liga o motor próprio', async () => {
+    const onPlayingChange = vi.fn();
+    render(<DrumPad initialBpm={120} playing={false} onPlayingChange={onPlayingChange} />);
+    await screen.findByLabelText('Selecionar ritmo');
+
+    fireEvent.click(screen.getByLabelText('Tocar ritmo'));
+
+    expect(onPlayingChange).toHaveBeenCalledWith(true);
+    // Motor do painel fica desligado no modo sincronizado (o som sai do
+    // RhythmPlayer da toolbar) — nada de Transport/interval do painel
+    expect(mocks.transportStart).not.toHaveBeenCalled();
+  });
+
   it('trocar de groove não mexe no andamento nem no Transport', async () => {
     const onGrooveChange = vi.fn();
     render(<DrumPad initialGroove="rock-8" initialBpm={90} onGrooveChange={onGrooveChange} />);
