@@ -2,13 +2,14 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { ArrowLeft, Save, Loader2, Download, X, Search, Camera, Music, Church } from 'lucide-react'
+import { ArrowLeft, Save, Loader2, Download, X, Search, Camera, Music, Church, ListMusic } from 'lucide-react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { TagInput } from '@/components/setlist/TagInput'
 import { ImportPhotoModal } from '@/components/ocr/ImportPhotoModal'
 import { ImportMpmModal } from '@/components/musicasparamissa/ImportMpmModal'
 import { VersionSelector } from '@/components/cifraclub/VersionSelector'
+import { BulkImportModal } from '@/components/cifraclub/BulkImportModal'
 import { CifraPreview } from '@/components/cifra/CifraPreview'
 import { TOM_OPCOES, TAG_SUGGESTIONS_MUSICA } from '@/lib/constants'
 
@@ -42,6 +43,7 @@ export default function NewMusicaPage() {
   
   // Import states
   const [showImport, setShowImport] = useState(false)
+  const [showBulkImport, setShowBulkImport] = useState(false)
   const [showPhotoImport, setShowPhotoImport] = useState(false)
   const [showMpmImport, setShowMpmImport] = useState(false)
   const [importQuery, setImportQuery] = useState('')
@@ -351,6 +353,14 @@ export default function NewMusicaPage() {
           </button>
           <button
             type="button"
+            onClick={() => setShowBulkImport(true)}
+            className="inline-flex items-center gap-2 px-4 py-2 text-brand border border-brand rounded-lg hover:bg-brand/10 transition-colors"
+          >
+            <ListMusic size={18} />
+            Importar várias
+          </button>
+          <button
+            type="button"
             onClick={() => setShowPhotoImport(true)}
             className="inline-flex items-center gap-2 px-4 py-2 text-brand border border-brand rounded-lg hover:bg-brand/10 transition-colors"
           >
@@ -510,6 +520,12 @@ export default function NewMusicaPage() {
           onSelectVersion={handleSelectVersion}
         />
       )}
+
+      {/* Bulk Import Modal */}
+      <BulkImportModal
+        isOpen={showBulkImport}
+        onClose={() => setShowBulkImport(false)}
+      />
 
       {/* Photo Import Modal */}
       <ImportPhotoModal
