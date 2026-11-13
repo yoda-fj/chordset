@@ -8,21 +8,25 @@ interface AutoscrollProps {
   bpm?: number;
 }
 
-type SpeedLevel = 0 | 1 | 2 | 3 | 4 | 5;
+type SpeedLevel = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7;
 
+// 8 níveis: a faixa lenta é bem mais densa (3-15 px/s) porque a queixa
+// mais comum no palco é "mesmo o mais lento passa rápido demais".
 const SPEED_MAP: Record<SpeedLevel, number> = {
   0: 0,    // off
-  1: 15,   // muito lento
-  2: 30,   // lento
-  3: 60,   // médio
-  4: 100,  // rápido
-  5: 150   // muito rápido
+  1: 3,    // rastejante
+  2: 6,    // ultra lento
+  3: 10,   // muito lento
+  4: 15,   // lento
+  5: 30,   // médio
+  6: 60,   // rápido
+  7: 120   // muito rápido
 };
 
 // Em modo BPM (bpm informado): px/s = px por batida × bpm/60.
-// A 120 BPM os níveis dão ~30/60/90/120/160 px/s — perto dos níveis fixos.
+// A 120 BPM os níveis dão ~4/8/14/20/40/80/120 px/s.
 const BPM_PX_PER_BEAT: Record<SpeedLevel, number> = {
-  0: 0, 1: 15, 2: 30, 3: 45, 4: 60, 5: 80
+  0: 0, 1: 2, 2: 4, 3: 7, 4: 10, 5: 20, 6: 40, 7: 60
 };
 
 export const Autoscroll = ({ targetRef, bpm }: AutoscrollProps) => {
@@ -158,17 +162,19 @@ export const Autoscroll = ({ targetRef, bpm }: AutoscrollProps) => {
   }, [targetRef]);
 
   const cycleSpeed = () => {
-    const newSpeed = ((speed + 1) % 6) as SpeedLevel;
+    const newSpeed = ((speed + 1) % 8) as SpeedLevel;
     setSpeed(newSpeed);
   };
 
   const SPEED_LABELS: Record<SpeedLevel, string> = {
     0: 'desligado',
-    1: 'muito lento',
-    2: 'lento',
-    3: 'médio',
-    4: 'rápido',
-    5: 'muito rápido',
+    1: 'rastejante',
+    2: 'ultra lento',
+    3: 'muito lento',
+    4: 'lento',
+    5: 'médio',
+    6: 'rápido',
+    7: 'muito rápido',
   };
 
   return (
@@ -179,7 +185,7 @@ export const Autoscroll = ({ targetRef, bpm }: AutoscrollProps) => {
         aria-label={`Auto-scroll: ${SPEED_LABELS[speed]}. Toque para mudar a velocidade.`}
         aria-pressed={speed > 0}
       >
-        {speed === 0 ? <Gauge size={20} aria-hidden /> : <Play size={18} className={speed >= 4 ? 'fill-current' : ''} aria-hidden />}
+        {speed === 0 ? <Gauge size={20} aria-hidden /> : <Play size={18} className={speed >= 6 ? 'fill-current' : ''} aria-hidden />}
       </button>
 
       <div className="flex-1 flex items-center gap-2">

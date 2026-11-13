@@ -30,6 +30,8 @@ function runFrame(timestamp: number) {
 
 const SPEED_LABELS = [
   'desligado',
+  'rastejante',
+  'ultra lento',
   'muito lento',
   'lento',
   'médio',
@@ -55,24 +57,24 @@ describe('Autoscroll', () => {
     vi.unstubAllGlobals();
   });
 
-  it('cicla os níveis de 0 a 5 e volta para desligado', () => {
+  it('cicla os níveis de 0 a 7 e volta para desligado', () => {
     const target = makeTarget();
     render(<Autoscroll targetRef={{ current: target as unknown as HTMLElement }} />);
     const btn = screen.getByRole('button', { name: /Auto-scroll/ });
 
     expect(btn).toHaveAttribute('aria-label', buttonLabel(0));
 
-    for (let level = 1; level <= 5; level++) {
+    for (let level = 1; level <= 7; level++) {
       fireEvent.click(btn);
       expect(btn).toHaveAttribute('aria-label', buttonLabel(level));
     }
 
-    fireEvent.click(btn); // wrap: 5 + 1 → 0
+    fireEvent.click(btn); // wrap: 7 + 1 → 0
     expect(btn).toHaveAttribute('aria-label', buttonLabel(0));
     expect(btn).toHaveAttribute('aria-pressed', 'false');
   });
 
-  it('modo BPM: nível 1 com bpm=150 avança 37.5 px/s (15 × 150/60)', () => {
+  it('modo BPM: nível 4 com bpm=150 avança 25 px/s (10 × 150/60)', () => {
     const target = makeTarget();
     render(
       <Autoscroll
@@ -81,8 +83,15 @@ describe('Autoscroll', () => {
       />
     );
 
-    fireEvent.click(screen.getByRole('button', { name: /Auto-scroll/ }));
+    const btn = screen.getByRole('button', { name: /Auto-scroll/ });
+    fireEvent.click(btn); // nível 1 → agenda o rAF
     expect(rafQueue).toHaveLength(1);
+
+    for (let i = 0; i < 3; i++) fireEvent.click(btn); // níveis 2-4
+    // Cada clique reagenda o rAF; no browser o cancel da limpeza deixa só um
+    // pendente, mas o mock de cancelAnimationFrame é no-op — drena os mais
+    // antigos, mantendo o callback do último efeito (o do nível atual).
+    rafQueue.splice(0, rafQueue.length - 1);
 
     // Timestamps precisam ser > 0: o tick usa lastTimeRef === 0 como sinal de
     // "primeiro frame", então um timestamp 0 faria o 2º frame zerar o delta.
@@ -92,15 +101,15 @@ describe('Autoscroll', () => {
     expect(target.scrollTop).toBe(0);
 
     act(() => {
-      runFrame(1016); // 1s depois: 37.5 px
+      runFrame(1016); // 1s depois: 25 px
     });
-    expect(target.scrollTop).toBeCloseTo(37.5, 1);
+    expect(target.scrollTop).toBeCloseTo(25, 1);
 
-    // Progresso reflete o deslocamento (37.5 de 800 px scrolláveis)
-    expect(screen.getByRole('progressbar')).toHaveAttribute('aria-valuenow', '5');
+    // Progresso reflete o deslocamento (25 de 800 px scrolláveis)
+    expect(screen.getByRole('progressbar')).toHaveAttribute('aria-valuenow', '3');
   });
 
-  it('sem bpm: nível 2 usa SPEED_MAP (30 px/s) — regressão do modo fixo', () => {
+  it('sem bpm: nível 2 usa SPEED_MAP (6 px/s) — regressão do modo fixo', () => {
     const target = makeTarget();
     render(<Autoscroll targetRef={{ current: target as unknown as HTMLElement }} />);
 
@@ -112,6 +121,6 @@ describe('Autoscroll', () => {
       runFrame(16);
       runFrame(1016);
     });
-    expect(target.scrollTop).toBeCloseTo(30, 1);
+    expect(target.scrollTop).toBeCloseTo(6, 1);
   });
 });
