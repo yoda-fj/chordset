@@ -67,7 +67,9 @@ export class CifraClubScraper {
   private async doScrape(artist: string, song: string, version?: string): Promise<CifraResponse> {
     let url = `${BASE_URL}${artist}/${song}`;
     if (version && version !== 'principal') {
-      url += `/${version}`;
+      // URL de versão alternativa SÓ existe com barra final no Cifra Club
+      // (/artista/musica/simplificada/ → 200; sem a barra → 404)
+      url += `/${version}/`;
     }
 
     try {
@@ -94,11 +96,15 @@ export class CifraClubScraper {
         // o IP — geralmente por limite de requisições. Falha rápido com
         // mensagem clara em vez de esperar o timeout do seletor.
         if (response && response.status() >= 400) {
+          const hint =
+            response.status() === 403
+              ? 'Provavelmente seu IP foi bloqueado temporariamente por limite de requisições. Aguarde alguns minutos e tente de novo.'
+              : response.status() === 404
+                ? 'Página não encontrada — a versão pode não existir mais no Cifra Club.'
+                : 'Erro no servidor do Cifra Club. Tente novamente em instantes.';
           return {
             cifraclub_url: url,
-            error:
-              `O Cifra Club recusou o acesso (HTTP ${response.status()}) — provavelmente seu IP foi ` +
-              'bloqueado temporariamente por limite de requisições. Aguarde alguns minutos e tente de novo.',
+            error: `O Cifra Club recusou o acesso (HTTP ${response.status()}). ${hint}`,
           };
         }
 

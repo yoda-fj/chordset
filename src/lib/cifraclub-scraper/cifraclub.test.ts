@@ -15,9 +15,11 @@ const FIXTURE_HTML = `<!doctype html><html><body>
 let server: http.Server
 let baseUrl: string
 let scraper: CifraClubScraper
+let lastPaths: string[] = []
 
 beforeAll(async () => {
   server = http.createServer((req, res) => {
+    lastPaths.push(req.url ?? '')
     if (req.url?.startsWith('/bloqueado')) {
       res.writeHead(403, { 'content-type': 'text/html' })
       res.end('<html><head><title>Access Denied</title></head><body>Access Denied</body></html>')
@@ -56,5 +58,14 @@ describe('CifraClubScraper', () => {
     if ('error' in result) return
     expect(result.cifra?.join('\n')).toContain('Quem espera que a vida')
     expect(result.cifra?.some((l) => l.includes('É Preciso Saber Viver'))).toBe(false)
+  }, 30_000)
+
+  it('versão alternativa: URL SEMPRE com barra final (sem ela o CC devolve 404)', async () => {
+    lastPaths = []
+    const result = await scraper.scrape('titas', 'e-preciso-saber-viver', 'simplificada')
+
+    expect('error' in result ? result.error : 'ok').toBe('ok')
+    const requested = lastPaths.find((p) => p.includes('simplificada'))
+    expect(requested).toBe('/titas/e-preciso-saber-viver/simplificada/')
   }, 30_000)
 })
