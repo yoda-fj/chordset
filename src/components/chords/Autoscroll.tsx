@@ -45,19 +45,27 @@ function speedLabel(pxPerSecond: number): string {
 export const Autoscroll = ({ targetRef, bpm }: AutoscrollProps) => {
   const [step, setStep] = useState(0);
   const [progress, setProgress] = useState(0);
+  const [mode, setMode] = useState<'px' | 'beat'>(bpm && bpm > 0 ? 'beat' : 'px');
   const animationRef = useRef<number | null>(null);
   const lastTimeRef = useRef<number>(0);
   const lastStepRef = useRef(8); // retomar neste nível ao religar
 
-  // Com BPM da música, o slider mede px por BATIDA: o scroll acompanha o
-  // andamento real (px/s = px/batida × bpm/60). Sem BPM, px/s fixo.
+  // A música mudou (ou carregou): usa BPM como referência quando existe
+  useEffect(() => {
+    setMode(bpm && bpm > 0 ? 'beat' : 'px');
+  }, [bpm]);
+
+  // px/s efetivo: modo 'beat' (com BPM) mede px por batida; 'px' é fixo.
   const pxPerSecond = useCallback(
     (s: number): number => {
-      if (bpm && bpm > 0) return (sliderToPxPerBeat(s) * bpm) / 60;
+      if (mode === 'beat' && bpm && bpm > 0) return (sliderToPxPerBeat(s) * bpm) / 60;
       return sliderToPx(s);
     },
-    [bpm]
+    [mode, bpm]
   );
+
+  const pxPerBeat = bpm && bpm > 0 ? sliderToPxPerBeat(step) : 0;
+  const beatModeActive = mode === 'beat' && bpm && bpm > 0;
 
   const scroll = useCallback(function tick(timestamp: number) {
     if (step === 0) return;
@@ -220,7 +228,11 @@ export const Autoscroll = ({ targetRef, bpm }: AutoscrollProps) => {
           onChange={(e) => handleSlider(Number(e.target.value))}
           className="flex-1 accent-success h-1.5 cursor-pointer"
           aria-label="Velocidade do auto-scroll"
-          aria-valuetext={`${Math.round(currentPx)} pixels por segundo (${speedLabel(currentPx)})`}
+          aria-valuetext={
+            beatModeActive
+              ? `${Math.round(pxPerBeat)} pixels por batida (${Math.round(currentPx)} pixels por segundo)`
+              : `${Math.round(currentPx)} pixels por segundo (${speedLabel(currentPx)})`
+          }
         />
 
         <span
@@ -229,8 +241,42 @@ export const Autoscroll = ({ targetRef, bpm }: AutoscrollProps) => {
             step > 0 ? 'bg-success/15 text-success' : 'bg-transparent text-ink-faint'
           }`}
         >
-          {step > 0 ? `${Math.round(currentPx)} px/s` : 'parado'}
+          {step > 0
+            ? beatModeActive
+              ? `${Math.round(pxPerBeat)} px/bat`
+              : `${Math.round(currentPx)} px/s`
+            : 'parado'}
         </span>
+      </div>
+
+      {/* Seletor de referência: px/s fixo ou pixels por batida (só com BPM) */}
+      <div className="flex items-center gap-2 pl-14">
+        <div
+          className="flex rounded-lg overflow-hidden border border-ink/10 text-xs"
+        >
+          <button
+            type="button"
+            onClick={() => setMode('px')}
+            aria-pressed={!beatModeActive}
+            title="Velocidade fixa em pixels por segundo"
+            className={`px-2 py-1 transition-colors ${!beatModeActive ? 'bg-success text-on-accent' : 'text-ink-muted hover:bg-surface-overlay'}`}
+          >
+            px/s
+          </button>
+          <button
+            type="button"
+            onClick={() => setMode('beat')}
+            disabled={!(bpm && bpm > 0)}
+            aria-pressed={beatModeActive === true}
+            title={bpm && bpm > 0 ? `Baseado no BPM da música (${bpm})` : 'Música sem BPM — indisponível'}
+            className={`px-2 py-1 transition-colors ${beatModeActive ? 'bg-success text-on-accent' : 'text-ink-muted hover:bg-surface-overlay'} disabled:opacity-40 disabled:pointer-events-none`}
+          >
+            por batida
+          </button>
+        </div>
+        {beatModeActive && bpm && (
+          <span className="text-xs text-ink-faint">BPM {bpm} · {Math.round(currentPx)} px/s efetivo</span>
+        )}
       </div>
 
       <div className="flex items-center gap-2">

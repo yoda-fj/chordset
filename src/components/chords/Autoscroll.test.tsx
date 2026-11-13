@@ -204,4 +204,52 @@ describe('Autoscroll', () => {
     fireEvent.change(slider, { target: { value: '10' } });
     expect(screen.getByText(`${Math.round(sliderToPx(10))} px/s`)).toBeInTheDocument();
   });
+
+  it('com BPM, modo padrão é "por batida" e o badge mostra px/batida', () => {
+    const target = makeTarget();
+    render(
+      <Autoscroll targetRef={{ current: target as unknown as HTMLElement }} bpm={150} />
+    );
+    const slider = screen.getByRole('slider');
+
+    fireEvent.change(slider, { target: { value: '10' } });
+    expect(screen.getByText(`${Math.round(sliderToPxPerBeat(10))} px/bat`)).toBeInTheDocument();
+    // E mostra o px/s efetivo considerando o BPM
+    expect(screen.getByText(/px\/s efetivo/)).toBeInTheDocument();
+  });
+
+  it('seletor alterna entre "px/s" e "por batida" (com BPM)', () => {
+    const target = makeTarget();
+    render(
+      <Autoscroll targetRef={{ current: target as unknown as HTMLElement }} bpm={120} />
+    );
+    const slider = screen.getByRole('slider');
+    fireEvent.change(slider, { target: { value: '10' } });
+
+    // Começa em por-batida; alterna pra px/s fixo
+    fireEvent.click(screen.getByRole('button', { name: 'px/s' }));
+    expect(screen.getByText(`${Math.round(sliderToPx(10))} px/s`)).toBeInTheDocument();
+
+    // De volta pra por-batida
+    fireEvent.click(screen.getByRole('button', { name: 'por batida' }));
+    expect(screen.getByText(`${Math.round(sliderToPxPerBeat(10))} px/bat`)).toBeInTheDocument();
+  });
+
+  it('sem BPM, o modo "por batida" fica desabilitado', () => {
+    const target = makeTarget();
+    render(<Autoscroll targetRef={{ current: target as unknown as HTMLElement }} />);
+    expect(screen.getByRole('button', { name: 'por batida' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'px/s' })).toBeEnabled();
+  });
+
+  it('mudar o BPM da música re-seleciona o modo automaticamente', () => {
+    const target = makeTarget();
+    const { rerender } = render(
+      <Autoscroll targetRef={{ current: target as unknown as HTMLElement }} bpm={90} />
+    );
+    expect(screen.getByRole('button', { name: 'por batida' })).toHaveAttribute('aria-pressed', 'true');
+
+    rerender(<Autoscroll targetRef={{ current: target as unknown as HTMLElement }} bpm={0} />);
+    expect(screen.getByRole('button', { name: 'por batida' })).toHaveAttribute('aria-pressed', 'false');
+  });
 });
