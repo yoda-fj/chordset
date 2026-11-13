@@ -187,7 +187,13 @@ export class CifraClubScraper {
 
       const lines: string[] = [];
       clone.childNodes.forEach(node => {
-        lines.push(...(node.textContent ?? '').split('\n'));
+        // O Cifra Club polui o texto com zero-width spaces (&#8203;), que
+        // quebram a detecção de "linha de acordes" na normalização
+        lines.push(
+          ...(node.textContent ?? '')
+            .replace(/[\u200B\u200C\u200D\uFEFF]/g, '')
+            .split('\n')
+        );
       });
       return lines;
     });

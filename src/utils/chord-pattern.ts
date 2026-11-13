@@ -16,8 +16,8 @@ export const CHORD_BASS = '(?:\\/[A-G][#b]?)';
 /** Acorde sem baixo invertido — para transposição, onde raiz e baixo são transpostos como tokens independentes */
 export const CHORD_CORE = `${CHORD_ROOT}${CHORD_SUFFIX}*`;
 
-/** Um token de acorde completo: raiz + sufixos + baixo invertido opcional */
-export const CHORD_TOKEN = `${CHORD_CORE}${CHORD_BASS}?`;
+/** Um token de acorde completo: raiz + sufixos + extensão (9) opcional + baixo invertido opcional */
+export const CHORD_TOKEN = `${CHORD_CORE}(?:\\(\\d+\\))?${CHORD_BASS}?`;
 
 /** Acorde entre colchetes, formato ChordPro ("[F#m7]", "[D/F#]") */
 export const CHORDPRO_BRACKETED = `\\[${CHORD_TOKEN}\\]`;

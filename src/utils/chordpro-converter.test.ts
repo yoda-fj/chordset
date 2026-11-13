@@ -99,3 +99,39 @@ describe('alinhamento dos acordes na conversão', () => {
     expect(result.split('\n')[0]).toBe('[C]OI[G]')
   })
 })
+
+describe('zero-width chars do Cifra Club (regressão: importação saía sem converter)', () => {
+  it('linha de acordes com ZWSP é reconhecida e converte o par acorde/letra', () => {
+    const zwsp = '​'
+    const cifra = [
+      `${zwsp}[Intro] Bm  D`,
+      '',
+      `${zwsp}        Bm  G  A  A4  A`,
+      `${zwsp}Não sei dizer o que mudou`,
+      `${zwsp}   G    D`,
+      `${zwsp}Mas nada está igual`,
+    ].join('\n')
+
+    const result = ensureChordProFormat(cifra)
+    // colunas fiéis ao original: Bm cai sobre 'dizer' (col 8), G entre 'Mas' e 'nada'
+    expect(result).toContain('Não sei [Bm]dize[G]r o[A] qu[A4]e mu[A]dou')
+    expect(result).toContain('Mas[G] nada[D] está igual')
+    // nenhum ZWSP sobrou no resultado
+    expect(result).not.toContain('​')
+    // Nenhuma linha de acordes solta deve sobrar
+    expect(result.split('\n').filter((l) => isChordLine(l) && l.trim())).toHaveLength(0)
+  })
+
+  it('acorde com parênteses (D5(9)) é tratado como acorde', () => {
+    expect(isChordLine('   D5(9)')).toBe(true)
+    const result = ensureChordProFormat(
+      ['D5(9)      G', 'Quem espera que a vida', '   G    A', 'Seja feita de ilusão'].join('\n')
+    )
+    expect(result).toContain('[D5(9)]Quem espera')
+    expect(result).toContain('Sej[G]a fei[A]ta')
+  })
+
+  it('linha de letra com parênteses não vira linha de acordes', () => {
+    expect(isChordLine('Não quero dinheiro (só quero amar)')).toBe(false)
+  })
+})

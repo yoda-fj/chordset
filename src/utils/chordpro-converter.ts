@@ -42,22 +42,32 @@ function extractChordsFromLine(line: string): ChordInLine[] {
 }
 
 /**
+ * Remove caracteres invisíveis (zero-width space etc.) que o Cifra Club
+ * insere na marcação e que quebram os testes de "linha de acordes".
+ */
+function stripInvisible(s: string): string {
+  return s.replace(/[\u200B\u200C\u200D\uFEFF]/g, '');
+}
+
+/**
  * Verifica se uma linha é uma linha de acordes (só contém acordes e espaços)
  */
 export function isChordLine(line: string): boolean {
+  line = stripInvisible(line);
   const trimmed = line.trim();
   if (!trimmed) return false;
-  
+
   // Se tem letras minúsculas comuns (excluindo 'm' de menor e 'b' de bemol), é letra
   if (/[ace-gi-ln-oq-sux-z]/.test(line)) return false;
-  
+
   // Se é uma seção tipo [Intro], não é chord line
   if (/^\[.+\]$/.test(trimmed)) return false;
-  
+
   // Se tem pelo menos um acorde válido e só caracteres permitidos
+  // ('()' para acordes tipo D5(9), '-' para poliacordes C-D)
   const hasChord = chordTokenRegex('').test(line);
-  const onlyChordsAndSpaces = /^[\sA-G#b\/mjsuadgi1791134560°ºø+M-]*$/.test(line);
-  
+  const onlyChordsAndSpaces = /^[\sA-G#b\/mjsuadgi1791134560°ºø+M()-]*$/.test(line);
+
   return hasChord && onlyChordsAndSpaces;
 }
 
@@ -111,8 +121,10 @@ export function convertTextToChordPro(cifraText: string): string {
   
   let i = 0;
   while (i < lines.length) {
-    const currentLine = lines[i];
-    const nextLine = i + 1 < lines.length ? lines[i + 1] : null;
+    // Linhas limpas de invisíveis: posições de acorde e letra ficam
+    // consistentes entre si e o resultado não carrega ZWSP
+    const currentLine = stripInvisible(lines[i]);
+    const nextLine = i + 1 < lines.length ? stripInvisible(lines[i + 1]) : null;
     
     // Linha vazia
     if (!currentLine.trim()) {
