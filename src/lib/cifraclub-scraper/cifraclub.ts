@@ -1,7 +1,7 @@
 import { chromium, Browser, Page } from 'playwright';
 import { CifraResponse, CifraResult } from './types';
 
-const BASE_URL = 'https://www.cifraclub.com.br/';
+const BASE_URL = process.env.CIFRACLUB_BASE_URL ?? 'https://www.cifraclub.com.br/';
 
 export class CifraClubScraper {
   private browser: Browser | null = null;
@@ -58,7 +58,20 @@ export class CifraClubScraper {
         const page = await context.newPage();
         page.setDefaultTimeout(15000);
 
-        await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 30000 });
+        const response = await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 30000 });
+
+        // O Cifra Club (Akamai) devolve 403 "Access Denied" quando bloqueia
+        // o IP — geralmente por limite de requisições. Falha rápido com
+        // mensagem clara em vez de esperar o timeout do seletor.
+        if (response && response.status() >= 400) {
+          return {
+            cifraclub_url: url,
+            error:
+              `O Cifra Club recusou o acesso (HTTP ${response.status()}) — provavelmente seu IP foi ` +
+              'bloqueado temporariamente por limite de requisições. Aguarde alguns minutos e tente de novo.',
+          };
+        }
+
         await page.waitForSelector('pre[data-chord-content]', { timeout: 15000 });
 
         const result: Partial<CifraResult> = { cifraclub_url: url };
