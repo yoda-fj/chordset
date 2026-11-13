@@ -147,8 +147,8 @@ export function CifraViewer({
 
   return (
     <div className={`flex flex-col h-full min-w-0 ${className}`}>
-      {/* Controls Bar */}
-      {showControls && (
+      {/* Controls Bar — some tudo em tela cheia: só a cifra ocupa a tela */}
+      {showControls && !isFullscreen && (
         <div className={`min-w-0 bg-surface-raised rounded-xl p-2 border border-ink/10 shadow-sm mb-2 flex flex-wrap items-center gap-2 shrink-0 ${isFullscreen ? 'fixed top-4 left-4 right-4 z-50' : ''}`}>
         {/* Sidebar toggle */}
         {onToggleSidebar && (
@@ -237,7 +237,7 @@ export function CifraViewer({
       )}
 
       {/* Metrônomo visual (Fase 2.4) — fora do bundle inicial via next/dynamic */}
-      {showMetronome && (
+      {showMetronome && !isFullscreen && (
         <div className="mb-2 shrink-0 flex flex-wrap items-center gap-2">
           {/* key por groove: trocar de música no setlist remonta o player e
               para o ritmo da música anterior (cleanup no unmount) */}
@@ -263,7 +263,6 @@ export function CifraViewer({
         ref={scrollContainerRef}
         className="bg-surface-raised rounded-xl border border-ink/10 shadow-sm flex-1 min-h-0 overflow-auto"
         style={{
-          ...(isFullscreen ? { maxHeight: 'calc(100vh - 80px)' } : {}),
           WebkitOverflowScrolling: 'touch',
           touchAction: 'pan-y',
         }}
@@ -277,6 +276,18 @@ export function CifraViewer({
         showTablatura={showTablatura}
       />
       </div>
+
+      {/* Em tela cheia só a cifra aparece: botão flutuante discreto pra sair */}
+      {isFullscreen && (
+        <button
+          onClick={toggleFullscreen}
+          className="fixed bottom-4 right-4 z-50 flex h-12 w-12 items-center justify-center rounded-full bg-black/60 text-white backdrop-blur transition-opacity opacity-30 hover:opacity-90"
+          aria-label="Sair da tela cheia"
+          title="Sair da tela cheia"
+        >
+          <Minimize className="w-5 h-5" aria-hidden />
+        </button>
+      )}
     </div>
   );
 }
