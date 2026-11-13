@@ -123,4 +123,29 @@ describe('Autoscroll', () => {
     });
     expect(target.scrollTop).toBeCloseTo(6, 1);
   });
+
+  it('mostra feedback visual da velocidade ativa', () => {
+    const target = makeTarget();
+    render(<Autoscroll targetRef={{ current: target as unknown as HTMLElement }} />);
+    const btn = screen.getByRole('button', { name: /Auto-scroll/ });
+
+    // Parado: mostra "parado"
+    expect(btn.parentElement).toHaveTextContent('parado');
+
+    fireEvent.click(btn); // nível 1
+    expect(btn.parentElement).toHaveTextContent('rastejante');
+
+    fireEvent.click(btn); // nível 2
+    expect(btn.parentElement).toHaveTextContent('ultra lento');
+
+    fireEvent.click(btn); // de volta a 0 (nível 3)
+    expect(btn.parentElement).toHaveTextContent('muito lento');
+
+    fireEvent.click(btn); // 4
+    fireEvent.click(btn); // 5
+    fireEvent.click(btn); // 6
+    fireEvent.click(btn); // 7
+    fireEvent.click(btn); // wrap -> 0
+    expect(btn.parentElement).toHaveTextContent('parado');
+  });
 });

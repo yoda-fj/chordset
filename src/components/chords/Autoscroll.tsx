@@ -183,10 +183,23 @@ export const Autoscroll = ({ targetRef, bpm }: AutoscrollProps) => {
         className={`flex h-12 w-12 items-center justify-center rounded-lg transition-colors ${speed > 0 ? 'bg-success text-on-accent' : 'text-ink-muted hover:bg-surface-overlay hover:text-ink'}`}
         onClick={cycleSpeed}
         aria-label={`Auto-scroll: ${SPEED_LABELS[speed]}. Toque para mudar a velocidade.`}
+        title={`Auto-scroll: ${SPEED_LABELS[speed]}`}
         aria-pressed={speed > 0}
       >
         {speed === 0 ? <Gauge size={20} aria-hidden /> : <Play size={18} className={speed >= 6 ? 'fill-current' : ''} aria-hidden />}
       </button>
+
+      {/* Feedback visível da velocidade ativa (o aria-label sozinho não é visto) */}
+      <span
+        aria-hidden
+        className={`text-xs font-medium rounded-full px-2 py-1 transition-colors whitespace-nowrap ${
+          speed > 0
+            ? 'bg-success/15 text-success'
+            : 'bg-transparent text-ink-faint'
+        }`}
+      >
+        {speed > 0 ? SPEED_LABELS[speed] : 'parado'}
+      </span>
 
       <div className="flex-1 flex items-center gap-2">
         <div
