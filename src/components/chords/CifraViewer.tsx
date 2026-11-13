@@ -277,16 +277,22 @@ export function CifraViewer({
       />
       </div>
 
-      {/* Em tela cheia só a cifra aparece: botão flutuante discreto pra sair */}
+      {/* Em tela cheia só a cifra aparece: auto-scroll compacto flutuante
+          (essencial no palco) + botão discreto pra sair */}
       {isFullscreen && (
-        <button
-          onClick={toggleFullscreen}
-          className="fixed bottom-4 right-4 z-50 flex h-12 w-12 items-center justify-center rounded-full bg-black/60 text-white backdrop-blur transition-opacity opacity-30 hover:opacity-90"
-          aria-label="Sair da tela cheia"
-          title="Sair da tela cheia"
-        >
-          <Minimize className="w-5 h-5" aria-hidden />
-        </button>
+        <>
+          <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 w-[min(85vw,380px)] rounded-full bg-black/60 backdrop-blur px-4 py-2 opacity-40 transition-opacity hover:opacity-100">
+            <Autoscroll compact targetRef={scrollContainerRef} bpm={bpm} />
+          </div>
+          <button
+            onClick={toggleFullscreen}
+            className="fixed bottom-4 right-4 z-50 flex h-12 w-12 items-center justify-center rounded-full bg-black/60 text-white backdrop-blur transition-opacity opacity-30 hover:opacity-90"
+            aria-label="Sair da tela cheia"
+            title="Sair da tela cheia"
+          >
+            <Minimize className="w-5 h-5" aria-hidden />
+          </button>
+        </>
       )}
     </div>
   );

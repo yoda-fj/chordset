@@ -242,6 +242,24 @@ describe('Autoscroll', () => {
     expect(screen.getByRole('button', { name: 'px/s' })).toBeEnabled();
   });
 
+  it('modo compacto: esconde barra de progresso e seletor de referência', () => {
+    const target = makeTarget();
+    render(
+      <Autoscroll
+        compact
+        targetRef={{ current: target as unknown as HTMLElement }}
+        bpm={120}
+      />
+    );
+
+    expect(screen.queryByRole('progressbar')).toBeNull();
+    expect(screen.queryByRole('button', { name: 'px/s' })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'por batida' })).toBeNull();
+    // Mas o essencial continua: slider e botão play/pausa
+    expect(screen.getByRole('slider')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /auto-scroll/i })).toBeInTheDocument();
+  });
+
   it('mudar o BPM da música re-seleciona o modo automaticamente', () => {
     const target = makeTarget();
     const { rerender } = render(

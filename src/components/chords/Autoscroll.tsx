@@ -6,6 +6,9 @@ import { Play, Pause } from 'lucide-react';
 interface AutoscrollProps {
   targetRef: React.RefObject<HTMLElement | null>;
   bpm?: number;
+  /** Modo compacto: esconde barra de progresso e seletor de referência
+   * (usado no controle flutuante da tela cheia). */
+  compact?: boolean;
 }
 
 // Slider com escala exponencial: os primeiros passos cobrem a faixa lenta
@@ -42,7 +45,7 @@ function speedLabel(pxPerSecond: number): string {
   return 'muito rápido';
 }
 
-export const Autoscroll = ({ targetRef, bpm }: AutoscrollProps) => {
+export const Autoscroll = ({ targetRef, bpm, compact = false }: AutoscrollProps) => {
   const [step, setStep] = useState(0);
   const [progress, setProgress] = useState(0);
   const [mode, setMode] = useState<'px' | 'beat'>(bpm && bpm > 0 ? 'beat' : 'px');
@@ -250,6 +253,7 @@ export const Autoscroll = ({ targetRef, bpm }: AutoscrollProps) => {
       </div>
 
       {/* Seletor de referência: px/s fixo ou pixels por batida (só com BPM) */}
+      {!compact && (
       <div className="flex items-center gap-2 pl-14">
         <div
           className="flex rounded-lg overflow-hidden border border-ink/10 text-xs"
@@ -278,7 +282,9 @@ export const Autoscroll = ({ targetRef, bpm }: AutoscrollProps) => {
           <span className="text-xs text-ink-faint">BPM {bpm} · {Math.round(currentPx)} px/s efetivo</span>
         )}
       </div>
+      )}
 
+      {!compact && (
       <div className="flex items-center gap-2">
         <div
           className="flex-1 h-1 bg-surface-overlay rounded-full overflow-hidden"
@@ -295,6 +301,7 @@ export const Autoscroll = ({ targetRef, bpm }: AutoscrollProps) => {
         </div>
         <span className="text-xs text-ink-faint w-8">{Math.round(progress)}%</span>
       </div>
+      )}
     </div>
   );
 };
