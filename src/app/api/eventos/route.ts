@@ -45,6 +45,17 @@ export async function POST(request: NextRequest) {
       const musicasCopiadas = setlistsDb.copyFromTemplate(evento.template_id, evento.id)
       console.log(`Copiadas ${musicasCopiadas} musicas do template ${evento.template_id} para o evento ${evento.id}`)
     }
+
+    // Se tem musicas selecionadas, adiciona em lote após a cópia do template
+    // (createMany ignora duplicatas, então músicas já copiadas são puladas)
+    if (Array.isArray(body.musica_ids) && body.musica_ids.length > 0) {
+      const musicaIds = body.musica_ids.filter(
+        (id: unknown) => typeof id === 'number' && Number.isInteger(id) && id > 0
+      )
+      if (musicaIds.length > 0) {
+        setlistsDb.createMany(evento.id, musicaIds)
+      }
+    }
     
     return NextResponse.json(evento, { status: 201 })
   } catch (error) {

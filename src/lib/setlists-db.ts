@@ -92,6 +92,37 @@ export const setlistsDb = {
     return created
   },
 
+  // Create multiple musicas in evento at once, skipping duplicates and
+  // continuing ordem from the current count. Returns how many were inserted.
+  createMany(eventoId: number, musicaIds: number[]): number {
+    const db = getDb()
+
+    const existingRows = db.prepare(
+      'SELECT musica_id FROM evento_musicas WHERE evento_id = ?'
+    ).all(eventoId) as { musica_id: number }[]
+
+    const existing = new Set(existingRows.map((row) => row.musica_id))
+    const uniqueIds = [...new Set(musicaIds)].filter((id) => !existing.has(id))
+
+    if (uniqueIds.length === 0) return 0
+
+    const startOrdem = existingRows.length + 1
+
+    const insertStmt = db.prepare(`
+      INSERT INTO evento_musicas (evento_id, musica_id, ordem)
+      VALUES (?, ?, ?)
+    `)
+
+    const transaction = db.transaction(() => {
+      uniqueIds.forEach((musicaId, index) => {
+        insertStmt.run(eventoId, musicaId, startOrdem + index)
+      })
+    })
+
+    transaction()
+    return uniqueIds.length
+  },
+
   // Get by ID
   getById(id: number): EventoMusica | null {
     const db = getDb()

@@ -37,8 +37,31 @@ export async function POST(
     }
     
     const body = await request.json()
-    
-    // Validação
+
+    // Adição em lote: { musica_ids: number[] }
+    if (body.musica_ids !== undefined) {
+      if (!Array.isArray(body.musica_ids) || body.musica_ids.length === 0) {
+        return jsonError('musica_ids deve ser um array não vazio', 400)
+      }
+
+      if (body.musica_ids.length > 200) {
+        return jsonError('Máximo de 200 músicas por requisição', 400)
+      }
+
+      if (!body.musica_ids.every((id: unknown) => typeof id === 'number' && Number.isInteger(id) && id > 0)) {
+        return jsonError('musica_ids deve conter apenas IDs inteiros positivos', 400)
+      }
+
+      const quantidade = setlistsDb.createMany(eventoId, body.musica_ids)
+
+      // Últimas N entradas ordenadas = as recém-criadas (ordem crescente)
+      const todas = setlistsDb.getByEventoId(eventoId)
+      const criadas = quantidade > 0 ? todas.slice(todas.length - quantidade) : []
+
+      return NextResponse.json({ success: true, quantidade, musicas: criadas }, { status: 201 })
+    }
+
+    // Adição única: { musica_id }
     if (!body.musica_id) {
       return jsonError('musica_id é obrigatório', 400)
     }

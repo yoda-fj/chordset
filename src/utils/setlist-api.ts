@@ -46,6 +46,29 @@ export async function addMusicaToSetlist(
 }
 
 /**
+ * Add multiple musics to an evento setlist in a single request.
+ * The template API has no bulk endpoint — use addMusicaToSetlist in a loop for templates.
+ */
+export async function addMusicasToSetlist(
+  setlistId: number,
+  musicaIds: number[]
+): Promise<SetlistApiResponse[]> {
+  const base = getSetlistApiBase('evento', setlistId)
+  const response = await fetch(`${base}/musicas`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ musica_ids: musicaIds }),
+  })
+
+  if (!response.ok) {
+    throw new Error(`Erro ao adicionar músicas: ${response.statusText}`)
+  }
+
+  const data = await response.json()
+  return data.musicas
+}
+
+/**
  * Remove a music from a setlist
  */
 export async function removeMusicaFromSetlist(

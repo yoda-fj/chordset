@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation'
 import { ArrowLeft, Save, Loader2 } from 'lucide-react'
 import Link from 'next/link'
 import { TagInput } from '@/components/setlist/TagInput'
+import { SetlistBuilder } from '@/components/setlist/SetlistBuilder'
+import type { SetlistMusica } from '@/components/setlist/MusicaCard'
 import { STATUS_OPCOES, TAG_SUGGESTIONS_EVENTO } from '@/lib/constants'
 
 export default function NewEventoPage() {
@@ -17,6 +19,7 @@ export default function NewEventoPage() {
   const [isStudyList, setIsStudyList] = useState(false)
   const [tags, setTags] = useState<string[]>([])
   const [observacoes, setObservacoes] = useState('')
+  const [eventoMusicas, setEventoMusicas] = useState<SetlistMusica[]>([])
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -42,6 +45,9 @@ export default function NewEventoPage() {
           status: isStudyList ? undefined : status,
           tags: isStudyList ? undefined : tags,
           observacoes: observacoes.trim() || undefined,
+          musica_ids: eventoMusicas.length > 0
+            ? eventoMusicas.map((m) => m.musica_id)
+            : undefined,
         }),
       })
 
@@ -81,8 +87,8 @@ export default function NewEventoPage() {
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="max-w-2xl">
-        <div className="bg-surface-raised p-6 rounded-lg border space-y-6">
+      <form onSubmit={handleSubmit} className="space-y-6">
+        <div className="bg-surface-raised p-6 rounded-lg border space-y-6 max-w-2xl">
           {/* Study List Toggle */}
           <div className="flex items-center gap-2 p-3 bg-surface rounded-lg border">
             <input
@@ -205,7 +211,15 @@ export default function NewEventoPage() {
           </div>
         </div>
 
-        <div className="flex justify-end gap-3 mt-6">
+        <div className="bg-surface-raised p-4 md:p-6 rounded-lg border">
+          <SetlistBuilder
+            musicas={eventoMusicas}
+            onChange={setEventoMusicas}
+            isEvento={true}
+          />
+        </div>
+
+        <div className="flex justify-end gap-3">
           <Link
             href="/eventos"
             className="px-4 py-2 text-ink-muted hover:text-ink"

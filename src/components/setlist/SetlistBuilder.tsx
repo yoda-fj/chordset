@@ -17,13 +17,14 @@ import {
   sortableKeyboardCoordinates,
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable'
-import { Plus, Search } from 'lucide-react'
+import { Plus, Search, Check, Loader2 } from 'lucide-react'
 import { MusicaCard, type SetlistMusica } from './MusicaCard'
 import { Musica } from '@/types/database'
 import { parseTags } from '@/utils/tag-utils'
 import {
   SetlistType,
   addMusicaToSetlist,
+  addMusicasToSetlist,
   removeMusicaFromSetlist,
   reorderSetlistMusicas,
   updateSetlistMusica,
@@ -50,6 +51,8 @@ export function SetlistBuilder({
   const [searchTerm, setSearchTerm] = useState('')
   const [availableMusicas, setAvailableMusicas] = useState<Musica[]>([])
   const [loadingMusicas, setLoadingMusicas] = useState(true)
+  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set())
+  const [adding, setAdding] = useState(false)
   const [activeId, setActiveId] = useState<number | string | null>(null)
   const activeMusica = musicas.find((m) => m.id === activeId)
 
@@ -164,33 +167,33 @@ export function SetlistBuilder({
     }
   }, [musicas, onChange, isEvento, setlistId, setlistType])
 
-  const handleAddMusica = useCallback(async (musica: Musica) => {
-    if (setlistId) {
-      try {
-        const savedMusica = await addMusicaToSetlist(setlistType, setlistId, musica.id, musicas.length + 1)
-        const musicaData = availableMusicas.find((m) => m.id === musica.id) || musica
-        onChange([...musicas, { ...savedMusica, musicas: musicaData }])
-      } catch (err) {
-        console.error('Erro ao adicionar música:', err)
-        handleError('Erro ao adicionar música')
+  const toggleMusicaSelection = useCallback((musicaId: number) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev)
+      if (next.has(musicaId)) {
+        next.delete(musicaId)
+      } else {
+        next.add(musicaId)
       }
-    } else {
-      const newMusica: SetlistMusica = {
-        id: `temp-${Date.now()}`,
-        template_id: templateId || '',
-        musica_id: musica.id,
-        ordem: musicas.length + 1,
-        tom_sugerido: null,
-        observacoes: null,
-        created_at: new Date().toISOString(),
-        musicas: musica,
-      }
-      onChange([...musicas, newMusica])
-    }
+      return next
+    })
+  }, [])
 
+  const closeAddModal = useCallback(() => {
     setShowAddModal(false)
     setSearchTerm('')
-  }, [setlistId, setlistType, musicas, availableMusicas, onChange, handleError, templateId])
+    setSelectedIds(new Set())
+  }, [])
+
+  // Escape fecha o modal e descarta a seleção
+  useEffect(() => {
+    if (!showAddModal) return
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') closeAddModal()
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [showAddModal, closeAddModal])
 
   const filteredAvailableMusicas = useMemo(() =>
     availableMusicas.filter((m) => !musicas.some((um) => um.musica_id === m.id)),
@@ -207,6 +210,64 @@ export function SetlistBuilder({
     [filteredAvailableMusicas, searchTerm]
   )
 
+  const handleConfirmAdd = useCallback(async () => {
+    if (selectedIds.size === 0 || adding) return
+
+    const selectedMusicas = availableMusicas.filter((m) => selectedIds.has(m.id))
+    const startOrdem = musicas.length + 1
+    setAdding(true)
+
+    try {
+      if (eventoId) {
+        const salvas = await addMusicasToSetlist(
+          eventoId,
+          selectedMusicas.map((m) => m.id)
+        )
+        const novas: SetlistMusica[] = salvas.map((sm) => ({
+          ...sm,
+          musicas: availableMusicas.find((m) => m.id === sm.musica_id)
+            || selectedMusicas.find((m) => m.id === sm.musica_id)!,
+        }))
+        onChange([...musicas, ...novas])
+      } else if (templateId) {
+        // Template não tem endpoint em lote: adiciona uma a uma, preservando a ordem
+        const novas: SetlistMusica[] = []
+        for (const [index, musica] of selectedMusicas.entries()) {
+          const salva = await addMusicaToSetlist('template', templateId, musica.id, startOrdem + index)
+          novas.push({ ...salva, musicas: musica })
+        }
+        onChange([...musicas, ...novas])
+      } else {
+        const novas: SetlistMusica[] = selectedMusicas.map((musica, index) => ({
+          id: `temp-${Date.now()}-${index}`,
+          template_id: templateId || '',
+          musica_id: musica.id,
+          ordem: startOrdem + index,
+          ...(isEvento ? { tom_evento: null } : { tom_sugerido: null }),
+          observacoes: null,
+          created_at: new Date().toISOString(),
+          musicas: musica,
+        }))
+        onChange([...musicas, ...novas])
+      }
+    } catch (err) {
+      console.error('Erro ao adicionar músicas:', err)
+      handleError('Erro ao adicionar músicas')
+      setAdding(false)
+      return
+    }
+
+    setAdding(false)
+
+    // Mantém o modal aberto para novas adições; fecha se nada mais sobrar
+    const restantes = filteredAvailableMusicas.filter((m) => !selectedIds.has(m.id)).length
+    if (restantes === 0) {
+      closeAddModal()
+    } else {
+      setSelectedIds(new Set())
+    }
+  }, [selectedIds, adding, availableMusicas, musicas, eventoId, templateId, isEvento, onChange, handleError, filteredAvailableMusicas, closeAddModal])
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
@@ -219,7 +280,7 @@ export function SetlistBuilder({
           className="inline-flex items-center gap-2 px-4 py-2 bg-brand text-on-accent rounded-lg hover:bg-brand-600 transition-colors"
         >
           <Plus size={18} />
-          Adicionar Música
+          Adicionar Músicas
         </button>
       </div>
 
@@ -274,7 +335,7 @@ export function SetlistBuilder({
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-surface-raised rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-[80vh] flex flex-col">
             <div className="p-4 border-b">
-              <h3 className="text-lg font-medium">Adicionar Música</h3>
+              <h3 className="text-lg font-medium">Adicionar Músicas</h3>
               <div className="mt-2 relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-ink-faint" size={18} />
                 <input
@@ -295,41 +356,69 @@ export function SetlistBuilder({
                 <p className="text-center text-ink-muted py-8">Nenhuma música encontrada</p>
               ) : (
                 <div className="space-y-2">
-                  {filteredMusicas.map((musica) => (
-                    <button
-                      key={musica.id}
-                      type="button"
-                      onClick={() => handleAddMusica(musica)}
-                      className="w-full text-left p-3 border rounded-lg hover:bg-surface transition-colors"
-                    >
-                      <div className="font-medium">{musica.titulo}</div>
-                      <div className="text-sm text-ink-muted">{musica.artista}</div>
-                      <div className="flex gap-1 mt-1">
-                        {musica.tags.map((tag) => (
-                          <span
-                            key={tag}
-                            className="text-xs px-2 py-0.5 bg-surface-overlay rounded-full"
-                          >
-                            {tag}
-                          </span>
-                        ))}
-                      </div>
-                    </button>
-                  ))}
+                  {filteredMusicas.map((musica) => {
+                    const isSelected = selectedIds.has(musica.id)
+                    return (
+                      <button
+                        key={musica.id}
+                        type="button"
+                        onClick={() => toggleMusicaSelection(musica.id)}
+                        aria-pressed={isSelected}
+                        className={`w-full text-left p-3 border rounded-lg transition-colors flex items-start gap-3 ${
+                          isSelected ? 'border-brand bg-brand/10' : 'hover:bg-surface'
+                        }`}
+                      >
+                        <span
+                          aria-hidden="true"
+                          className={`mt-0.5 flex-shrink-0 w-5 h-5 rounded border flex items-center justify-center transition-colors ${
+                            isSelected ? 'bg-brand border-brand text-on-accent' : 'border-ink/20'
+                          }`}
+                        >
+                          {isSelected && <Check size={14} />}
+                        </span>
+                        <div className="flex-1 min-w-0">
+                          <div className="font-medium">{musica.titulo}</div>
+                          <div className="text-sm text-ink-muted">{musica.artista}</div>
+                          <div className="flex gap-1 mt-1">
+                            {musica.tags.map((tag) => (
+                              <span
+                                key={tag}
+                                className="text-xs px-2 py-0.5 bg-surface-overlay rounded-full"
+                              >
+                                {tag}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      </button>
+                    )
+                  })}
                 </div>
               )}
             </div>
 
-            <div className="p-4 border-t flex justify-end">
-              <button
-                onClick={() => {
-                  setShowAddModal(false)
-                  setSearchTerm('')
-                }}
-                className="px-4 py-2 text-ink-muted hover:text-ink"
-              >
-                Cancelar
-              </button>
+            <div className="p-4 border-t flex items-center justify-between gap-3">
+              <span className="text-sm text-ink-muted">
+                {selectedIds.size > 0 && `${selectedIds.size} selecionada(s)`}
+              </span>
+              <div className="flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={closeAddModal}
+                  className="px-4 py-2 text-ink-muted hover:text-ink"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="button"
+                  onClick={handleConfirmAdd}
+                  disabled={selectedIds.size === 0 || adding}
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-brand text-on-accent rounded-lg hover:bg-brand-600 disabled:opacity-50 transition-colors"
+                >
+                  {adding ? <Loader2 size={18} className="animate-spin" /> : <Plus size={18} />}
+                  Adicionar {selectedIds.size} música(s) selecionada(s)
+                </button>
+              </div>
             </div>
           </div>
         </div>
