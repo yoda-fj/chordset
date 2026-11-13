@@ -1,48 +1,60 @@
 'use client';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { Play, Gauge } from 'lucide-react';
+import { Play, Pause } from 'lucide-react';
 
 interface AutoscrollProps {
   targetRef: React.RefObject<HTMLElement | null>;
   bpm?: number;
 }
 
-type SpeedLevel = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7;
+// Slider com escala exponencial: os primeiros passos cobrem a faixa lenta
+// (3-15 px/s) com granularidade fina, e a faixa rápida fica compacta no fim.
+export const MIN_PX = 3;
+export const MAX_PX = 150;
+const STEPS = 30;
 
-// 8 níveis: a faixa lenta é bem mais densa (3-15 px/s) porque a queixa
-// mais comum no palco é "mesmo o mais lento passa rápido demais".
-const SPEED_MAP: Record<SpeedLevel, number> = {
-  0: 0,    // off
-  1: 3,    // rastejante
-  2: 6,    // ultra lento
-  3: 10,   // muito lento
-  4: 15,   // lento
-  5: 30,   // médio
-  6: 60,   // rápido
-  7: 120   // muito rápido
-};
+/** Converte o passo do slider (0 = desligado, 1..STEPS) em px/s. */
+export function sliderToPx(step: number): number {
+  if (step <= 0) return 0;
+  const t = (Math.min(step, STEPS) - 1) / (STEPS - 1); // 0..1
+  return MIN_PX * Math.pow(MAX_PX / MIN_PX, t);
+}
 
-// Em modo BPM (bpm informado): px/s = px por batida × bpm/60.
-// A 120 BPM os níveis dão ~4/8/14/20/40/80/120 px/s.
-const BPM_PX_PER_BEAT: Record<SpeedLevel, number> = {
-  0: 0, 1: 2, 2: 4, 3: 7, 4: 10, 5: 20, 6: 40, 7: 60
-};
+/** Rótulo qualitativo só pra referência — o valor em px/s é o que manda. */
+function speedLabel(pxPerSecond: number): string {
+  if (pxPerSecond <= 0) return 'parado';
+  if (pxPerSecond < 4) return 'rastejante';
+  if (pxPerSecond < 8) return 'ultra lento';
+  if (pxPerSecond < 15) return 'lento';
+  if (pxPerSecond < 35) return 'médio';
+  if (pxPerSecond < 80) return 'rápido';
+  return 'muito rápido';
+}
 
 export const Autoscroll = ({ targetRef, bpm }: AutoscrollProps) => {
-  const [speed, setSpeed] = useState<SpeedLevel>(0);
+  const [step, setStep] = useState(0);
   const [progress, setProgress] = useState(0);
   const animationRef = useRef<number | null>(null);
   const lastTimeRef = useRef<number>(0);
+  const lastStepRef = useRef(8); // retomar neste nível ao religar
 
-  const pxPerSecond = useCallback((level: SpeedLevel): number =>
-    bpm && bpm > 0 ? (BPM_PX_PER_BEAT[level] * bpm) / 60 : SPEED_MAP[level], [bpm]);
+  // Escala pelo BPM da música: a 120 BPM o slider vale exatamente o px/s
+  // marcado; músicas mais rápidas rolam proporcionalmente mais depressa.
+  const pxPerSecond = useCallback(
+    (s: number): number => {
+      const px = sliderToPx(s);
+      if (px === 0) return 0;
+      return bpm && bpm > 0 ? (px * bpm) / 120 : px;
+    },
+    [bpm]
+  );
 
   const scroll = useCallback(function tick(timestamp: number) {
-    if (speed === 0) return;
-    
+    if (step === 0) return;
+
     const element = targetRef.current;
-    
+
     if (!element) {
       // Fallback: scroll the window if no target element
       if (lastTimeRef.current === 0) {
@@ -50,23 +62,23 @@ export const Autoscroll = ({ targetRef, bpm }: AutoscrollProps) => {
       }
       const deltaTime = (timestamp - lastTimeRef.current) / 1000;
       lastTimeRef.current = timestamp;
-      const scrollAmount = pxPerSecond(speed) * deltaTime;
+      const scrollAmount = pxPerSecond(step) * deltaTime;
       const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
       const newScrollTop = Math.min(window.scrollY + scrollAmount, maxScroll);
       window.scrollTo(0, newScrollTop);
       setProgress((newScrollTop / maxScroll) * 100);
-      
-      if (newScrollTop < maxScroll && speed > 0) {
+
+      if (newScrollTop < maxScroll && step > 0) {
         animationRef.current = requestAnimationFrame(tick);
       } else {
-        setSpeed(0);
+        setStep(0);
         lastTimeRef.current = 0;
       }
       return;
     }
-    
+
     const maxScroll = element.scrollHeight - element.clientHeight;
-    
+
     if (maxScroll <= 0) {
       // Element has no scroll, try window scroll as fallback
       if (lastTimeRef.current === 0) {
@@ -74,16 +86,16 @@ export const Autoscroll = ({ targetRef, bpm }: AutoscrollProps) => {
       }
       const deltaTime = (timestamp - lastTimeRef.current) / 1000;
       lastTimeRef.current = timestamp;
-      const scrollAmount = pxPerSecond(speed) * deltaTime;
+      const scrollAmount = pxPerSecond(step) * deltaTime;
       const windowMaxScroll = document.documentElement.scrollHeight - window.innerHeight;
       const newScrollTop = Math.min(window.scrollY + scrollAmount, windowMaxScroll);
       window.scrollTo(0, newScrollTop);
       setProgress((newScrollTop / windowMaxScroll) * 100);
-      
-      if (newScrollTop < windowMaxScroll && speed > 0) {
+
+      if (newScrollTop < windowMaxScroll && step > 0) {
         animationRef.current = requestAnimationFrame(tick);
       } else {
-        setSpeed(0);
+        setStep(0);
         lastTimeRef.current = 0;
       }
       return;
@@ -96,23 +108,23 @@ export const Autoscroll = ({ targetRef, bpm }: AutoscrollProps) => {
     const deltaTime = (timestamp - lastTimeRef.current) / 1000;
     lastTimeRef.current = timestamp;
 
-    const scrollAmount = pxPerSecond(speed) * deltaTime;
+    const scrollAmount = pxPerSecond(step) * deltaTime;
     const newScrollTop = Math.min(element.scrollTop + scrollAmount, maxScroll);
 
     element.scrollTop = newScrollTop;
     setProgress((newScrollTop / maxScroll) * 100);
 
-    if (newScrollTop < maxScroll && speed > 0) {
+    if (newScrollTop < maxScroll && step > 0) {
       animationRef.current = requestAnimationFrame(tick);
     } else {
       // Chegou no fim ou velocidade foi mudada pra 0
-      setSpeed(0);
+      setStep(0);
       lastTimeRef.current = 0;
     }
-  }, [speed, pxPerSecond, targetRef]);
+  }, [step, pxPerSecond, targetRef]);
 
   useEffect(() => {
-    if (speed > 0) {
+    if (step > 0) {
       lastTimeRef.current = 0;
       animationRef.current = requestAnimationFrame(scroll);
     } else {
@@ -127,12 +139,12 @@ export const Autoscroll = ({ targetRef, bpm }: AutoscrollProps) => {
         cancelAnimationFrame(animationRef.current);
       }
     };
-  }, [speed, scroll]);
+  }, [step, scroll]);
 
   // Atualiza progresso quando scrolla manualmente
   useEffect(() => {
     const element = targetRef.current;
-    
+
     const handleElementScroll = () => {
       if (!element) return;
       const maxScroll = element.scrollHeight - element.clientHeight;
@@ -140,7 +152,7 @@ export const Autoscroll = ({ targetRef, bpm }: AutoscrollProps) => {
         setProgress((element.scrollTop / maxScroll) * 100);
       }
     };
-    
+
     const handleWindowScroll = () => {
       const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
       if (maxScroll > 0) {
@@ -152,7 +164,7 @@ export const Autoscroll = ({ targetRef, bpm }: AutoscrollProps) => {
       element.addEventListener('scroll', handleElementScroll, { passive: true });
     }
     window.addEventListener('scroll', handleWindowScroll, { passive: true });
-    
+
     return () => {
       if (element) {
         element.removeEventListener('scroll', handleElementScroll);
@@ -161,47 +173,58 @@ export const Autoscroll = ({ targetRef, bpm }: AutoscrollProps) => {
     };
   }, [targetRef]);
 
-  const cycleSpeed = () => {
-    const newSpeed = ((speed + 1) % 8) as SpeedLevel;
-    setSpeed(newSpeed);
+  const toggle = () => {
+    if (step > 0) {
+      lastStepRef.current = step;
+      setStep(0);
+    } else {
+      setStep(lastStepRef.current);
+    }
   };
 
-  const SPEED_LABELS: Record<SpeedLevel, string> = {
-    0: 'desligado',
-    1: 'rastejante',
-    2: 'ultra lento',
-    3: 'muito lento',
-    4: 'lento',
-    5: 'médio',
-    6: 'rápido',
-    7: 'muito rápido',
+  const handleSlider = (value: number) => {
+    if (value > 0) lastStepRef.current = value;
+    setStep(value);
   };
+
+  const currentPx = pxPerSecond(step);
 
   return (
-    <div className="flex items-center gap-2">
-      <button
-        className={`flex h-12 w-12 items-center justify-center rounded-lg transition-colors ${speed > 0 ? 'bg-success text-on-accent' : 'text-ink-muted hover:bg-surface-overlay hover:text-ink'}`}
-        onClick={cycleSpeed}
-        aria-label={`Auto-scroll: ${SPEED_LABELS[speed]}. Toque para mudar a velocidade.`}
-        title={`Auto-scroll: ${SPEED_LABELS[speed]}`}
-        aria-pressed={speed > 0}
-      >
-        {speed === 0 ? <Gauge size={20} aria-hidden /> : <Play size={18} className={speed >= 6 ? 'fill-current' : ''} aria-hidden />}
-      </button>
+    <div className="flex flex-col gap-2 flex-1 min-w-[260px]">
+      <div className="flex items-center gap-2">
+        <button
+          className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-lg transition-colors ${step > 0 ? 'bg-success text-on-accent' : 'text-ink-muted hover:bg-surface-overlay hover:text-ink'}`}
+          onClick={toggle}
+          aria-label={step > 0 ? 'Pausar auto-scroll' : 'Iniciar auto-scroll'}
+          title={step > 0 ? 'Pausar auto-scroll' : 'Iniciar auto-scroll'}
+          aria-pressed={step > 0}
+        >
+          {step === 0 ? <Play size={20} aria-hidden /> : <Pause size={20} aria-hidden />}
+        </button>
 
-      {/* Feedback visível da velocidade ativa (o aria-label sozinho não é visto) */}
-      <span
-        aria-hidden
-        className={`text-xs font-medium rounded-full px-2 py-1 transition-colors whitespace-nowrap ${
-          speed > 0
-            ? 'bg-success/15 text-success'
-            : 'bg-transparent text-ink-faint'
-        }`}
-      >
-        {speed > 0 ? SPEED_LABELS[speed] : 'parado'}
-      </span>
+        <input
+          type="range"
+          min={0}
+          max={STEPS}
+          step={1}
+          value={step}
+          onChange={(e) => handleSlider(Number(e.target.value))}
+          className="flex-1 accent-success h-1.5 cursor-pointer"
+          aria-label="Velocidade do auto-scroll"
+          aria-valuetext={`${Math.round(currentPx)} pixels por segundo (${speedLabel(currentPx)})`}
+        />
 
-      <div className="flex-1 flex items-center gap-2">
+        <span
+          aria-hidden
+          className={`text-xs font-medium rounded-full px-2 py-1 transition-colors whitespace-nowrap w-24 text-center ${
+            step > 0 ? 'bg-success/15 text-success' : 'bg-transparent text-ink-faint'
+          }`}
+        >
+          {step > 0 ? `${Math.round(currentPx)} px/s` : 'parado'}
+        </span>
+      </div>
+
+      <div className="flex items-center gap-2">
         <div
           className="flex-1 h-1 bg-surface-overlay rounded-full overflow-hidden"
           role="progressbar"

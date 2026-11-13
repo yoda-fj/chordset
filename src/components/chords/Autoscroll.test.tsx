@@ -1,13 +1,12 @@
 // @vitest-environment jsdom
 /**
- * Cobertura — Autoscroll
- * Modo BPM: pxPerSecond = BPM_PX_PER_BEAT[nível] × bpm/60 (ex.: nível 1 com
- * bpm=150 → 37.5 px/s). Sem bpm, cai no SPEED_MAP fixo (regressão).
- * O rAF é mockado para controlar os timestamps e medir scrollTop acumulado.
+ * Cobertura — Autoscroll (slider contínuo)
+ * px/s = sliderToPx(passo); com bpm, escala por bpm/120 (a 120 BPM o valor
+ * do slider vale exatamente). O rAF é mockado para controlar timestamps.
  */
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, fireEvent, act } from '@testing-library/react';
-import { Autoscroll } from './Autoscroll';
+import { Autoscroll, sliderToPx, MIN_PX, MAX_PX } from './Autoscroll';
 
 const rafQueue: FrameRequestCallback[] = [];
 
@@ -28,20 +27,33 @@ function runFrame(timestamp: number) {
   cb(timestamp);
 }
 
-const SPEED_LABELS = [
-  'desligado',
-  'rastejante',
-  'ultra lento',
-  'muito lento',
-  'lento',
-  'médio',
-  'rápido',
-  'muito rápido',
-];
-
-function buttonLabel(level: number) {
-  return `Auto-scroll: ${SPEED_LABELS[level]}. Toque para mudar a velocidade.`;
+/** Drena reagendamentos extras deixados pelo mock de cancelAnimationFrame. */
+function drainRaf() {
+  rafQueue.splice(0, rafQueue.length - 1);
 }
+
+describe('sliderToPx', () => {
+  it('passo 0 = desligado; extremos vão de MIN a MAX', () => {
+    expect(sliderToPx(0)).toBe(0);
+    expect(sliderToPx(1)).toBeCloseTo(MIN_PX, 5);
+    expect(sliderToPx(30)).toBeCloseTo(MAX_PX, 5);
+  });
+
+  it('escala é exponencial: granularidade fina na faixa lenta', () => {
+    // Passos baixos diferem pouco entre si (bom pra ajuste fino lento)
+    expect(sliderToPx(2) - sliderToPx(1)).toBeLessThan(2);
+    expect(sliderToPx(3) - sliderToPx(2)).toBeLessThan(2);
+    // ...e a faixa lenta (3-15 px/s) ocupa vários passos
+    const slowSteps = Array.from({ length: 30 }, (_, i) => i + 1).filter(
+      (s) => sliderToPx(s) < 15
+    ).length;
+    expect(slowSteps).toBeGreaterThanOrEqual(8);
+    // Monotônica
+    for (let s = 1; s < 30; s++) {
+      expect(sliderToPx(s + 1)).toBeGreaterThan(sliderToPx(s));
+    }
+  });
+});
 
 describe('Autoscroll', () => {
   beforeEach(() => {
@@ -57,95 +69,88 @@ describe('Autoscroll', () => {
     vi.unstubAllGlobals();
   });
 
-  it('cicla os níveis de 0 a 7 e volta para desligado', () => {
+  it('toggle inicia no último nível usado e pausa', () => {
     const target = makeTarget();
     render(<Autoscroll targetRef={{ current: target as unknown as HTMLElement }} />);
-    const btn = screen.getByRole('button', { name: /Auto-scroll/ });
+    const btn = screen.getByRole('button', { name: /auto-scroll/i });
+    const slider = screen.getByRole('slider');
 
-    expect(btn).toHaveAttribute('aria-label', buttonLabel(0));
+    expect(slider).toHaveValue('0');
+    fireEvent.click(btn); // inicia
+    expect(slider).toHaveValue('8'); // último nível padrão
+    expect(btn).toHaveAttribute('aria-pressed', 'true');
+    drainRaf();
 
-    for (let level = 1; level <= 7; level++) {
-      fireEvent.click(btn);
-      expect(btn).toHaveAttribute('aria-label', buttonLabel(level));
-    }
-
-    fireEvent.click(btn); // wrap: 7 + 1 → 0
-    expect(btn).toHaveAttribute('aria-label', buttonLabel(0));
+    fireEvent.click(btn); // pausa
+    expect(slider).toHaveValue('0');
     expect(btn).toHaveAttribute('aria-pressed', 'false');
   });
 
-  it('modo BPM: nível 4 com bpm=150 avança 25 px/s (10 × 150/60)', () => {
+  it('arrastar o slider para 0 pausa; para >0 inicia', () => {
     const target = makeTarget();
-    render(
-      <Autoscroll
-        targetRef={{ current: target as unknown as HTMLElement }}
-        bpm={150}
-      />
-    );
+    render(<Autoscroll targetRef={{ current: target as unknown as HTMLElement }} />);
+    const slider = screen.getByRole('slider');
 
-    const btn = screen.getByRole('button', { name: /Auto-scroll/ });
-    fireEvent.click(btn); // nível 1 → agenda o rAF
-    expect(rafQueue).toHaveLength(1);
+    fireEvent.change(slider, { target: { value: '12' } });
+    expect(rafQueue.length).toBeGreaterThan(0);
+    drainRaf();
 
-    for (let i = 0; i < 3; i++) fireEvent.click(btn); // níveis 2-4
-    // Cada clique reagenda o rAF; no browser o cancel da limpeza deixa só um
-    // pendente, mas o mock de cancelAnimationFrame é no-op — drena os mais
-    // antigos, mantendo o callback do último efeito (o do nível atual).
-    rafQueue.splice(0, rafQueue.length - 1);
+    fireEvent.change(slider, { target: { value: '0' } });
+    expect(screen.getByRole('button', { name: /auto-scroll/i })).toHaveAttribute('aria-pressed', 'false');
+  });
 
-    // Timestamps precisam ser > 0: o tick usa lastTimeRef === 0 como sinal de
-    // "primeiro frame", então um timestamp 0 faria o 2º frame zerar o delta.
+  it('sem bpm: avança sliderToPx(passo) px/s', () => {
+    const target = makeTarget();
+    render(<Autoscroll targetRef={{ current: target as unknown as HTMLElement }} />);
+
+    const slider = screen.getByRole('slider');
+    fireEvent.change(slider, { target: { value: '10' } });
+    drainRaf();
+
     act(() => {
-      runFrame(16); // 1º frame: só inicializa o relógio, sem deslocamento
+      runFrame(16); // 1º frame: só inicializa o relógio
     });
     expect(target.scrollTop).toBe(0);
 
     act(() => {
-      runFrame(1016); // 1s depois: 25 px
+      runFrame(1016); // 1s depois
     });
-    expect(target.scrollTop).toBeCloseTo(25, 1);
-
-    // Progresso reflete o deslocamento (25 de 800 px scrolláveis)
-    expect(screen.getByRole('progressbar')).toHaveAttribute('aria-valuenow', '3');
+    const expected = sliderToPx(10);
+    expect(target.scrollTop).toBeCloseTo(expected, 1);
+    expect(screen.getByRole('progressbar')).toHaveAttribute(
+      'aria-valuenow',
+      String(Math.round((expected / 800) * 100))
+    );
   });
 
-  it('sem bpm: nível 2 usa SPEED_MAP (6 px/s) — regressão do modo fixo', () => {
+  it('modo BPM: escala por bpm/120 (bpm=240 dobra a velocidade)', () => {
     const target = makeTarget();
-    render(<Autoscroll targetRef={{ current: target as unknown as HTMLElement }} />);
+    render(
+      <Autoscroll
+        targetRef={{ current: target as unknown as HTMLElement }}
+        bpm={240}
+      />
+    );
 
-    const btn = screen.getByRole('button', { name: /Auto-scroll/ });
-    fireEvent.click(btn); // nível 1
-    fireEvent.click(btn); // nível 2
+    const slider = screen.getByRole('slider');
+    fireEvent.change(slider, { target: { value: '10' } });
+    drainRaf();
 
     act(() => {
       runFrame(16);
       runFrame(1016);
     });
-    expect(target.scrollTop).toBeCloseTo(6, 1);
+    expect(target.scrollTop).toBeCloseTo(sliderToPx(10) * 2, 1);
   });
 
-  it('mostra feedback visual da velocidade ativa', () => {
+  it('mostra a velocidade atual em px/s e "parado" quando desligado', () => {
     const target = makeTarget();
     render(<Autoscroll targetRef={{ current: target as unknown as HTMLElement }} />);
-    const btn = screen.getByRole('button', { name: /Auto-scroll/ });
+    const slider = screen.getByRole('slider');
 
-    // Parado: mostra "parado"
-    expect(btn.parentElement).toHaveTextContent('parado');
+    expect(screen.getByText('parado')).toBeInTheDocument();
 
-    fireEvent.click(btn); // nível 1
-    expect(btn.parentElement).toHaveTextContent('rastejante');
-
-    fireEvent.click(btn); // nível 2
-    expect(btn.parentElement).toHaveTextContent('ultra lento');
-
-    fireEvent.click(btn); // de volta a 0 (nível 3)
-    expect(btn.parentElement).toHaveTextContent('muito lento');
-
-    fireEvent.click(btn); // 4
-    fireEvent.click(btn); // 5
-    fireEvent.click(btn); // 6
-    fireEvent.click(btn); // 7
-    fireEvent.click(btn); // wrap -> 0
-    expect(btn.parentElement).toHaveTextContent('parado');
+    fireEvent.change(slider, { target: { value: '10' } });
+    expect(screen.getByText(`${Math.round(sliderToPx(10))} px/s`)).toBeInTheDocument();
   });
 });
