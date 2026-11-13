@@ -6,7 +6,7 @@
  */
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, fireEvent, act } from '@testing-library/react';
-import { Autoscroll, sliderToPx, MIN_PX, MAX_PX } from './Autoscroll';
+import { Autoscroll, sliderToPx, sliderToPxPerBeat, MIN_PX, MAX_PX, MIN_PX_PER_BEAT, MAX_PX_PER_BEAT } from './Autoscroll';
 
 const rafQueue: FrameRequestCallback[] = [];
 
@@ -31,6 +31,20 @@ function runFrame(timestamp: number) {
 function drainRaf() {
   rafQueue.splice(0, rafQueue.length - 1);
 }
+
+describe('sliderToPxPerBeat', () => {
+  it('passo 0 = desligado; extremos vão de MIN a MAX px/batida', () => {
+    expect(sliderToPxPerBeat(0)).toBe(0);
+    expect(sliderToPxPerBeat(1)).toBeCloseTo(MIN_PX_PER_BEAT, 5);
+    expect(sliderToPxPerBeat(30)).toBeCloseTo(MAX_PX_PER_BEAT, 5);
+  });
+
+  it('monotônica', () => {
+    for (let s = 1; s < 30; s++) {
+      expect(sliderToPxPerBeat(s + 1)).toBeGreaterThan(sliderToPxPerBeat(s));
+    }
+  });
+});
 
 describe('sliderToPx', () => {
   it('passo 0 = desligado; extremos vão de MIN a MAX', () => {
@@ -123,7 +137,7 @@ describe('Autoscroll', () => {
     );
   });
 
-  it('modo BPM: escala por bpm/120 (bpm=240 dobra a velocidade)', () => {
+  it('modo BPM: px/s = px/batida × bpm/60 — mesmo passo, o dobro do BPM dobra a velocidade', () => {
     const target = makeTarget();
     render(
       <Autoscroll
@@ -140,7 +154,44 @@ describe('Autoscroll', () => {
       runFrame(16);
       runFrame(1016);
     });
-    expect(target.scrollTop).toBeCloseTo(sliderToPx(10) * 2, 1);
+    // bpm=240 → fator 240/60 = 4
+    expect(target.scrollTop).toBeCloseTo(sliderToPxPerBeat(10) * 4, 1);
+  });
+
+  it('modo BPM: a 60 BPM a metade da velocidade de 120 BPM no mesmo passo', () => {
+    const target = makeTarget();
+    const { unmount } = render(
+      <Autoscroll
+        targetRef={{ current: target as unknown as HTMLElement }}
+        bpm={120}
+      />
+    );
+    const slider = screen.getByRole('slider');
+    fireEvent.change(slider, { target: { value: '15' } });
+    drainRaf();
+    act(() => {
+      runFrame(16);
+      runFrame(1016);
+    });
+    const pxAt120 = target.scrollTop;
+    unmount();
+
+    rafQueue.length = 0;
+    const target2 = makeTarget();
+    render(
+      <Autoscroll
+        targetRef={{ current: target2 as unknown as HTMLElement }}
+        bpm={60}
+      />
+    );
+    const slider2 = screen.getByRole('slider');
+    fireEvent.change(slider2, { target: { value: '15' } });
+    drainRaf();
+    act(() => {
+      runFrame(16);
+      runFrame(1016);
+    });
+    expect(target2.scrollTop).toBeCloseTo(pxAt120 / 2, 1);
   });
 
   it('mostra a velocidade atual em px/s e "parado" quando desligado', () => {

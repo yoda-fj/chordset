@@ -9,16 +9,26 @@ interface AutoscrollProps {
 }
 
 // Slider com escala exponencial: os primeiros passos cobrem a faixa lenta
-// (3-15 px/s) com granularidade fina, e a faixa rápida fica compacta no fim.
+// com granularidade fina, e a faixa rápida fica compacta no fim.
 export const MIN_PX = 3;
 export const MAX_PX = 150;
+// Modo BPM: o slider mede px por batida; px/s = px/batida × bpm/60.
+export const MIN_PX_PER_BEAT = 1;
+export const MAX_PX_PER_BEAT = 60;
 const STEPS = 30;
 
-/** Converte o passo do slider (0 = desligado, 1..STEPS) em px/s. */
+/** Converte o passo do slider (0 = desligado, 1..STEPS) em px/s (sem BPM). */
 export function sliderToPx(step: number): number {
   if (step <= 0) return 0;
   const t = (Math.min(step, STEPS) - 1) / (STEPS - 1); // 0..1
   return MIN_PX * Math.pow(MAX_PX / MIN_PX, t);
+}
+
+/** Converte o passo do slider em px por batida (modo BPM). */
+export function sliderToPxPerBeat(step: number): number {
+  if (step <= 0) return 0;
+  const t = (Math.min(step, STEPS) - 1) / (STEPS - 1); // 0..1
+  return MIN_PX_PER_BEAT * Math.pow(MAX_PX_PER_BEAT / MIN_PX_PER_BEAT, t);
 }
 
 /** Rótulo qualitativo só pra referência — o valor em px/s é o que manda. */
@@ -39,13 +49,12 @@ export const Autoscroll = ({ targetRef, bpm }: AutoscrollProps) => {
   const lastTimeRef = useRef<number>(0);
   const lastStepRef = useRef(8); // retomar neste nível ao religar
 
-  // Escala pelo BPM da música: a 120 BPM o slider vale exatamente o px/s
-  // marcado; músicas mais rápidas rolam proporcionalmente mais depressa.
+  // Com BPM da música, o slider mede px por BATIDA: o scroll acompanha o
+  // andamento real (px/s = px/batida × bpm/60). Sem BPM, px/s fixo.
   const pxPerSecond = useCallback(
     (s: number): number => {
-      const px = sliderToPx(s);
-      if (px === 0) return 0;
-      return bpm && bpm > 0 ? (px * bpm) / 120 : px;
+      if (bpm && bpm > 0) return (sliderToPxPerBeat(s) * bpm) / 60;
+      return sliderToPx(s);
     },
     [bpm]
   );
