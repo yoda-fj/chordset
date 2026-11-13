@@ -70,6 +70,29 @@ describe('importSongSchema', () => {
   it('rejeita query acima de 200 chars', () => {
     expect(importSongSchema.safeParse({ query: 'x'.repeat(201) }).success).toBe(false)
   })
+
+  it('aceita query com save: true (modo combinado do bulk import)', () => {
+    const r = importSongSchema.safeParse({ query: 'tempo perdido', save: true })
+    expect(r.success).toBe(true)
+    if (r.success) {
+      expect(r.data).toMatchObject({ query: 'tempo perdido', save: true })
+    }
+  })
+
+  it('aceita query com save: false (busca sem importar)', () => {
+    expect(importSongSchema.safeParse({ query: 'tempo perdido', save: false }).success).toBe(true)
+  })
+
+  it('aceita url com save: true (importar e salvar)', () => {
+    const r = importSongSchema.safeParse({
+      url: 'https://www.cifraclub.com.br/legiao-urbana/sera',
+      save: true,
+    })
+    expect(r.success).toBe(true)
+    if (r.success) {
+      expect(r.data).toMatchObject({ save: true })
+    }
+  })
 })
 
 describe('importMpmSchema', () => {

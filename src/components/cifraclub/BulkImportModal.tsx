@@ -2,10 +2,10 @@
 
 import { useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
-import { X, Loader2, CheckCircle2, AlertTriangle, XCircle, CircleDashed } from 'lucide-react'
+import { X, Loader2, CheckCircle2, AlertTriangle, XCircle, CircleDashed, Clock } from 'lucide-react'
 import { parseBulkImportLines, BULK_IMPORT_DELAY_MS, type BulkImportItem } from '@/lib/bulk-import'
 
-type LineStatus = 'pending' | 'importing' | 'imported' | 'exists' | 'error'
+type LineStatus = 'pending' | 'importing' | 'waiting' | 'imported' | 'exists' | 'error'
 
 interface BulkLine {
   item: BulkImportItem
@@ -15,7 +15,28 @@ interface BulkLine {
   message?: string
 }
 
-const sleep = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms))
+/** Máximo de tentativas por linha quando a API responde 429. */
+const MAX_RETRY_ATTEMPTS = 3
+
+/** retryAfterSec do body 429 quando ausente/inválido. */
+const DEFAULT_RETRY_AFTER_SEC = 30
+
+/**
+ * Dorme `ms`, mas verifica `shouldCancel` a cada 250ms para que o
+ * cancelamento responda mesmo em esperas longas (ex: retry de 429).
+ * Retorna true se completou a espera; false se foi cancelado.
+ */
+function sleepCancellable(ms: number, shouldCancel: () => boolean): Promise<boolean> {
+  return new Promise((resolve) => {
+    const startedAt = Date.now()
+    const tick = () => {
+      if (shouldCancel()) return resolve(false)
+      if (Date.now() - startedAt >= ms) return resolve(true)
+      setTimeout(tick, 250)
+    }
+    tick()
+  })
+}
 
 interface BulkImportModalProps {
   isOpen: boolean
@@ -46,78 +67,97 @@ export function BulkImportModal({ isOpen, onClose }: BulkImportModalProps) {
     setLines(items.map((item) => ({ item, status: 'pending' })))
 
     for (let i = 0; i < items.length; i++) {
-      if (cancelRef.current) break
-      updateLine(i, { status: 'importing' })
-
       const item = items[i]
+      let attempt = 0
+      let lineDone = false
 
-      try {
-        let url: string | null = item.kind === 'url' ? item.url : null
+      while (!lineDone) {
+        if (cancelRef.current) break
+        attempt += 1
+        updateLine(i, { status: 'importing', message: undefined })
 
-        if (!url) {
-          const query = item.kind === 'query' ? item.query : ''
-          const searchRes = await fetch('/api/import-song', {
+        try {
+          // Uma única requisição por linha: o modo combinado {query, save: true}
+          // busca o primeiro resultado e já importa (economiza o rate limit).
+          const body =
+            item.kind === 'url'
+              ? { url: item.url, provider: 'cifraclub', save: true }
+              : { query: item.query, provider: 'cifraclub', save: true }
+
+          const res = await fetch('/api/import-song', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ query, provider: 'cifraclub' }),
+            body: JSON.stringify(body),
           })
-          const searchData = await searchRes.json()
+          const data = await res.json()
           if (cancelRef.current) break
-          if (!searchRes.ok || !searchData.success) {
-            throw new Error(searchData.error || 'Erro ao buscar música')
-          }
-          const first = searchData.results?.[0]
-          if (!first) {
-            throw new Error('Nenhum resultado encontrado para essa busca')
-          }
-          url = first.url
-          // Pausa também entre a busca e a importação da mesma linha
-          await sleep(BULK_IMPORT_DELAY_MS)
-          if (cancelRef.current) break
-        }
 
-        const importRes = await fetch('/api/import-song', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ url, provider: 'cifraclub', save: true }),
-        })
-        const data = await importRes.json()
-        if (cancelRef.current) break
+          if (res.status === 429) {
+            const parsedRetry = Number(data?.retryAfterSec)
+            const retryAfterSec =
+              Number.isFinite(parsedRetry) && parsedRetry > 0 ? Math.ceil(parsedRetry) : DEFAULT_RETRY_AFTER_SEC
 
-        if (!importRes.ok || !data.success) {
-          updateLine(i, { status: 'error', message: data.error || 'Erro ao importar música' })
-        } else if (data.alreadyExists) {
-          updateLine(i, {
-            status: 'exists',
-            titulo: data.song?.titulo,
-            artista: data.song?.artista,
-          })
-        } else if (data.saved) {
-          updateLine(i, {
-            status: 'imported',
-            titulo: data.song?.titulo,
-            artista: data.song?.artista,
-          })
-        } else {
+            if (attempt >= MAX_RETRY_ATTEMPTS) {
+              updateLine(i, {
+                status: 'error',
+                message: data.error || `Rate limit não liberou após ${MAX_RETRY_ATTEMPTS} tentativas`,
+              })
+              lineDone = true
+            } else {
+              updateLine(i, {
+                status: 'waiting',
+                message: `Aguardando rate limit (${retryAfterSec}s)...`,
+              })
+              if (!(await sleepCancellable(retryAfterSec * 1000, () => cancelRef.current))) break
+            }
+            continue
+          }
+
+          if (!res.ok || !data.success) {
+            updateLine(i, { status: 'error', message: data.error || 'Erro ao importar música' })
+          } else if (data.alreadyExists) {
+            updateLine(i, {
+              status: 'exists',
+              titulo: data.song?.titulo,
+              artista: data.song?.artista,
+            })
+          } else if (data.saved) {
+            updateLine(i, {
+              status: 'imported',
+              titulo: data.song?.titulo,
+              artista: data.song?.artista,
+            })
+          } else {
+            updateLine(i, {
+              status: 'error',
+              message: data.error || 'Música encontrada mas não foi possível salvar no banco',
+            })
+          }
+          lineDone = true
+        } catch (err) {
           updateLine(i, {
             status: 'error',
-            message: data.error || 'Música encontrada mas não foi possível salvar no banco',
+            message: err instanceof Error ? err.message : 'Erro ao importar música',
           })
+          lineDone = true
         }
-      } catch (err) {
-        updateLine(i, {
-          status: 'error',
-          message: err instanceof Error ? err.message : 'Erro ao importar música',
-        })
       }
 
+      if (cancelRef.current) break
+
       // Pausa entre uma música e a próxima para não disparar o rate limit
-      if (i < items.length - 1) await sleep(BULK_IMPORT_DELAY_MS)
+      if (i < items.length - 1) {
+        if (!(await sleepCancellable(BULK_IMPORT_DELAY_MS, () => cancelRef.current))) break
+      }
     }
 
     // Linha que estava em andamento quando o cancelamento aconteceu volta a ficar pendente
     setLines((prev) =>
-      prev.map((line) => (line.status === 'importing' ? { ...line, status: 'pending' } : line))
+      prev.map((line) =>
+        line.status === 'importing' || line.status === 'waiting'
+          ? { ...line, status: 'pending', message: undefined }
+          : line
+      )
     )
     setRunning(false)
   }
@@ -136,7 +176,9 @@ export function BulkImportModal({ isOpen, onClose }: BulkImportModalProps) {
     onClose()
   }
 
-  const processedCount = lines.filter((l) => l.status !== 'pending' && l.status !== 'importing').length
+  const processedCount = lines.filter(
+    (l) => l.status === 'imported' || l.status === 'exists' || l.status === 'error'
+  ).length
   const importedCount = lines.filter((l) => l.status === 'imported').length
   const existsCount = lines.filter((l) => l.status === 'exists').length
   const errorCount = lines.filter((l) => l.status === 'error').length
@@ -179,7 +221,8 @@ export function BulkImportModal({ isOpen, onClose }: BulkImportModalProps) {
             <p className="mt-1 text-xs text-ink-muted">
               Para não disparar a proteção do Cifra Club contra acessos em rajada, as músicas são
               importadas uma de cada vez, com pausa de ~{(BULK_IMPORT_DELAY_MS / 1000).toFixed(1)}s
-              entre os pedidos. Buscas em texto livre usam o primeiro resultado (versão principal).
+              entre elas. Se o limite da API estourar, a importação aguarda e tenta de novo
+              sozinha. Buscas em texto livre usam o primeiro resultado (versão principal).
             </p>
           </div>
 
@@ -225,6 +268,7 @@ export function BulkImportModal({ isOpen, onClose }: BulkImportModalProps) {
                   <span className="mt-0.5 flex-shrink-0">
                     {line.status === 'pending' && <CircleDashed size={16} className="text-ink-faint" />}
                     {line.status === 'importing' && <Loader2 size={16} className="animate-spin text-brand" />}
+                    {line.status === 'waiting' && <Clock size={16} className="text-brand" />}
                     {line.status === 'imported' && <CheckCircle2 size={16} className="text-success" />}
                     {line.status === 'exists' && <AlertTriangle size={16} className="text-brand" />}
                     {line.status === 'error' && <XCircle size={16} className="text-danger" />}
@@ -249,6 +293,9 @@ export function BulkImportModal({ isOpen, onClose }: BulkImportModalProps) {
                           <span className="block text-xs text-ink-muted">{line.message}</span>
                         )}
                       </>
+                    )}
+                    {line.status === 'waiting' && (
+                      <span className="text-ink-muted">{line.message || line.item.raw}</span>
                     )}
                     {(line.status === 'pending' || line.status === 'importing') && (
                       <span className="text-ink-muted">{line.item.raw}</span>

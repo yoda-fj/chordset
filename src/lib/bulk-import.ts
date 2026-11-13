@@ -4,10 +4,12 @@
 
 /**
  * Pausa entre requisições no modo de importação em lote.
- * O Cifra Club usa proteção anti-robô (Akamai) que bloqueia rajadas
- * de requisições; manter ~1.5s entre pedidos evita o bloqueio.
+ * A API tem rate limit de 20 req/min por IP (src/middleware.ts), e o
+ * Cifra Club usa proteção anti-robô (Akamai) que bloqueia rajadas;
+ * manter ~3s entre os pedidos fica abaixo do limite. O tratamento de 429
+ * com retry (BulkImportModal) é a rede de segurança caso o limite estoure.
  */
-export const BULK_IMPORT_DELAY_MS = 1500
+export const BULK_IMPORT_DELAY_MS = 3000
 
 /** Limite de linhas aceitas por lote (proteção contra paste acidental gigante). */
 export const BULK_IMPORT_MAX_LINES = 100
