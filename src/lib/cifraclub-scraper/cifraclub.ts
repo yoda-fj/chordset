@@ -22,12 +22,33 @@ export class CifraClubScraper {
       return this.browser;
     }
     this.browser = null;
-    const launchArgs: string[] = [];
-    const browser = await chromium.launch({
+    const launchArgs: string[] = ['--disable-blink-features=AutomationControlled'];
+    // O headless shell (padrão do chromium.launch({headless: true})) é
+    // detectado e bloqueado pelo Akamai do Cifra Club (403). O build
+    // completo do Chromium em modo headless novo passa — mas só junto
+    // com contexto realista (UA/locale/viewport) e sem o sinal de
+    // automação do Blink. Quando um executablePath é fornecido
+    // (ex.: Chromium do sistema no Docker), ele tem precedência.
+    const executablePath = process.env.PLAYWRIGHT_CHROMIUM_PATH;
+    const launchOptions = {
       headless: true,
       args: launchArgs,
-      executablePath: process.env.PLAYWRIGHT_CHROMIUM_PATH,
-    });
+      ...(executablePath
+        ? { executablePath }
+        : { channel: 'chromium' as const }),
+    };
+    let browser: Browser;
+    try {
+      browser = await chromium.launch(launchOptions);
+    } catch (err) {
+      // Chromium completo não instalado (falta `npx playwright install chromium`)?
+      // Cai pro headless shell — pelo menos funciona onde o Akamai não bloqueia.
+      console.warn(
+        '[CifraClubScraper] Chromium completo indisponível, usando headless shell:',
+        (err as Error).message
+      );
+      browser = await chromium.launch({ headless: true, args: launchArgs, executablePath });
+    }
     // Se o browser morrer (crash, OOM, kill), limpa a referência
     // para que a próxima chamada faça re-launch em vez de usar instância morta
     browser.on('disconnected', () => {
@@ -52,8 +73,17 @@ export class CifraClubScraper {
     try {
       const browser = await this.getBrowser();
       // Context isolado por scrape: fechar o context fecha a página junto,
-      // sem derrubar o browser reutilizável
-      const context = await browser.newContext();
+      // sem derrubar o browser reutilizável.
+      // Contexto com fingerprint de navegador real: o Akamai do Cifra Club
+      // bloqueia contextos com UA/locale de automação.
+      const context = await browser.newContext({
+        userAgent:
+          'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
+        locale: 'pt-BR',
+        timezoneId: 'America/Sao_Paulo',
+        viewport: { width: 1440, height: 900 },
+        extraHTTPHeaders: { 'Accept-Language': 'pt-BR,pt;q=0.9' },
+      });
       try {
         const page = await context.newPage();
         page.setDefaultTimeout(15000);
