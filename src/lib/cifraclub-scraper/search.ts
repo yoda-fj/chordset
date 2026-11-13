@@ -6,10 +6,12 @@ interface SolrDoc {
   art: string;
   dns: string;
   txt: string;
-  url: string;
+  /** Só docs de música têm slug — cards de vídeo/artista não têm página de cifra */
+  url?: string;
   imgm: string;
   id_artist: number;
   id_song: number;
+  tipo?: string;
 }
 
 interface SolrResponse {
@@ -20,7 +22,54 @@ interface SolrResponse {
 }
 
 export async function search(query: string, limit = 30): Promise<SearchResult> {
-  const params = new URLSearchParams({ q: query, limit: String(limit), callback: 'suggest_callback' });
+  const normalized = normalizeSearchQuery(query)
+
+  const params = new URLSearchParams({ q: normalized, limit: String(limit), callback: 'suggest_callback' });
+  let data: SolrResponse = await fetchSolr(params);
+
+  // Fallback: busca com comentários entre parênteses removidos
+  // (ex.: "País Tropical (emendar com Taj Mahal)" -> "País Tropical")
+  if (data.response.numFound === 0) {
+    const stripped = normalized
+      .replace(/\(.*?\)/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim()
+    if (stripped && stripped !== normalized) {
+      const retry = new URLSearchParams({ q: stripped, limit: String(limit), callback: 'suggest_callback' })
+      data = await fetchSolr(retry)
+    }
+  }
+
+  const songs: SearchDoc[] = data.response.docs
+    // Só docs com slug de música viram resultado — vídeos/artistas
+    // (sem 'url') quebrariam o scrape com 404
+    .filter((doc) => doc.url)
+    .map((doc) => ({
+      artist: doc.art,
+      artist_slug: doc.dns,
+      song: doc.txt,
+      song_slug: doc.url as string,
+      image: doc.imgm,
+      id_artist: doc.id_artist,
+      id_song: doc.id_song,
+    }));
+
+  return { total: data.response.numFound, songs };
+}
+
+/**
+ * Normaliza a query de busca: travessões/en-dashes (copiados de Word/docs/
+ * WhatsApp) viram espaços — o Solr do Cifra Club devolve 0 resultados
+ * com eles. Espaços múltiplos são colapsados.
+ */
+export function normalizeSearchQuery(query: string): string {
+  return query
+    .replace(/[\u2010-\u2015\u2212]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+}
+
+async function fetchSolr(params: URLSearchParams): Promise<SolrResponse> {
   const res = await fetch(`${SEARCH_URL}?${params}`);
 
   if (!res.ok) {
@@ -29,17 +78,5 @@ export async function search(query: string, limit = 30): Promise<SearchResult> {
 
   const text = await res.text();
   const json = text.replace(/^suggest_callback\(/, '').replace(/\);?$/, '');
-  const data: SolrResponse = JSON.parse(json);
-
-  const songs: SearchDoc[] = data.response.docs.map((doc) => ({
-    artist: doc.art,
-    artist_slug: doc.dns,
-    song: doc.txt,
-    song_slug: doc.url,
-    image: doc.imgm,
-    id_artist: doc.id_artist,
-    id_song: doc.id_song,
-  }));
-
-  return { total: data.response.numFound, songs };
+  return JSON.parse(json);
 }
