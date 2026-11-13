@@ -342,62 +342,66 @@ export default function NewMusicaPage() {
           </div>
         </div>
 
-        <div className="flex justify-end gap-3 mt-6">
-          <button
-            type="button"
-            onClick={() => setShowImport(true)}
-            className="inline-flex items-center gap-2 px-4 py-2 text-brand border border-brand rounded-lg hover:bg-brand/10 transition-colors"
-          >
-            <Download size={18} />
-            Importar do Cifra Club
-          </button>
-          <button
-            type="button"
-            onClick={() => setShowBulkImport(true)}
-            className="inline-flex items-center gap-2 px-4 py-2 text-brand border border-brand rounded-lg hover:bg-brand/10 transition-colors"
-          >
-            <ListMusic size={18} />
-            Importar várias
-          </button>
-          <button
-            type="button"
-            onClick={() => setShowPhotoImport(true)}
-            className="inline-flex items-center gap-2 px-4 py-2 text-brand border border-brand rounded-lg hover:bg-brand/10 transition-colors"
-          >
-            <Camera size={18} />
-            Importar via Foto
-          </button>
-          <button
-            type="button"
-            onClick={() => setShowMpmImport(true)}
-            className="inline-flex items-center gap-2 px-4 py-2 text-brand border border-brand rounded-lg hover:bg-brand/10 transition-colors"
-          >
-            <Church size={18} />
-            Importar do Músicas para Missa
-          </button>
-          <Link
-            href="/musicas"
-            className="px-4 py-2 text-ink-muted hover:text-ink"
-          >
-            Cancelar
-          </Link>
-          <button
-            type="submit"
-            disabled={saving || !isValid}
-            className="inline-flex items-center gap-2 px-4 py-2 bg-brand text-on-accent rounded-lg hover:bg-brand-600 disabled:opacity-50 transition-colors"
-          >
-            {saving ? (
-              <>
-                <Loader2 size={18} className="animate-spin" />
-                Salvando...
-              </>
-            ) : (
-              <>
-                <Save size={18} />
-                Salvar Música
-              </>
-            )}
-          </button>
+        <div className="flex flex-wrap items-center justify-between gap-3 mt-6">
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setShowImport(true)}
+              className="inline-flex items-center gap-2 px-4 py-2 text-brand border border-brand rounded-lg hover:bg-brand/10 transition-colors"
+            >
+              <Download size={18} />
+              Importar do Cifra Club
+            </button>
+            <button
+              type="button"
+              onClick={() => setShowBulkImport(true)}
+              className="inline-flex items-center gap-2 px-4 py-2 text-brand border border-brand rounded-lg hover:bg-brand/10 transition-colors"
+            >
+              <ListMusic size={18} />
+              Importar várias
+            </button>
+            <button
+              type="button"
+              onClick={() => setShowPhotoImport(true)}
+              className="inline-flex items-center gap-2 px-4 py-2 text-brand border border-brand rounded-lg hover:bg-brand/10 transition-colors"
+            >
+              <Camera size={18} />
+              Importar via Foto
+            </button>
+            <button
+              type="button"
+              onClick={() => setShowMpmImport(true)}
+              className="inline-flex items-center gap-2 px-4 py-2 text-brand border border-brand rounded-lg hover:bg-brand/10 transition-colors"
+            >
+              <Church size={18} />
+              Importar do Músicas para Missa
+            </button>
+          </div>
+          <div className="flex items-center gap-3">
+            <Link
+              href="/musicas"
+              className="px-4 py-2 text-ink-muted hover:text-ink"
+            >
+              Cancelar
+            </Link>
+            <button
+              type="submit"
+              disabled={saving || !isValid}
+              className="inline-flex items-center gap-2 px-4 py-2 bg-brand text-on-accent rounded-lg hover:bg-brand-600 disabled:opacity-50 transition-colors"
+            >
+              {saving ? (
+                <>
+                  <Loader2 size={18} className="animate-spin" />
+                  Salvando...
+                </>
+              ) : (
+                <>
+                  <Save size={18} />
+                  Salvar Música
+                </>
+              )}
+            </button>
+          </div>
         </div>
       </form>
 
