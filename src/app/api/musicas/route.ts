@@ -39,6 +39,7 @@ export async function POST(request: NextRequest) {
       artista: parsedBody.data.artista ?? '',
       tom_original: parsedBody.data.tom_original ?? undefined,
       cifra: parsedBody.data.cifra ?? undefined,
+      cifra_url: parsedBody.data.cifra_url,
       tags: parsedBody.data.tags ?? []
     })
     

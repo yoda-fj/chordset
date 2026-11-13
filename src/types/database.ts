@@ -26,6 +26,7 @@ export interface Musica {
   drum_pattern_id: number | null;
   bpm: number;
   volume: number;
+  cifra_url: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -35,6 +36,7 @@ export interface CreateMusicaInput {
   artista: string;
   tom_original?: string;
   cifra?: string;
+  cifra_url?: string;
   tags?: string[];
 }
 
@@ -44,6 +46,7 @@ export interface UpdateMusicaInput {
   tom_original?: string | null;
   tom_atual?: string | null;
   cifra?: string | null;
+  cifra_url?: string | null;
   tags?: string[];
   observacao?: string | null;
   audio_url?: string | null;

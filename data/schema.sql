@@ -26,6 +26,7 @@ CREATE TABLE IF NOT EXISTS musicas (
   drum_pattern_id INTEGER, -- FK para drum_patterns (ritmo associado)
   bpm INTEGER DEFAULT 120, -- BPM do drum pad
   volume REAL DEFAULT 0.7, -- Volume do drum pad
+  cifra_url TEXT, -- URL de origem da cifra importada (Cifra Club etc.)
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (drum_pattern_id) REFERENCES drum_patterns(id) ON DELETE SET NULL

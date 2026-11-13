@@ -96,6 +96,20 @@ export const importSongSchema = z
 export type ImportSongRequest = z.infer<typeof importSongSchema>
 
 // =====================================
+// MUSICAS REIMPORTAR (/api/musicas/reimportar)
+// =====================================
+
+export const reimportarSchema = z.object({
+  id: z.number().int('id deve ser inteiro').positive('id deve ser positivo'),
+  url: z
+    .string()
+    .refine(isCifraClubUrl, 'URL deve ser do domínio cifraclub.com.br')
+    .optional(),
+})
+
+export type ReimportarRequest = z.infer<typeof reimportarSchema>
+
+// =====================================
 // IMPORT-MUSICASPARAMISSA (/api/import-musicasparamissa)
 // =====================================
 
@@ -133,6 +147,9 @@ const musicaFields = {
     .string()
     .max(MAX_CIFRA_CHARS, `Cifra deve ter no máximo 200KB`)
     .nullish(),
+  cifra_url: z
+    .url({ protocol: /^https?$/, message: 'cifra_url deve ser http/https' })
+    .optional(),
   tags: z.array(z.string().max(50)).max(50).optional(),
 }
 

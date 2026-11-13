@@ -1,8 +1,8 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import { useParams } from 'next/navigation'
-import { ArrowLeft, Music, Edit, FileText, Calendar, Play, ChevronLeft, ChevronRight, Drum, Volume2 } from 'lucide-react'
+import { useParams, useRouter } from 'next/navigation'
+import { ArrowLeft, Music, Edit, FileText, Calendar, Play, ChevronLeft, ChevronRight, Drum, Volume2, RefreshCw, Loader2 } from 'lucide-react'
 import { Skeleton } from '@/components/ui/Skeleton'
 import * as Tone from 'tone'
 import { getSamplerUrls, volumeToDb } from '@/lib/drum-samples'
@@ -40,8 +40,17 @@ interface EventoDaMusica {
   confirmada: boolean
 }
 
+// Candidata retornada por POST /api/musicas/reimportar quando a busca
+// encontra mais de um resultado (needChoice)
+interface ReimportCandidate {
+  titulo: string
+  artista: string
+  url: string
+}
+
 export default function MusicaPage() {
   const params = useParams()
+  const router = useRouter()
   const musicaId = parseInt(params.id as string)
 
   const [musica, setMusica] = useState<Musica | null>(null)
@@ -52,6 +61,11 @@ export default function MusicaPage() {
   const [ritmoVolume, setRitmoVolume] = useState(0.7)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+
+  // Re-importação de cifra
+  const [reimporting, setReimporting] = useState(false)
+  const [reimportCandidates, setReimportCandidates] = useState<ReimportCandidate[] | null>(null)
+  const [reimportMsg, setReimportMsg] = useState<{ kind: 'success' | 'error'; text: string } | null>(null)
 
   // Observacao editing
   const [observacao, setObservacao] = useState('')
@@ -139,6 +153,50 @@ export default function MusicaPage() {
     setObservacao(value)
     if (obsTimeoutRef.current) clearTimeout(obsTimeoutRef.current)
     obsTimeoutRef.current = setTimeout(saveObservacao, 1500)
+  }
+
+  // Re-importa a cifra do Cifra Club. Sem URL explícita, confirma a
+  // sobrescrita e deixa a API resolver (cifra_url salva ou busca);
+  // needChoice abre o modal de candidatas e a escolha dispara com a URL.
+  const handleReimportar = async (url?: string) => {
+    if (!musica) return
+    if (!url && !confirm('Isso vai substituir a cifra atual pela versão do Cifra Club. Continuar?')) return
+
+    setReimporting(true)
+    setReimportMsg(null)
+    try {
+      const data = await apiFetch<{
+        needChoice?: boolean
+        candidates?: ReimportCandidate[]
+        success?: boolean
+        tom?: string | null
+        linhas?: number
+      }>('/api/musicas/reimportar', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: musicaId, ...(url ? { url } : {}) }),
+      })
+
+      if (data.needChoice && data.candidates) {
+        setReimportCandidates(data.candidates)
+        return
+      }
+
+      setReimportCandidates(null)
+      setReimportMsg({
+        kind: 'success',
+        text: `Cifra re-importada com sucesso — tom: ${data.tom ?? 'não detectado'}, ${data.linhas ?? 0} linhas.`,
+      })
+
+      // Atualiza tom_original/cifra exibidos na página (o fetch inicial é client-side)
+      const res = await fetch(`/api/musicas/${musicaId}`)
+      if (res.ok) setMusica(await res.json())
+      router.refresh()
+    } catch (e) {
+      setReimportMsg({ kind: 'error', text: e instanceof Error ? e.message : 'Erro ao re-importar cifra' })
+    } finally {
+      setReimporting(false)
+    }
   }
 
   const saveRitmo = async (ritmoId: number | null) => {
@@ -463,6 +521,19 @@ export default function MusicaPage() {
       </div>
 
       {/* Ações */}
+      {reimportMsg && (
+        <div
+          role="status"
+          className={`p-4 rounded-lg border ${
+            reimportMsg.kind === 'success'
+              ? 'bg-success/10 border-success/40 text-success'
+              : 'bg-danger/10 border-danger/40 text-danger'
+          }`}
+        >
+          {reimportMsg.text}
+        </div>
+      )}
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <Link
           href={`/musicas/${musicaId}/cifra`}
@@ -478,7 +549,68 @@ export default function MusicaPage() {
             </div>
           </div>
         </Link>
+
+        <button
+          type="button"
+          onClick={() => handleReimportar()}
+          disabled={reimporting}
+          className="bg-surface-raised p-6 rounded-lg border hover:border-brand hover:shadow-md transition-all text-left disabled:opacity-50"
+        >
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-brand/15 rounded">
+              {reimporting ? (
+                <Loader2 size={24} className="text-brand animate-spin" />
+              ) : (
+                <RefreshCw size={24} className="text-brand" />
+              )}
+            </div>
+            <div>
+              <h3 className="font-semibold text-ink">
+                {reimporting ? 'Re-importando...' : 'Re-importar cifra'}
+              </h3>
+              <p className="text-sm text-ink-muted">
+                Busca de novo no Cifra Club e substitui a cifra atual
+              </p>
+            </div>
+          </div>
+        </button>
       </div>
+
+      {/* Modal de escolha — busca retornou mais de um resultado */}
+      {reimportCandidates && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-surface-raised rounded-lg shadow-xl max-w-lg w-full mx-4 p-4">
+            <h3 className="text-lg font-medium text-ink">Várias versões encontradas</h3>
+            <p className="text-sm text-ink-muted mt-1 mb-4">
+              Escolha qual cifra usar para &quot;{musica.titulo}&quot;:
+            </p>
+            <div className="space-y-2 max-h-80 overflow-y-auto">
+              {reimportCandidates.map((c) => (
+                <button
+                  key={c.url}
+                  type="button"
+                  onClick={() => handleReimportar(c.url)}
+                  disabled={reimporting}
+                  className="w-full text-left p-3 border rounded-lg hover:bg-surface transition-colors disabled:opacity-50"
+                >
+                  <div className="font-medium text-ink">{c.titulo}</div>
+                  <div className="text-sm text-ink-muted">{c.artista}</div>
+                </button>
+              ))}
+            </div>
+            <div className="mt-4 flex justify-end">
+              <button
+                type="button"
+                onClick={() => setReimportCandidates(null)}
+                disabled={reimporting}
+                className="px-4 py-2 text-ink-muted hover:text-ink disabled:opacity-50"
+              >
+                Cancelar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Eventos que usam esta música */}
       {eventos.length > 0 && (

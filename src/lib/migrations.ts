@@ -88,10 +88,25 @@ function migration003(db: Database.Database) {
   }
 }
 
+// Migration 004: musicas.cifra_url — URL de origem da cifra importada.
+// Permite re-importar a cifra de músicas já salvas (ex.: reimportar
+// convertendo para ChordPro depois de correções no pipeline).
+function migration004(db: Database.Database) {
+  const hasColumn = (table: string, column: string) =>
+    (db.prepare(`PRAGMA table_info(${table})`).all() as { name: string }[])
+      .some(col => col.name === column)
+
+  if (!hasColumn('musicas', 'cifra_url')) {
+    console.log('[Migration 004] Adding cifra_url column to musicas...')
+    db.exec('ALTER TABLE musicas ADD COLUMN cifra_url TEXT')
+  }
+}
+
 export const migrations: Migration[] = [
   { version: 1, name: 'schema-base', up: migration001 },
   { version: 2, name: 'evento-musicas-unique-ordem', up: migration002 },
   { version: 3, name: 'musicas-tom-atual', up: migration003 },
+  { version: 4, name: 'musicas-cifra-url', up: migration004 },
 ]
 
 export function applyMigrations(db: Database.Database): void {

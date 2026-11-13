@@ -3,6 +3,7 @@ import {
   ocrRequestSchema,
   importSongSchema,
   importMpmSchema,
+  reimportarSchema,
   musicaCreateSchema,
   musicaUpdateSchema,
   practiceSessionSchema,
@@ -39,6 +40,30 @@ describe('ocrRequestSchema', () => {
       provider: 'openai',
     })
     expect(r.success).toBe(false)
+  })
+})
+
+describe('reimportarSchema', () => {
+  it('aceita apenas id', () => {
+    expect(reimportarSchema.safeParse({ id: 1 }).success).toBe(true)
+  })
+
+  it('aceita id com url do cifraclub', () => {
+    expect(
+      reimportarSchema.safeParse({ id: 1, url: 'https://www.cifraclub.com.br/legiao-urbana/sera' }).success
+    ).toBe(true)
+  })
+
+  it('rejeita url de outro domínio', () => {
+    expect(
+      reimportarSchema.safeParse({ id: 1, url: 'https://evil.com/legiao-urbana/sera' }).success
+    ).toBe(false)
+  })
+
+  it('rejeita id ausente ou inválido', () => {
+    expect(reimportarSchema.safeParse({}).success).toBe(false)
+    expect(reimportarSchema.safeParse({ id: 'x' }).success).toBe(false)
+    expect(reimportarSchema.safeParse({ id: 0 }).success).toBe(false)
   })
 })
 

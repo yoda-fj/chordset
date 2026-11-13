@@ -11,6 +11,7 @@ function rowToMusica(row: MusicaRow): Musica {
     tags: parseTags(row.tags),
     observacao: row.observacao || null,
     audio_url: row.audio_url || null,
+    cifra_url: row.cifra_url || null,
     tom_atual: row.tom_atual || null,
     groove: row.groove || null,
     drum_pattern_id: row.drum_pattern_id || null,
@@ -52,14 +53,15 @@ export const musicasDb = {
   create(input: CreateMusicaInput): Musica {
     const db = getDb()
     const stmt = db.prepare(`
-      INSERT INTO musicas (titulo, artista, tom_original, cifra, tags)
-      VALUES (?, ?, ?, ?, ?)
+      INSERT INTO musicas (titulo, artista, tom_original, cifra, cifra_url, tags)
+      VALUES (?, ?, ?, ?, ?, ?)
     `)
     const result = stmt.run(
       input.titulo,
       input.artista,
       input.tom_original || null,
       input.cifra || null,
+      input.cifra_url || null,
       stringifyTags(input.tags)
     )
 
@@ -89,6 +91,10 @@ export const musicasDb = {
     if (input.cifra !== undefined) {
       sets.push('cifra = ?')
       values.push(input.cifra)
+    }
+    if (input.cifra_url !== undefined) {
+      sets.push('cifra_url = ?')
+      values.push(input.cifra_url)
     }
     if (input.tags !== undefined) {
       sets.push('tags = ?')

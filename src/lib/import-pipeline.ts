@@ -71,6 +71,7 @@ export function saveImportedSong(song: NormalizedSong): SaveImportedResult {
     artista: song.artista,
     tom_original: song.tom_original || undefined,
     cifra: song.cifra || undefined,
+    cifra_url: song.url,
     tags: [song.provider],
   })
 

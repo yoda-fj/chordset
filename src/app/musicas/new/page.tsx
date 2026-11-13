@@ -36,6 +36,7 @@ export default function NewMusicaPage() {
   const [artista, setArtista] = useState('')
   const [tomOriginal, setTomOriginal] = useState('')
   const [cifra, setCifra] = useState('')
+  const [cifraUrl, setCifraUrl] = useState<string | null>(null)
   const [tags, setTags] = useState<string[]>([])
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -70,6 +71,7 @@ export default function NewMusicaPage() {
           artista: artista.trim(),
           tom_original: tomOriginal || undefined,
           cifra: cifra.trim() || undefined,
+          cifra_url: cifraUrl ?? undefined,
           tags,
         }),
       })
@@ -178,6 +180,7 @@ export default function NewMusicaPage() {
       setArtista(data.song.artista)
       setTomOriginal(data.song.tom_original || '')
       setCifra(data.song.cifra || '')
+      setCifraUrl(data.song.url || null)
       setTags([data.song.provider])
       
       // Close import modal
