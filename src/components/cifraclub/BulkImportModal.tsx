@@ -4,6 +4,7 @@ import { useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { X, Loader2, CheckCircle2, AlertTriangle, XCircle, CircleDashed, Clock } from 'lucide-react'
 import { parseBulkImportLines, BULK_IMPORT_DELAY_MS, type BulkImportItem } from '@/lib/bulk-import'
+import { sleepCancellable } from '@/lib/sleep'
 
 type LineStatus = 'pending' | 'importing' | 'waiting' | 'imported' | 'exists' | 'error'
 
@@ -20,23 +21,6 @@ const MAX_RETRY_ATTEMPTS = 3
 
 /** retryAfterSec do body 429 quando ausente/inválido. */
 const DEFAULT_RETRY_AFTER_SEC = 30
-
-/**
- * Dorme `ms`, mas verifica `shouldCancel` a cada 250ms para que o
- * cancelamento responda mesmo em esperas longas (ex: retry de 429).
- * Retorna true se completou a espera; false se foi cancelado.
- */
-function sleepCancellable(ms: number, shouldCancel: () => boolean): Promise<boolean> {
-  return new Promise((resolve) => {
-    const startedAt = Date.now()
-    const tick = () => {
-      if (shouldCancel()) return resolve(false)
-      if (Date.now() - startedAt >= ms) return resolve(true)
-      setTimeout(tick, 250)
-    }
-    tick()
-  })
-}
 
 interface BulkImportModalProps {
   isOpen: boolean

@@ -3,7 +3,7 @@
 import { useState, useEffect, useMemo } from 'react'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
-import { Plus, Search, Tag, Music, FileText } from 'lucide-react'
+import { Plus, Search, Tag, Music, FileText, Wrench } from 'lucide-react'
 import { Skeleton } from '@/components/ui/Skeleton'
 import { EmptyState, ErrorState } from '@/components/ui/EmptyState'
 import type { Musica } from '@/types/database'
@@ -82,13 +82,22 @@ export default function MusicasPage() {
     <div>
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold text-ink">Músicas</h1>
-        <Link
-          href="/musicas/new"
-          className="inline-flex items-center gap-2 px-4 py-2 bg-brand text-on-accent rounded-lg hover:bg-brand-600 transition-colors"
-        >
-          <Plus size={18} />
-          Nova Música
-        </Link>
+        <div className="flex items-center gap-2">
+          <Link
+            href="/musicas/reimportar"
+            className="inline-flex items-center gap-2 px-4 py-2 text-brand border border-brand rounded-lg hover:bg-brand/10 transition-colors"
+          >
+            <Wrench size={18} />
+            Corrigir cifras
+          </Link>
+          <Link
+            href="/musicas/new"
+            className="inline-flex items-center gap-2 px-4 py-2 bg-brand text-on-accent rounded-lg hover:bg-brand-600 transition-colors"
+          >
+            <Plus size={18} />
+            Nova Música
+          </Link>
+        </div>
       </div>
 
       {/* Filtros */}
